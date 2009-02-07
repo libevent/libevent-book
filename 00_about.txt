@@ -1,0 +1,20 @@
+
+About this document
+-------------------
+
+This document will teach you how to use Libevent 2.0 to write fast
+portable asynchronous network IO programs in C.  We assume:
+
+* That you already know C.
+* That you already know the basic C networking calls (socket(),
+  connect(), and so on).
+
+
+A note on examples
+------------------
+
+The examples here above should work all right on Linux, FreeBSD,
+OpenBSD, NetBSD, Mac OS X, Solaris, Android,
+
+You might notice that some of the examples above
+don't compile so well on winows.

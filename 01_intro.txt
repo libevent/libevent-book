@@ -1,0 +1,29 @@
+
+A tiny introduction to asynchronous I/O
+----------------------------------------
+
+Most beginning programmers start with synchronous, blocking I/O calls.
+An I/O call is _synchronous_ if, when you call it, it does not return
+unless and until the operation is completed.  When you call
+"connect()" on a TCP connection, for example, your operating system
+queues a SYN packet to the host on the other side of the TCP
+connection, and does not return control back to your application until
+it receives a SYN ACK packet from the opposite host, or until enough
+time has passed that it decides to give up.
+
+Here's an example of a really simple syncronous client that writes 
+
+[source,C]
+~~~~~~~
+include::01_sync_webclient.c[]
+~~~~~~~
+
+As you'll see, 
+
+
+
+
+Windows digression: what about overlapped IO?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Oh gods no.
