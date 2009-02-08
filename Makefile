@@ -1,5 +1,5 @@
 
-GENERATED_HTML=01_intro.html
+GENERATED_HTML=00_about.html 01_intro.html
 
 all: html examples
 
@@ -21,3 +21,6 @@ clean:
 	rm -f $(GENERATED_HTML)
 	cd examples_01 && $(MAKE) clean
 
+count:
+	wc -w *.txt
+	wc -l examples_*/*.c
