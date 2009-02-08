@@ -260,3 +260,9 @@ Here's our ROT13 server one last time, using the bufferevents API.
 include::examples_01/01_rot13_server_bufferevent.c[]
 ~~~~~~~
 
+How efficient is all of this, really?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+XXXX write an efficiency section here.  The benchmarks on the libevent
+page are really out of date.
+
