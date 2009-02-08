@@ -8,12 +8,16 @@ html: $(GENERATED_HTML)
 examples:
 	cd examples_01 && $(MAKE)
 
-01_intro.html: examples_01/01_sync_webclient.c
+.SUFFIXES: .txt .html
 
 .txt.html:
 	asciidoc $<
+
+01_intro.html: examples_01/*.c
+
 clean:
 	rm -f *~
 	rm -f *.o
 	rm -f $(GENERATED_HTML)
 	cd examples_01 && $(MAKE) clean
+
