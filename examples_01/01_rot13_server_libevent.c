@@ -104,7 +104,7 @@ do_read(evutil_socket_t fd, short events, void *arg)
     if (result == 0) {
         free_fd_state(state);
     } else if (result < 0) {
-        if (errno == EAGAIN)
+        if (errno == EAGAIN) // XXXX use evutil macro
             return;
         perror("recv");
         free_fd_state(state);
@@ -120,7 +120,7 @@ do_write(evutil_socket_t fd, short events, void *arg)
         ssize_t result = send(fd, state->buffer + state->n_written,
                               state->write_upto - state->n_written, 0);
         if (result < 0) {
-            if (errno == EAGAIN)
+            if (errno == EAGAIN) // XXX use evutil macro
                 return;
             free_fd_state(state);
             return;
@@ -143,10 +143,10 @@ do_accept(evutil_socket_t listener, short event, void *arg)
     struct sockaddr_storage ss;
     socklen_t slen = sizeof(ss);
     int fd = accept(listener, (struct sockaddr*)&ss, &slen);
-    if (fd < 0) {
+    if (fd < 0) { // XXXX eagain??
         perror("accept");
     } else if (fd > FD_SETSIZE) {
-        close(fd);
+        close(fd); // XXX replace all closes with EVUTIL_CLOSESOCKET */
     } else {
         struct fd_state *state;
         evutil_make_socket_nonblocking(fd);
