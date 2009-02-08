@@ -14,6 +14,8 @@
 #include <stdio.h>
 #include <errno.h>
 
+#define MAX_LINE 16384
+
 char
 rot13_char(char c)
 {
@@ -28,8 +30,7 @@ rot13_char(char c)
 }
 
 struct fd_state {
-    char *buffer;
-    size_t buffer_len;
+    char buffer[MAX_LINE];
     size_t buffer_used;
 
     int writing;
@@ -43,12 +44,6 @@ alloc_fd_state(void)
     struct fd_state *state = malloc(sizeof(struct fd_state));
     if (!state)
         return NULL;
-    state->buffer_len = 1024;
-    state->buffer = malloc(state->buffer_len);
-    if (!state->buffer) {
-        free(state);
-        return NULL;
-    }
     state->buffer_used = state->n_written = state->writing =
         state->write_upto = 0;
     return state;
@@ -57,7 +52,6 @@ alloc_fd_state(void)
 void
 free_fd_state(struct fd_state *state)
 {
-    free(state->buffer);
     free(state);
 }
 
@@ -77,24 +71,10 @@ do_read(int fd, struct fd_state *state)
         result = recv(fd, buf, sizeof(buf), 0);
         if (result <= 0)
             break;
-        if (state->buffer_used + result >= state->buffer_len) {
-            char *newbuf;
-            size_t newlen = state->buffer_len;
-            do {
-                newlen *= 2;
-            } while (newlen < state->buffer_used + result);
-            newbuf = realloc(state->buffer, newlen);
-            if (newbuf == NULL) {
-                perror("realloc");
-                result = -1;
-                break;
-            }
-            state->buffer = newbuf;
-            state->buffer_len = newlen;
-        }
 
         for (i=0; i < result; ++i)  {
-            state->buffer[state->buffer_used++] = rot13_char(buf[i]);
+            if (state->buffer_used < sizeof(state->buffer))
+                state->buffer[state->buffer_used++] = rot13_char(buf[i]);
             if (buf[i] == '\n') {
                 state->writing = 1;
                 state->write_upto = state->buffer_used;

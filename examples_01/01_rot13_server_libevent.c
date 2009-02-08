@@ -14,6 +14,8 @@
 #include <stdio.h>
 #include <errno.h>
 
+#define MAX_LINE 16384
+
 void do_read(evutil_socket_t fd, short events, void *arg);
 void do_write(evutil_socket_t fd, short events, void *arg);
 
@@ -31,15 +33,13 @@ rot13_char(char c)
 }
 
 struct fd_state {
-    char *buffer;
-    size_t buffer_len;
+    char buffer[MAX_LINE];
     size_t buffer_used;
 
     size_t n_written;
     size_t write_upto;
 
     struct event *read_event;
-    char junk[16];
     struct event *write_event;
 };
 
@@ -49,68 +49,22 @@ alloc_fd_state(struct event_base *base, evutil_socket_t fd)
     struct fd_state *state = malloc(sizeof(struct fd_state));
     if (!state)
         return NULL;
-    memset(state, 0, sizeof(*state));
-
-    {
-        int i;
-        for (i=0;i<16;++i)
-            assert(state->junk[i] == 0);
-    }
-
-    state->buffer_len = 1024;
-    state->buffer = malloc(state->buffer_len);
-
-    {
-        int i;
-        for (i=0;i<16;++i)
-            assert(state->junk[i] == 0);
-    }
-
-
-    if (!state->buffer) {
-        free(state);
-        return NULL;
-    }
-
     state->read_event = event_new(base, fd, EV_READ|EV_PERSIST, do_read, state);
-
-    {
-        int i;
-        for (i=0;i<16;++i)
-            assert(state->junk[i] == 0);
-    }
-
-
     if (!state->read_event) {
-        free(state->buffer);
         free(state);
         return NULL;
     }
     state->write_event =
         event_new(base, fd, EV_WRITE|EV_PERSIST, do_write, state);
 
-    {
-        int i;
-        for (i=0;i<16;++i)
-            assert(state->junk[i] == 0);
-    }
-
     if (!state->write_event) {
         event_free(state->read_event);
-        free(state->buffer);
         free(state);
         return NULL;
     }
 
     state->buffer_used = state->n_written = state->write_upto = 0;
 
-    {
-        int i;
-        for (i=0;i<16;++i)
-            assert(state->junk[i] == 0);
-    }
-
-    puts("newstate");
     assert(state->write_event);
     return state;
 }
@@ -118,11 +72,8 @@ alloc_fd_state(struct event_base *base, evutil_socket_t fd)
 void
 free_fd_state(struct fd_state *state)
 {
-    puts("freestate");
     event_free(state->read_event);
     event_free(state->write_event);
-    free(state->buffer);
-    memset(state, 0, sizeof(*state));
     free(state);
 }
 
@@ -139,24 +90,9 @@ do_read(evutil_socket_t fd, short events, void *arg)
         if (result <= 0)
             break;
 
-        if (state->buffer_used + result >= state->buffer_len) {
-            char *newbuf;
-            size_t newlen = state->buffer_len;
-            do {
-                newlen *= 2;
-            } while (newlen < state->buffer_used + result);
-            newbuf = realloc(state->buffer, newlen);
-            if (newbuf == NULL) {
-                perror("realloc");
-                result = -1;
-                break;
-            }
-            state->buffer = newbuf;
-            state->buffer_len = newlen;
-        }
-
         for (i=0; i < result; ++i)  {
-            state->buffer[state->buffer_used++] = rot13_char(buf[i]);
+            if (state->buffer_used < sizeof(state->buffer))
+                state->buffer[state->buffer_used++] = rot13_char(buf[i]);
             if (buf[i] == '\n') {
                 assert(state->write_event);
                 event_add(state->write_event, NULL);

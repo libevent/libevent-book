@@ -8,6 +8,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define MAX_LINE 16384
+
 char
 rot13_char(char c)
 {
@@ -24,16 +26,9 @@ rot13_char(char c)
 void
 child(int fd)
 {
-    char *outbuf;
-    size_t outbuf_len = 1024;
+    char outbuf[MAX_LINE+1];
     size_t outbuf_used = 0;
     ssize_t result;
-
-    outbuf = malloc(outbuf_len);
-    if (!outbuf) {
-        perror("malloc");
-        exit(1);
-    }
 
     while (1) {
         char ch;
@@ -45,17 +40,10 @@ child(int fd)
             break;
         }
 
-        if (outbuf_used == outbuf_len) {
-            char *outbuf2 = realloc(outbuf, outbuf_len*2);
-            if (outbuf2 == NULL) {
-                perror("realloc");
-                break;
-            }
-            outbuf = outbuf2;
-            outbuf_len *= 2;
+        /* We do this test to keep the user from overflowing the buffer. */
+        if (outbuf_used < sizeof(outbuf)) {
+            outbuf[outbuf_used++] = rot13_char(ch);
         }
-
-        outbuf[outbuf_used++] = rot13_char(ch);
 
         if (ch == '\n') {
             send(fd, outbuf, outbuf_used, 0);

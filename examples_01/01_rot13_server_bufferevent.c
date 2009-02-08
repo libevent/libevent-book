@@ -16,6 +16,8 @@
 #include <stdio.h>
 #include <errno.h>
 
+#define MAX_LINE 16384
+
 void do_read(evutil_socket_t fd, short events, void *arg);
 void do_write(evutil_socket_t fd, short events, void *arg);
 
@@ -38,14 +40,28 @@ readcb(struct bufferevent *bev, void *ctx)
     struct evbuffer *input, *output;
     char *line;
     size_t n;
+    int i;
     input = bufferevent_get_input(bev);
     output = bufferevent_get_output(bev);
 
     while ((line = evbuffer_readln(input, &n, EVBUFFER_EOL_LF))) {
-        int i;
         for (i = 0; i < n; ++i)
             line[i] = rot13_char(line[i]);
         evbuffer_add(output, line, n);
+        evbuffer_add(output, "\n", 1);
+        free(line);
+    }
+
+    if (evbuffer_get_length(input) >= MAX_LINE) {
+        /* Too long; just process what there is and go on so that the buffer
+         * doesn't grow infinitely long. */
+        char buf[1024];
+        while (evbuffer_get_length(input)) {
+            int n = evbuffer_remove(input, buf, sizeof(buf));
+            for (i = 0; i < n; ++i)
+                line[i] = rot13_char(line[i]);
+            evbuffer_add(output, buf, n);
+        }
         evbuffer_add(output, "\n", 1);
     }
 }
@@ -72,6 +88,7 @@ do_accept(evutil_socket_t listener, short event, void *arg)
         evutil_make_socket_nonblocking(fd);
         bev = bufferevent_socket_new(base, fd, BEV_OPT_CLOSE_ON_FREE);
         bufferevent_setcb(bev, readcb, NULL, errorcb, NULL);
+        bufferevent_setwatermark(bev, EV_READ, 0, MAX_LINE);
         bufferevent_enable(bev, EV_READ|EV_WRITE);
     }
 }
