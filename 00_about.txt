@@ -1,3 +1,5 @@
+# Copyright 2009, Nick Mathewson.
+# License forthcoming
 
 About this document
 -------------------
