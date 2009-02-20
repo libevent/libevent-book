@@ -42,7 +42,7 @@ while (i_still_want_to_read()) {
         n = recv(fd[i], buf, sizeof(buf), 0);
         if (n==0)
             handle_close(fd[i]);
-        else if (n1<0)
+        else if (n<0)
             handle_error(fd[i], error)
         else
             handle_input(fd[i], buf, n);
