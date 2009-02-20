@@ -124,7 +124,7 @@ run(void)
     struct fd_state *state[FD_SETSIZE];
     struct sockaddr_in sin;
     int i, n, maxfd;
-    struct fd_set readset, writeset, exset;
+    fd_set readset, writeset, exset;
 
     sin.sin_family = AF_INET;
     sin.sin_addr.s_addr = 0;
