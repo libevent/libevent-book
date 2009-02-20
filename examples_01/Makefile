@@ -23,7 +23,7 @@ examples: $(EXAMPLE_BINARIES)
 	$(CC) $(CFLAGS) 01_rot13_server_select.o -o 01_rot13_server_select
 
 01_rot13_server_libevent: 01_rot13_server_libevent.o
-	$(CC) $(CFLAGS) /Users/nickm/le/lib/libevent_core.a 01_rot13_server_libevent.o -o 01_rot13_server_libevent
+	$(CC) $(CFLAGS) 01_rot13_server_libevent.o -o 01_rot13_server_libevent -levent_core
 
 01_rot13_server_bufferevent: 01_rot13_server_bufferevent.o
 	$(CC) $(CFLAGS) /Users/nickm/le/lib/libevent_core.a 01_rot13_server_bufferevent.o -o 01_rot13_server_bufferevent
