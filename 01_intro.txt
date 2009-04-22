@@ -18,10 +18,10 @@ Here's an example of a really simple syncronous client using
 synchronous network calls.  It opens a connection to www.google.com,
 sends it a simple HTTP request, and prints the response to stdout.
 
-[code,C]
-~~~~~~~
+[code]
+-------
 include::examples_01/01_sync_webclient.c[]
-~~~~~~~
+-------
 
 All of the network calls in the code above are _blocking_: the
 gethostbyname does not return until it has suceeded or failed in
@@ -37,7 +37,7 @@ multiple connections at once.  To make our example concrete: suppose
 that you want to read input from two connections, and you don't know
 which connection will get input first.  You can't say
 [code,C]
-~~~~~~
+-------
 /* This won't work. */
 while (i_still_want_to_read()) {
     for (i=0; i<n_sockets; ++i) {
@@ -50,7 +50,7 @@ while (i_still_want_to_read()) {
             handle_input(fd[i], buf, n);
     }
 }
-~~~~~~
+-------
 because if data arrives on fd[2] first, your program won't even try
 reading from fd[2] until the read from fd[1] has gotten some data and
 finished.
@@ -69,9 +69,9 @@ arrives.  It uses the Unix fork() call to create a new process for
 each incoming connection.
 
 [code,C]
-~~~~~~~
+-------
 include::examples_01/01_rot13_server_forking.c[]
-~~~~~~~
+-------
 
 So, do we have the perfect solution for handling multiple connections
 at once?  Can I stop writing this book and go work on something else
@@ -86,9 +86,9 @@ have have only a few threads per CPU.
 So, how can we do this?  In the Unix paradigm, you make your sockets
 _nonblocking_.  The Unix call to do this is:
 [code,C]
-~~~~~~
+------
 fcntl(fd, F_SETFL, O_NONBLOCK);
-~~~~~~
+------
 Once you've made fd nonblocking, from then on, whenver you make a
 network call to fd, the call will either complete the operation
 immediately, or return with a special error code to indicate, "I
@@ -96,7 +96,7 @@ couldn't make any process now, try again.  So our two-socket example
 might be naively written as:
 
 [code,C]
-~~~~~~
+------
 /* This will work, but the performance will be unforgiavably bad. */
 for (i=0; i < n_sockets; ++i)
     fcntl(fd[i], F_SETFL, O_NONBLOCK);
@@ -116,7 +116,7 @@ while (i_still_want_to_read()) {
          }
     }
 }
-~~~~~~
+------
 
 Now that we're using nonblocking sockets, the code above would
 _work_... but only barely.  The performance will be awful, for two
@@ -136,7 +136,7 @@ and alters the sets to contain only the ready sockets.
 
 Here is our read() example again, using select:
 [code,C]
-~~~~~~
+------
 /* If you only have a couple dozen fds, this version won't be awful */
 struct fd_set readset;
 
@@ -170,14 +170,15 @@ while (i_still_want_to_read()) {
         }
     }
 }
-~~~~~~
+------
+
 
 And here's a reimplementation of our ROT13 server, using select() this
 time.
 [code,C]
-~~~~~~~
+------
 include::examples_01/01_rot13_server_select.c[]
-~~~~~~~
+------
 
 But we're still not done.  Because generating and reading the select()
 bit arrays takes time proportional to highest interesting fd, the
@@ -216,9 +217,9 @@ struct event_base, which might be implemented in terms of select(),
 poll(), epoll(), kqueue(), etc.
 
 [code,C]
-~~~~~~~
+-------
 include::examples_01/01_rot13_server_libevent.c[]
-~~~~~~~
+-------
 
 (Other things to note in the code: instead of typing the sockets as
 "int", we're using the type evutil_fd_t.  Instead of calling
@@ -258,9 +259,9 @@ on Unix.
 Here's our ROT13 server one last time, using the bufferevents API.
 
 [code,C]
-~~~~~~~
+-------
 include::examples_01/01_rot13_server_bufferevent.c[]
-~~~~~~~
+-------
 
 How efficient is all of this, really?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
