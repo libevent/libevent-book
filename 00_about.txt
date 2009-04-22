@@ -1,5 +1,6 @@
-# Copyright 2009, Nick Mathewson.
-# License forthcoming
+include::license.txt[]
+
+:language: C
 
 About this document
 -------------------

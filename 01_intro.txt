@@ -1,3 +1,6 @@
+include::license.txt[]
+
+:language: C
 
 A tiny introduction to asynchronous IO
 ----------------------------------------
@@ -15,7 +18,6 @@ Here's an example of a really simple syncronous client using
 synchronous network calls.  It opens a connection to www.google.com,
 sends it a simple HTTP request, and prints the response to stdout.
 
-.Example
 [code,C]
 ~~~~~~~
 include::examples_01/01_sync_webclient.c[]
@@ -265,4 +267,5 @@ How efficient is all of this, really?
 
 XXXX write an efficiency section here.  The benchmarks on the libevent
 page are really out of date.
+
 
