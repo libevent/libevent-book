@@ -35,6 +35,9 @@ immediately after running any active events.  If EVLOOP_NONBLOCK is set, then
 the loop will not wait for events to trigger: it will only check whether
 any events are ready to trigger immediately.
 
+When it is done, event_base_loop() returns 0 if it exited normally, and -1 if
+it exited because of some unhandled error in the backend.
+
 To aid in understanding, here's an approximate summary of the event_base_loop
 algorithm:
 
@@ -77,5 +80,89 @@ before Libevent 1.0.
 Stopping the loop
 ~~~~~~~~~~~~~~~~~
 
-If you want to stop an active event loop from running,
+If you want an active event loop to stop running before all events are
+removed from it, you have two slightly different functions you can call.
+
+.Interface
+[source]
+~~~~~~~~
+int event_base_loopexit(struct event_base *base,
+                        const struct timeval *tv);
+int event_base_loopbreak(struct event_base *base);
+~~~~~~~~
+
+The event_base_loopexit() function tells an event_base to stop looping after
+a given time has elapsed.  If the 'tv' argument is NULL, the event_base stops
+looping now.  If the event_base is currently processing any active events,
+it will continue processing them, and not exit until it is done.
+
+The event_base_loopbreak() function tells the event_base to exit its loop
+immediately.  It differs from event_base_loopexit(base, NULL) in that if
+the event_base is currently processing any active events, it will exit
+immediately after finishing the one it's currently processing.
+
+Both of these methods return 0 on success and -1 on failure.
+
+.Example: Shut down immediately
+[source]
+~~~~~~~~
+/* Here's a callback function that calls loopbreak */
+void cb(int sock, short what, void *arg)
+{
+    struct event_base *base = arg;
+    event_base_loopbreak(base);
+}
+
+void main_loop(struct event_base *base)
+{
+    struct event *watchdog_event;
+    int watchdog_fd = get_watchdog_fd();
+
+    /* Construct a new event to trigger whenever there are any bytes to
+       read from a watchdog socket.  When that happens, we'll call the
+       cb function, which will make the loop exit immediately without
+       running any other active events at all.
+     */
+    watchdog_event = event_new(base, watchdog_fd, EV_READ, cb, base);
+
+    event_add(watchdog_event, NULL);
+
+    event_base_dispatch(base);
+}
+~~~~~~~~
+
+.Example: Run an event loop for 10 seconds, then exit.
+[source]
+~~~~~~~~
+struct event_base *base;
+struct event *ev1, *ev2;
+struct timeval ten_sec;
+
+base = event_base_new();
+
+/* We need to get ev1 and ev2 from somewhere. */
+ev1 = ...;
+ev2 = ...;
+
+event_add(ev1, NULL);
+event_add(ev2, NULL);
+
+ten_sec.tv_sec = 10;
+ten_sec.tv_usec = 0;
+
+/* Now we run the event_base for a series of 10-second intervals, printing
+   "Tick" after each.  For a much better way to implement a 10-second
+   timer, see the section below about persistent timer events. */
+while (1)
+   /* This schedules an exit ten seconds from now. */
+   event_base_loopexit(base, &ten_sec);
+
+   event_base_dispatch(base);
+   puts("Tick");
+}
+~~~~~~~~
+
+These functions are declared in <event2/event.h>.  The event_break_loopexit()
+function was first implemented in Libevent 1.0c; event_break_loopbreak() was
+first implemented in Libevent 1.4.3.
 
