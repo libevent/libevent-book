@@ -1,0 +1,81 @@
+include::license.txt[]
+
+:language: C
+
+Working with an event loop
+--------------------------
+
+Running the loop
+~~~~~~~~~~~~~~~~
+
+Once you have an event_base with some events registered (see the next section
+about how to register events), you will want Libevent to wait for events and
+alert you about them.
+
+
+.Interface
+[source]
+~~~~~~~~
+#define EVLOOP_ONCE	0x01
+#define EVLOOP_NONBLOCK	0x02
+
+int event_base_loop(struct event_base *base, int flags);
+~~~~~~~~
+
+By default, the event_base_loop() function 'runs' an event_base until there
+are no more events registered in it.  To run the loop, it repeatedly checks
+whether any of the registered events has triggered (for example, if a read
+event's file descriptor is ready to read, or if a timeout event's timeout is
+ready to expire).  Once this happens, it marks all triggered events as
+"active", and starts to run them.
+
+You can change the behavior of event_base_loop() by setting one or more flags
+in its 'flags' argument.  If EVLOOP_ONCE is set, then the loop will stop
+immediately after running any active events.  If EVLOOP_NONBLOCK is set, then
+the loop will not wait for events to trigger: it will only check whether
+any events are ready to trigger immediately.
+
+To aid in understanding, here's an approximate summary of the event_base_loop
+algorithm:
+
+.Pseudocode
+[source]
+~~~~~~~~
+while (any events are registered with the loop) {
+
+    if (EVLOOP_NONBLOCK was set, or any events are already active)
+        If any registered events have triggered, mark them active.
+    else
+        Wait until at least one event has triggered, and mark it active.
+
+    for (p = 0; p < n_priorities; ++p {
+       if (any event with priority of p is active) {
+          Run all active events with priority of p.
+          break; /* Do not run any events of a less important priority */
+       }
+    }
+
+    if (EVLOOP_ONCE was set or EVLOOP_NONBLOCK was set)
+       break;
+}
+~~~~~~~~
+
+As a convenience, you can also call:
+
+.Interface
+[source]
+~~~~~~~~
+int event_base_dispatch(struct event_base *base);
+~~~~~~~~
+
+The event_base_dispatch() call is the same as event_base_loop(), with no
+flags set.
+
+These functions are defined in <event2/event.h>.  They have existed since
+before Libevent 1.0.
+
+Stopping the loop
+~~~~~~~~~~~~~~~~~
+
+If you want to stop an active event loop from running,
+

@@ -1,0 +1,382 @@
+include::license.txt[]
+
+:language: C
+
+Setting up the Libevent library
+-------------------------------
+
+Libevent has a few global settings that are shared across the entire
+process.  These affect the entire library.
+
+You need to make any changes to these settings before you call any other
+part of the Libevent library.
+
+Log messages in Libevent
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Libevent can log internal errors and warnings.  It also logs debugging
+messages if it was compiled with logging support.  By default, these
+messages are written to stderr.  You can override this behavior by
+providing your own logging function.
+
+.Interface
+[source,C]
+~~~~~~~~~~
+#define _EVENT_LOG_DEBUG 0
+#define _EVENT_LOG_MSG   1
+#define _EVENT_LOG_WARN  2
+#define _EVENT_LOG_ERR   3
+typedef void (*event_log_cb)(int severity, const char *msg);
+
+void event_set_log_callback(event_log_cb cb);
+~~~~~~~~~~
+
+To override Libevent's logging behavior, you write your own function
+matching the signature of event_log_cb, and pass it as an argument to
+event_set_log_callback().  Whenever Libevent wants to log a message, it
+will pass it to the function you provided.  You can have Libevent return
+to its default behavior by calling event_set_log_callback() again with
+NULL as an argument.
+
+.Examples
+[source,C]
+~~~~~~~~~~
+static void discard_cb(int severity, const char *msg)
+{
+    /* This callback does nothing. */
+}
+
+static FILE *logfile = NULL;
+static void write_to_file_cb(int severity, const char *msg)
+{
+    const char *s;
+    if (!logfile)
+        return;
+    switch (severity) {
+        case _EVENT_LOG_DEBUG: s = "debug"; break;
+        case _EVENT_LOG_MSG:   s = "msg";   break;
+        case _EVENT_LOG_WARN:  s = "warn";  break;
+        case _EVENT_LOG_ERR:   s = "error;  break;
+        default:               s = "?";     break; /* never reached */
+    }
+    fprintf(logfile, "[%s] %s\n", s, msg);
+}
+
+/* Turn off all logging from Libevent. */
+void suppress_logging(void)
+{
+    event_set_log_callback(discard_cb)
+}
+
+/* Redirect all Libevent log messages to the C stdio file 'f'. */
+void set_logfile(FILE *f)
+{
+    logfile = f;
+    event_set_log_callback(write_to_file_cb);
+}
+~~~~~~~~~~
+
+These functions are declared in <event2/event.h>.  They first appeared
+in Libevent 1.0c.
+
+Memory management
+~~~~~~~~~~~~~~~~~
+
+By default, Libevent uses the C library's memory management functions to
+allocate memory from the heap.  You can have Libevent use another memory
+manager by providing your own replacements for malloc, realloc, and
+free.  You might want to do this if you have a more efficient allocator
+that you want Libevent to use, or if you have an instrumented allocator
+that you want Libevent to use in order to look for memory leaks.
+
+.Interface
+[source,C]
+~~~~~~~~
+void event_set_mem_functions(void *(*malloc_fn)(size_t sz),
+                             void *(*realloc_fn)(void *ptr, size_t sz),
+                             void (*free_fn)(void *ptr));
+~~~~~~~~
+
+Here's a simple example that replaces Libevent's allocation functions
+with variants that count the total number of bytes that are allocated.
+In reality, you'd probably want to add locking here, to prevent errors
+when Libevent is running in multiple threads.
+
+.Example
+[source,C]
+~~~~~~~~
+union alignment {
+    size_t sz;
+    void *ptr;
+    double dbl;
+};
+/* We need to make sure that everything we return is on the right
+   alignment to hold anything, including a double. */
+#define ALIGNMENT sizeof(alignment)
+
+/* We need to do this cast-to-char* trick on our pointers to adjust
+   them; doing arithmetic on a void* is not standard. */
+#define OUTPTR(ptr) (((char*)ptr)+ALIGNMENT)
+#define INPTR(ptr) (((char*)ptr)-ALIGNMENT)
+
+static size_t total_allocated = 0;
+static void *replacement_malloc(size_t sz)
+{
+    void *chunk = malloc(sz + ALIGNMENT);
+    if (!chunk) return chunk;
+    total_allocated += sz;
+    *(size_t*)chunk = sz;
+    return OUTPTR(chunk);
+}
+static void *replacement_realloc(void *ptr, size_t sz)
+{
+    size_t old_size = 0;
+    if (ptr) {
+        ptr = INPTR(ptr);
+        old_size = *(size_t*)ptr;
+    }
+    ptr = realloc(ptr, sz + ALIGNMENT);
+    if (!ptr)
+        return NULL;
+    *(size_t*)ptr = sz;
+    total_allocated = total_allocated - old_size + sz;
+    return OUTPTR(chunk);
+}
+static void replacement_free(void *ptr)
+{
+    ptr = INPTR(chunk);
+    total_allocated -= *(size_t*)ptr;
+    free(ptr);
+}
+void start_counting_bytes(void)
+{
+    event_set_mem_functions(replacement_malloc,
+                            replacement_realloc,
+                            replacement_free);
+}
+~~~~~~~~
+
+.NOTES
+- Replacing the memory management functions affects all future calls to
+  allocate, resize, or free memory from in Libevent.  Therefore, you
+  need to make sure that you replace the functions _before_ you call any
+  other Libevent functions.  Otherwise, Libevent will use your version
+  of free to deallocate memory returned from the C library's version of
+  malloc.
+- Your malloc and realloc functions needs to return memory chunks with
+  the same alignment as the C library.
+- Your realloc function needs to handle realloc(NULL, sz) correctly
+  (that is, by treating it as malloc(sz)).
+- Your realloc function needs to handle realloc(ptr, 0) correctly
+  (that is, by treating it as free(ptr)).
+- Your free function does not need to handle free(NULL).
+- Your malloc function does not need to handle malloc(0).
+- The replaced memory management functions need to be threadsafe if you
+  are using Libevent from more than one thread.
+
+The event_set_mem_functions() function is declared in <event2/event.h>.
+They first appeared in Libevent 2.0.1-alpha.
+
+Libevent can be built with event_set_mem_functions() disabled.  If it
+is, then programs using event_set_mem_functions will not compile or link.
+
+Locks and threading
+~~~~~~~~~~~~~~~~~~~
+
+As you probably know if you're writing multithreaded programs, it isn't
+always safe to access the same data from multiple threads at the same
+time.
+
+Libevent structures can generally work three ways with multithreading.
+
+- Some structures are inherently single-threaded: it is never safe to use
+  them from more then one thread at the same time.
+- Some structures are optionally locked: you can tell Libevent for each
+  object whether you need to use it from multiple threads at once.
+- Some structures are always locked: if Libevent is running with lock
+  support, then they are always safe to use from multiple threads at
+  once.
+
+To get locking in Libevent, you must tell Libevent which locking
+functions to use.  You need to do this before you call any Libevent
+function that allocates a structure that needs to be shared between
+threads.
+
+If you are using the pthreads library, or the native windows threading
+code, you're in luck.  There are pre-defined functions that will set up
+the right
+
+.Interface
+[source]
+~~~~~~~~
+#ifdef WIN32
+int evthread_use_windows_threads(void);
+#endif
+#ifdef _EVENT_HAVE_PTHREADS
+int evthread_use_pthreads(void);
+#endif
+~~~~~~~~
+
+Both functions return 0 on success, and -1 on failure.
+
+If you need to use a different threading library, then you have a little
+more work ahead of you.  You need to define functions that use your
+library to implement:
+
+- locking
+- lock allocation
+- lock destruction,
+- thread ID detection
+
+Then you tell Libevent about these functions, using:
+[source]
+~~~~~~~~
+#define EVTHREAD_LOCK	0x01
+#define EVTHREAD_UNLOCK	0x02
+#define EVTHREAD_WRITE	0x04
+#define EVTHREAD_READ	0x08
+void evthread_set_lock_create_callbacks(
+    void *(*alloc_fn)(void), void (*free_fn)(void *));
+void evthread_set_locking_callback(
+    void (*locking_fn)(int mode, void *lock));
+void evthread_set_id_callback(
+    unsigned long (*id_fn)(void));
+~~~~~~~~
+
+Your locks will be passed around as the void * type.  The alloc_fn
+argument must be a function that allocates a new lock; the free_fn
+argument must be a function that frees a lock allocated with alloc_fn.
+
+The locking_fn argument must be a function that implements locking and
+unlocking.  It takes a 'mode' field as its first argument, which will be
+a bitfield containing one of EVTHREAD_LOCK and EVTHREAD_UNLOCK, and one
+of EVTHREAD_WRITE and EVTHREAD_READ.  Its second argument must be a lock
+allocated with alloc_fn.
+
+The id_fn argument must be a function returning an unsigned long
+identifying what thread is calling the function.  It must always return
+the same number for the same thread, and must not ever return the same
+number for two different threads if they are both executing at the same
+time.
+
+Locking must be recursive.  That is, if a thread currently holds a lock
+and tries to lock it again, the second allocation must succeed and not
+deadlock.  The thread now holds the lock _twice_, and no other thread
+should be able to acquire the lock until the thread holding it has
+unlocked it twice.
+
+.Examples
+
+------
+For an example of how to use these functions, see evthread_pthread.c and
+evthread_win32.c in the Libevent source distribution.
+------
+
+The functions in this section are declared in <event2/thread.h>.  They
+first appeared in Libevent 2.0.1-alpha.  The event_use_pthreads()
+function requires you to link your program against the event_pthreads
+library.
+
+Libevent can be built with locking support disabled.  If it is, then
+programs built to use the above thread-related functions will not
+compile or link.
+
+
+Detecting the version of Libevent
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+New versions of Libevent can add features and remove bugs.  Sometimes
+you'll want to detect the Libevent version, so that you can:
+
+- Detect whether the installed version of Libevent is good enough to
+  build your program.
+- Display the Libevent version for debugging.
+- Detect the version of Libevent so that you can warn the user about
+  bugs, or work around them.
+
+.Interface
+[source]
+~~~~~~~~
+#define LIBEVENT_VERSION_NUMBER 0x02000100
+#define LIBEVENT_VERSION "0.2.0.1-alpha"
+const char *event_get_version(void);
+ev_uint32_t event_get_version_number(void);
+~~~~~~~~
+
+The macros make available the compile-time version of the Libevent
+library; the functions return the run-time version.  Note that if you
+have dynamically linked your program against Libevent, these versions
+may be different.
+
+You can get a Libevent version in two formats: a string suitable for
+displaying to users, and as a 4-byte integer suitable for numerical
+comparison.  The integer format uses the high byte for the major version,
+the second byte for the minor version, the byte for the patch version, and
+the low byte to indicate release status (0 for release, nonzero for a
+development series after a given release).
+
+Thus, the released Libevent 2.0.1-alpha has the version number of [02 00
+01 00], or 0x02000100.  A development versions between 2.0.1-alpha and
+2.0.2-alpha might have a version number of [02 00 01 08], or 0x02000108.
+
+.Example: Compile-time checks
+[source]
+~~~~~~~~
+#if !defined(LIBEVENT_VERSION_NUMBER) || LIBEVENT_VERSION_NUMBER < 0x02000100
+#error "This version of Libevent is not supported; Get 2.0.1-alpha or later."
+#endif
+
+int
+make_sandwich(void)
+{
+        /* Let's suppose that Libevent 6.0.5 intruduces a make-me-a
+           sandwich function. */
+#if LIBEVENT_VERSION_NUMBER >= 0x06000500
+        evutil_make_me_a_sandwich();
+        return 0;
+#else
+        return -1;
+#endif
+}
+~~~~~~~~
+
+.Example: Run-time checks
+[source]
+~~~~~~~~
+int
+check_for_old_version(void)
+{
+    const char *v = event_get_version();
+    /* This is a dumb way to do it, but it is the only thing that works
+       before Libevent 2.0. */
+    if (!strncmp(v, "0.", 2) ||
+        !strncmp(v, "1.1", 3) ||
+        !strncmp(v, "1.2", 3) ||
+        !strncmp(v, "1.3", 3)) {
+
+        printf("Your version of Libevent is very old.  If you run into bugs,"
+               " consider upgrading.\n");
+        return -1;
+    } else {
+        printf("Running with Libevent version %s\n", v);
+        return 0;
+    }
+}
+
+int
+check_version_match(void)
+{
+    ev_uint32_t v_compile, v_run;
+    v_compile = LIBEVENT_VERSION_NUMBER;
+    v_run = event_get_version_number();
+    if ((v_compile & 0xffff0000) != (v_run & 0xffff0000)) {
+        printf("Running with a Libevent version (%s) very different from the "
+               "one we were build with (%s).\n", event_get_version(),
+               LIBEVENT_VERSION);
+    }
+}
+~~~~~~~~
+
+The macros and functions in this section are defined in
+<event2/event.h>.  The event_get_version() function first appeared in
+Libevent 1.0c; the others first appeared in Libevent 2.0.1-alpha.

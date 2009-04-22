@@ -1,0 +1,12 @@
+______________________________
+These documents are Copyright (c) 2009 by Nick Mathewson, and are made
+available under the Creative Commons Attribution-Noncommercial-Share Alike
+license, version 3.0.  Future versions may be made available under a less
+restrictive license.
+
+For the latest version of this document, see
+   http://wangafu.net/~nickm/libevent-book/TOC.html
+
+To get the source for the latest version of this document, install git
+and run "git clone git://git.torproject.org/~nickm/git/lebook"
+______________________________
