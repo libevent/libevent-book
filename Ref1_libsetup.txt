@@ -20,8 +20,8 @@ messages are written to stderr.  You can override this behavior by
 providing your own logging function.
 
 .Interface
-[source,C]
-~~~~~~~~~~
+[code,C]
+--------
 #define _EVENT_LOG_DEBUG 0
 #define _EVENT_LOG_MSG   1
 #define _EVENT_LOG_WARN  2
@@ -29,7 +29,7 @@ providing your own logging function.
 typedef void (*event_log_cb)(int severity, const char *msg);
 
 void event_set_log_callback(event_log_cb cb);
-~~~~~~~~~~
+--------
 
 To override Libevent's logging behavior, you write your own function
 matching the signature of event_log_cb, and pass it as an argument to
@@ -39,8 +39,8 @@ to its default behavior by calling event_set_log_callback() again with
 NULL as an argument.
 
 .Examples
-[source,C]
-~~~~~~~~~~
+[code,C]
+--------
 static void discard_cb(int severity, const char *msg)
 {
     /* This callback does nothing. */
@@ -74,7 +74,7 @@ void set_logfile(FILE *f)
     logfile = f;
     event_set_log_callback(write_to_file_cb);
 }
-~~~~~~~~~~
+--------
 
 These functions are declared in <event2/event.h>.  They first appeared
 in Libevent 1.0c.
@@ -90,12 +90,12 @@ that you want Libevent to use, or if you have an instrumented allocator
 that you want Libevent to use in order to look for memory leaks.
 
 .Interface
-[source,C]
-~~~~~~~~
+[code,C]
+--------
 void event_set_mem_functions(void *(*malloc_fn)(size_t sz),
                              void *(*realloc_fn)(void *ptr, size_t sz),
                              void (*free_fn)(void *ptr));
-~~~~~~~~
+--------
 
 Here's a simple example that replaces Libevent's allocation functions
 with variants that count the total number of bytes that are allocated.
@@ -103,8 +103,8 @@ In reality, you'd probably want to add locking here, to prevent errors
 when Libevent is running in multiple threads.
 
 .Example
-[source,C]
-~~~~~~~~
+[code,C]
+--------
 union alignment {
     size_t sz;
     void *ptr;
@@ -154,7 +154,7 @@ void start_counting_bytes(void)
                             replacement_realloc,
                             replacement_free);
 }
-~~~~~~~~
+--------
 
 .NOTES
 - Replacing the memory management functions affects all future calls to
@@ -207,15 +207,15 @@ code, you're in luck.  There are pre-defined functions that will set up
 the right
 
 .Interface
-[source]
-~~~~~~~~
+[code]
+--------
 #ifdef WIN32
 int evthread_use_windows_threads(void);
 #endif
 #ifdef _EVENT_HAVE_PTHREADS
 int evthread_use_pthreads(void);
 #endif
-~~~~~~~~
+--------
 
 Both functions return 0 on success, and -1 on failure.
 
@@ -229,8 +229,8 @@ library to implement:
 - thread ID detection
 
 Then you tell Libevent about these functions, using:
-[source]
-~~~~~~~~
+[code]
+--------
 #define EVTHREAD_LOCK	0x01
 #define EVTHREAD_UNLOCK	0x02
 #define EVTHREAD_WRITE	0x04
@@ -241,7 +241,7 @@ void evthread_set_locking_callback(
     void (*locking_fn)(int mode, void *lock));
 void evthread_set_id_callback(
     unsigned long (*id_fn)(void));
-~~~~~~~~
+--------
 
 Your locks will be passed around as the void * type.  The alloc_fn
 argument must be a function that allocates a new lock; the free_fn
@@ -295,13 +295,13 @@ you'll want to detect the Libevent version, so that you can:
   bugs, or work around them.
 
 .Interface
-[source]
-~~~~~~~~
+[code]
+--------
 #define LIBEVENT_VERSION_NUMBER 0x02000100
 #define LIBEVENT_VERSION "0.2.0.1-alpha"
 const char *event_get_version(void);
 ev_uint32_t event_get_version_number(void);
-~~~~~~~~
+--------
 
 The macros make available the compile-time version of the Libevent
 library; the functions return the run-time version.  Note that if you
@@ -320,8 +320,8 @@ Thus, the released Libevent 2.0.1-alpha has the version number of [02 00
 2.0.2-alpha might have a version number of [02 00 01 08], or 0x02000108.
 
 .Example: Compile-time checks
-[source]
-~~~~~~~~
+[code]
+--------
 #if !defined(LIBEVENT_VERSION_NUMBER) || LIBEVENT_VERSION_NUMBER < 0x02000100
 #error "This version of Libevent is not supported; Get 2.0.1-alpha or later."
 #endif
@@ -338,11 +338,11 @@ make_sandwich(void)
         return -1;
 #endif
 }
-~~~~~~~~
+--------
 
 .Example: Run-time checks
-[source]
-~~~~~~~~
+[code]
+--------
 int
 check_for_old_version(void)
 {
@@ -375,7 +375,7 @@ check_version_match(void)
                LIBEVENT_VERSION);
     }
 }
-~~~~~~~~
+--------
 
 The macros and functions in this section are defined in
 <event2/event.h>.  The event_get_version() function first appeared in

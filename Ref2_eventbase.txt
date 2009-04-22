@@ -44,10 +44,10 @@ When choosing among methods, it picks the fastest method that the OS
 supports.
 
 .Interface
-[source,C]
-~~~~~~~~~~~
+[code,C]
+--------
 struct event_base *event_base_new(void);
-~~~~~~~~~~~
+--------
 
 For most programs, this is all you need.
 
@@ -63,12 +63,12 @@ information about your preferences for an event_base.  When you want an
 event_base, you pass the event_config to event_base_new_with_config().
 
 .Interface
-[source,C]
-~~~~~~~~~~~
+[code,C]
+--------
 struct event_config *event_config_new(void);
 struct event_base *event_base_new_with_config(struct event_config *cfg);
 void event_config_free(struct event_config *cfg);
-~~~~~~~~~~~
+--------
 
 To allocate an event_base with these functions, you call event_config_new()
 to allocate a new event_config.  Then, you call other functions on the
@@ -77,8 +77,8 @@ event_base_new_with_config() to get a new event_base.  When you are done,
 you can free the event_config with event_config_free().
 
 .Interface
-[source,C]
-~~~~~~~~~~~
+[code,C]
+--------
 int event_config_avoid_method(struct event_config *cfg, const char *method);
 
 enum event_method_feature {
@@ -94,7 +94,7 @@ enum event_base_config_flag {
 };
 int event_config_set_flag(struct event_config *cfg,
     enum event_base_config_flag flag);
-~~~~~~~~~~~
+--------
 
 Calling event_config_avoid_method to tell Libevent to avoid a specific
 available backend by name.  Calling event_config_require_feature() tells
@@ -129,8 +129,8 @@ EV_FEATURE_FDS and EV_FEATURE_O1.  If you have made a configuration that
 Libevent can't satisfy, event_base_new_with_config() will return NULL.
 
 .Example
-[source,C]
-~~~~~~~~~~
+[code,C]
+--------
 struct event_config *cfg;
 struct event_config *base;
 int i;
@@ -157,7 +157,7 @@ for (i=0; i<2; ++i) {
        setting EV_FEATURE_ET.  If this is the second time around the
        loop, we'll give up. */
 }
-~~~~~~~~~~
+--------
 
 These functions and types are declared in <event2/event.h>.
 
@@ -171,18 +171,18 @@ Sometimes you want to see which features are actually available in an
 event_base, or which method it's using.
 
 .Interface
-[source,C]
-~~~~~~~~~~
+[code,C]
+--------
 const char **event_get_supported_methods(void);
-~~~~~~~~~~
+--------
 
 The event_get_supported_methods() function returns a pointer to an array of
 the names of the methods supported in this version of Libevent.  The
 last element in the array is NULL.
 
 .Example
-[source,C]
-~~~~~~~~~~
+[code,C]
+--------
 int i;
 const char **methods;
 printf("Starting Libevent %s.  Available methods are:\n",
@@ -190,7 +190,7 @@ printf("Starting Libevent %s.  Available methods are:\n",
 for (i=0; methods[i] != NULL; ++i) {
     printf("    %s\n", methods[i]);
 }
-~~~~~~~~~~
+--------
 
 NOTE: This function returns a list of the methods that Libevent was compiled
 to support.  It is possible that your operating system will not in fact
@@ -198,19 +198,19 @@ support them all when Libevent tries to run.  (For example, you could be on a
 version of OSX where kqueue is too buggy to use.)
 
 .Interface
-[source,C]
-~~~~~~~~~~
+[code,C]
+--------
 const char *event_base_get_method(struct event_base *base);
 enum event_method_feature event_base_get_features(struct event_base *base);
-~~~~~~~~~~
+--------
 
 The event_base_get_method() call returns the name of the actual method in use
 by an event_base.  The event_base_get_features() call returns a bitmask of
 the features that it supports.
 
 .Example
-[source]
-~~~~~~~~
+[code]
+--------
 struct event_base *base;
 enum event_method_features f;
 
@@ -229,7 +229,7 @@ if (!base) {
         printf("  All FD types are supported.");
     puts("");
 }
-~~~~~~~~
+--------
 
 These functions are defined in <event2/event.h>.  The event_base_get_method()
 call was first available in Libevent 1.4.3.  The others first appeared in
@@ -242,10 +242,10 @@ When you are finished with an event_base, you can deallocate it with
 event_base_free().
 
 .Interface
-[source]
-~~~~~~~~
+[code]
+--------
 void event_base_free(struct event_base *base);
-~~~~~~~~
+--------
 
 Note that this function does not deallocate any of the events that are
 currently associated with the event_base, or close any of their sockets, or
@@ -263,10 +263,10 @@ though, an event_base supports only a single priority level.  You can set the
 number of priorities on an event_base by calling event_base_priority_init().
 
 .Interface
-[source]
-~~~~~~~~
+[code]
+--------
 int event_base_priority_init(struct event_base *base, int n_priorities);
-~~~~~~~~
+--------
 
 This function returns 0 on success and -1 on failure.  The 'base' argument is
 the event_base to modify, and n_priorities is the number of priorities to
@@ -298,16 +298,16 @@ and you want to continue using an event_base after you have forked, you may
 need to reinitialize it.
 
 .Interface
-[source]
-~~~~~~~~
+[code]
+--------
 int event_reinit(struct event_base *base);
-~~~~~~~~
+--------
 
 The function returns 0 on success, -1 on failure.
 
 .Example
-[source]
-~~~~~~~~
+[code]
+--------
 struct event_base *base = event_base_new();
 
 /* ... add some events to the event_base ... */
@@ -320,7 +320,7 @@ if (fork()) {
     event_reinit(base);
     continue_running_child(base); /*...*/
 }
-~~~~~~~~
+--------
 
 The event_reinit() function is defined in <event2/event.h>. It was first
 available in Libevent 1.4.3-alpha.

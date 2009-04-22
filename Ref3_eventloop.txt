@@ -14,13 +14,13 @@ alert you about them.
 
 
 .Interface
-[source]
-~~~~~~~~
+[code]
+--------
 #define EVLOOP_ONCE	0x01
 #define EVLOOP_NONBLOCK	0x02
 
 int event_base_loop(struct event_base *base, int flags);
-~~~~~~~~
+--------
 
 By default, the event_base_loop() function 'runs' an event_base until there
 are no more events registered in it.  To run the loop, it repeatedly checks
@@ -42,8 +42,8 @@ To aid in understanding, here's an approximate summary of the event_base_loop
 algorithm:
 
 .Pseudocode
-[source]
-~~~~~~~~
+[code]
+--------
 while (any events are registered with the loop) {
 
     if (EVLOOP_NONBLOCK was set, or any events are already active)
@@ -61,15 +61,15 @@ while (any events are registered with the loop) {
     if (EVLOOP_ONCE was set or EVLOOP_NONBLOCK was set)
        break;
 }
-~~~~~~~~
+--------
 
 As a convenience, you can also call:
 
 .Interface
-[source]
-~~~~~~~~
+[code]
+--------
 int event_base_dispatch(struct event_base *base);
-~~~~~~~~
+--------
 
 The event_base_dispatch() call is the same as event_base_loop(), with no
 flags set.
@@ -84,12 +84,12 @@ If you want an active event loop to stop running before all events are
 removed from it, you have two slightly different functions you can call.
 
 .Interface
-[source]
-~~~~~~~~
+[code]
+--------
 int event_base_loopexit(struct event_base *base,
                         const struct timeval *tv);
 int event_base_loopbreak(struct event_base *base);
-~~~~~~~~
+--------
 
 The event_base_loopexit() function tells an event_base to stop looping after
 a given time has elapsed.  If the 'tv' argument is NULL, the event_base stops
@@ -104,8 +104,8 @@ immediately after finishing the one it's currently processing.
 Both of these methods return 0 on success and -1 on failure.
 
 .Example: Shut down immediately
-[source]
-~~~~~~~~
+[code]
+--------
 /* Here's a callback function that calls loopbreak */
 void cb(int sock, short what, void *arg)
 {
@@ -129,11 +129,11 @@ void main_loop(struct event_base *base)
 
     event_base_dispatch(base);
 }
-~~~~~~~~
+--------
 
 .Example: Run an event loop for 10 seconds, then exit.
-[source]
-~~~~~~~~
+[code]
+--------
 struct event_base *base;
 struct event *ev1, *ev2;
 struct timeval ten_sec;
@@ -160,7 +160,7 @@ while (1)
    event_base_dispatch(base);
    puts("Tick");
 }
-~~~~~~~~
+--------
 
 These functions are declared in <event2/event.h>.  The event_break_loopexit()
 function was first implemented in Libevent 1.0c; event_break_loopbreak() was
