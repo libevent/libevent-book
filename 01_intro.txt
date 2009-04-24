@@ -5,17 +5,17 @@ include::license.txt[]
 A tiny introduction to asynchronous IO
 ----------------------------------------
 
-Most beginning programmers start with synchronous, blocking IO calls.
+Most beginning programmers start with blocking IO calls.
 An IO call is _synchronous_ if, when you call it, it does not return
 unless and until the operation is completed, or until enough time
-has passed that it gives up.  When you call "connect()" on a TCP
+has passed that your network stack gives up.  When you call "connect()" on a TCP
 connection, for example, your operating system queues a SYN packet to
 the host on the other side of the TCP connection.  It does not return
 control back to your application until either it receives a SYN ACK
 packet from the opposite host, or until enough time has passed that it
 decides to give up.
 
-Here's an example of a really simple client using synchronous network
+Here's an example of a really simple client using blocking network
 calls.  It opens a connection to www.google.com, sends it a simple
 HTTP request, and prints the response to stdout.
 
@@ -84,16 +84,16 @@ your program needs to handle thousands or tens of thousands of
 connections at a time, dealing with tens of thousands of threads will
 not be as efficient as trying to have have only a few threads per CPU.
 
-If threading isn't the answer to having multiple connections, what is?
+But if threading isn't the answer to having multiple connections, what is?
 In the Unix paradigm, you make your sockets _nonblocking_.  The Unix
 call to do this is: 
 [code,C] 
 ------ 
 fcntl(fd, F_SETFL, O_NONBLOCK);
 ------
-where fd is the file descriptor of the socket.  The file descriptor is
-the number the kernel assigns to the socket when you open it.  Use
-this number to make Unix calls referring to the socket.  Once you've
+where fd is the file descriptor for the socket.  footnote:[A file descriptor is
+the number the kernel assigns to the socket when you open it. You use
+this number to make Unix calls referring to the socket.]  Once you've
 made fd (the socket) nonblocking, from then on, whenever you make a
 network call to fd the call will either complete the operation
 immediately or return with a special error code to indicate "I

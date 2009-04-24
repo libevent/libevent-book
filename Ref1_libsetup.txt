@@ -8,8 +8,9 @@ Setting up the Libevent library
 Libevent has a few global settings that are shared across the entire
 process.  These affect the entire library.
 
-Make any changes to these settings before you call any other part of
-the Libevent library.
+You *must* make any changes to these settings before you call any
+other part of the Libevent library.  If you don't, Libevent could wind
+up in an inconsistent state.
 
 Log messages in Libevent
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -308,8 +309,8 @@ library; the functions return the run-time version.  Note that if you
 have dynamically linked your program against Libevent, these versions
 may be different.
 
-You can get a Libevent version in two formats: a string suitable for
-displaying to users, or a 4-byte integer suitable for numerical
+You can get a Libevent version in two formats: as a string suitable for
+displaying to users, or as a 4-byte integer suitable for numerical
 comparison.  The integer format uses the high byte for the major version,
 the second byte for the minor version, the byte for the patch version, and
 the low byte to indicate release status (0 for release, nonzero for a
