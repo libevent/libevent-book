@@ -16,12 +16,9 @@ portable asynchronous network IO programs in C.  We assume:
 A note on examples
 ------------------
 
-The examples here above should work all right on Linux, FreeBSD,
-OpenBSD, NetBSD, Mac OS X, Solaris, Android,
-
-You might notice that some of the examples above don't compile so well
-on Windows.
-
+The examples in this document should work all right on Linux, FreeBSD,
+OpenBSD, NetBSD, Mac OS X, Solaris, and Android. Some of the examples
+may not compile on Windows.
 
 Why Libevent 2.0?
 -----------------

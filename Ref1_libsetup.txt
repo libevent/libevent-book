@@ -8,8 +8,8 @@ Setting up the Libevent library
 Libevent has a few global settings that are shared across the entire
 process.  These affect the entire library.
 
-You need to make any changes to these settings before you call any other
-part of the Libevent library.
+Make any changes to these settings before you call any other part of
+the Libevent library.
 
 Log messages in Libevent
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -31,7 +31,7 @@ typedef void (*event_log_cb)(int severity, const char *msg);
 void event_set_log_callback(event_log_cb cb);
 --------
 
-To override Libevent's logging behavior, you write your own function
+To override Libevent's logging behavior, write your own function
 matching the signature of event_log_cb, and pass it as an argument to
 event_set_log_callback().  Whenever Libevent wants to log a message, it
 will pass it to the function you provided.  You can have Libevent return
@@ -99,7 +99,7 @@ void event_set_mem_functions(void *(*malloc_fn)(size_t sz),
 
 Here's a simple example that replaces Libevent's allocation functions
 with variants that count the total number of bytes that are allocated.
-In reality, you'd probably want to add locking here, to prevent errors
+In reality, you'd probably want to add locking here to prevent errors
 when Libevent is running in multiple threads.
 
 .Example
@@ -204,7 +204,7 @@ threads.
 
 If you are using the pthreads library, or the native windows threading
 code, you're in luck.  There are pre-defined functions that will set up
-the right
+the right FIXME
 
 .Interface
 [code]
@@ -309,7 +309,7 @@ have dynamically linked your program against Libevent, these versions
 may be different.
 
 You can get a Libevent version in two formats: a string suitable for
-displaying to users, and as a 4-byte integer suitable for numerical
+displaying to users, or a 4-byte integer suitable for numerical
 comparison.  The integer format uses the high byte for the major version,
 the second byte for the minor version, the byte for the patch version, and
 the low byte to indicate release status (0 for release, nonzero for a
@@ -371,7 +371,7 @@ check_version_match(void)
     v_run = event_get_version_number();
     if ((v_compile & 0xffff0000) != (v_run & 0xffff0000)) {
         printf("Running with a Libevent version (%s) very different from the "
-               "one we were build with (%s).\n", event_get_version(),
+               "one we were built with (%s).\n", event_get_version(),
                LIBEVENT_VERSION);
     }
 }

@@ -7,7 +7,7 @@ Creating an event_base
 
 Before you can use any interesting Libevent function, you need to allocate
 one or more event_base structures.  Each event_base structure holds a set of
-events, and can poll to determine which events are active.
+events and can poll to determine which events are active.
 
 If an event_base is set up to use locking, it is safe to access it between
 multiple threads.  Its loop can only be run in a single thread, however.  If
@@ -37,7 +37,7 @@ Setting up a default event_base
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The event_base_new() function allocates and returns a new event base with
-the default settings.  It examines the environment variables, and returns
+the default settings.  It examines the environment variables and returns
 a pointer to a new event_base.  If there is an error, it returns NULL.
 
 When choosing among methods, it picks the fastest method that the OS
@@ -96,10 +96,10 @@ int event_config_set_flag(struct event_config *cfg,
     enum event_base_config_flag flag);
 --------
 
-Calling event_config_avoid_method to tell Libevent to avoid a specific
+Calling event_config_avoid_method tells Libevent to avoid a specific
 available backend by name.  Calling event_config_require_feature() tells
 Libevent not to use any backend that cannot supply all of a set of features.
-Calling event_config_set_flag() AKDJASD
+Calling event_config_set_flag() AKDJASD FIXME
 
 The recognized feature values for event_config_require_features are:
 
@@ -194,8 +194,8 @@ for (i=0; methods[i] != NULL; ++i) {
 
 NOTE: This function returns a list of the methods that Libevent was compiled
 to support.  It is possible that your operating system will not in fact
-support them all when Libevent tries to run.  (For example, you could be on a
-version of OSX where kqueue is too buggy to use.)
+support them all when Libevent tries to run.  For example, you could be on a
+version of OSX where kqueue is too buggy to use.
 
 .Interface
 [code,C]

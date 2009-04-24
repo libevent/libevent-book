@@ -7,16 +7,17 @@ A tiny introduction to asynchronous IO
 
 Most beginning programmers start with synchronous, blocking IO calls.
 An IO call is _synchronous_ if, when you call it, it does not return
-unless and until the operation is completed.  When you call
-"connect()" on a TCP connection, for example, your operating system
-queues a SYN packet to the host on the other side of the TCP
-connection, and does not return control back to your application until
-it receives a SYN ACK packet from the opposite host, or until enough
-time has passed that it decides to give up.
+unless and until the operation is completed, or until enough time
+has passed that it gives up.  When you call "connect()" on a TCP
+connection, for example, your operating system queues a SYN packet to
+the host on the other side of the TCP connection.  It does not return
+control back to your application until either it receives a SYN ACK
+packet from the opposite host, or until enough time has passed that it
+decides to give up.
 
-Here's an example of a really simple syncronous client using
-synchronous network calls.  It opens a connection to www.google.com,
-sends it a simple HTTP request, and prints the response to stdout.
+Here's an example of a really simple client using synchronous network
+calls.  It opens a connection to www.google.com, sends it a simple
+HTTP request, and prints the response to stdout.
 
 [code]
 -------
@@ -30,7 +31,7 @@ connected; the recv calls do not return until they have received data
 or a close; and the send call does not return until it has at least
 flushed its output to the kernel's write buffers.
 
-Now, blocking IO is not necessarily evil; if there's nothing else you
+Now, blocking IO is not necessarily evil.  If there's nothing else you
 wanted your program to do in the meantime, blocking IO will work fine
 for you.  But suppose that you need to write a program to handle
 multiple connections at once.  To make our example concrete: suppose
@@ -76,28 +77,32 @@ include::examples_01/01_rot13_server_forking.c[]
 So, do we have the perfect solution for handling multiple connections
 at once?  Can I stop writing this book and go work on something else
 now?  Not quite.  First off, process creation (and even thread
-creation) can be pretty expensive on some platforms; in real life,
-you'd want to use a thread pool here.  But more fundamentally, threads
-won't scale as much as you'd like.  If your program needs to handle
-thousands or tens of thousands of connections at a time, dealing with
-tens of thousands of threads will not be so efficient as trying to
-have have only a few threads per CPU.
+creation) can be pretty expensive on some platforms.  In real life,
+you'd want to use a thread pool instead of creating new processes.
+But more fundamentally, threads won't scale as much as you'd like.  If
+your program needs to handle thousands or tens of thousands of
+connections at a time, dealing with tens of thousands of threads will
+not be as efficient as trying to have have only a few threads per CPU.
 
-So, how can we do this?  In the Unix paradigm, you make your sockets
-_nonblocking_.  The Unix call to do this is:
-[code,C]
-------
+If threading isn't the answer to having multiple connections, what is?
+In the Unix paradigm, you make your sockets _nonblocking_.  The Unix
+call to do this is: 
+[code,C] 
+------ 
 fcntl(fd, F_SETFL, O_NONBLOCK);
 ------
-Once you've made fd nonblocking, from then on, whenver you make a
-network call to fd, the call will either complete the operation
-immediately, or return with a special error code to indicate, "I
-couldn't make any process now, try again.  So our two-socket example
+where fd is the file descriptor of the socket.  The file descriptor is
+the number the kernel assigns to the socket when you open it.  Use
+this number to make Unix calls referring to the socket.  Once you've
+made fd (the socket) nonblocking, from then on, whenever you make a
+network call to fd the call will either complete the operation
+immediately or return with a special error code to indicate "I
+couldn't make any progress now, try again."  So our two-socket example
 might be naively written as:
 
 [code,C]
 ------
-/* This will work, but the performance will be unforgiavably bad. */
+/* This will work, but the performance will be unforgiveably bad. */
 for (i=0; i < n_sockets; ++i)
     fcntl(fd[i], F_SETFL, O_NONBLOCK);
 
@@ -120,19 +125,19 @@ while (i_still_want_to_read()) {
 
 Now that we're using nonblocking sockets, the code above would
 _work_... but only barely.  The performance will be awful, for two
-reasons.  First, when there is no data to read on either connection,
+reasons.  First, when there is no data to read on either connection
 the loop will spin indefinitely, using up all your CPU cycles.
 Second, if you try to handle more than one or two connections with
-this approach, you'll do a kernel call for each one, whether it has
-any data for you or not.  So what we need is a way to tell the kernel,
+this approach you'll do a kernel call for each one, whether it has
+any data for you or not.  So what we need is a way to tell the kernel
 "wait until one of these sockets is ready to give me some data, and
 tell me which ones are ready."
 
 The oldest solution that people still use for this problem is
 select().  The select() call takes three sets of fds (implemented as
-bit arrays): one for reading, one or writing, and one for
-"exceptions".  It waits until a socket from one of the sets is ready,
-and alters the sets to contain only the ready sockets.
+bit arrays): one for reading, one for writing, and one for
+"exceptions".  It waits until a socket from one of the sets is ready
+and alters the sets to contain only the sockets ready for use.
 
 Here is our read() example again, using select:
 [code,C]
@@ -181,21 +186,22 @@ include::examples_01/01_rot13_server_select.c[]
 ------
 
 But we're still not done.  Because generating and reading the select()
-bit arrays takes time proportional to highest interesting fd, the
-select() call scales terribly when the number of sockets is high.
-footnote:[On the userspace side, generating and reading the bit arrays
-takes time proportional to the number of interesting sockets.  But on the
-kernel side, reading the bit arrays takes time proportional to the
-maximum fd in the bit array, which tends to be around _the total number
-of fds in use in the whole program_, regardless of how many fds are
-added to the sets in select().]
+bit arrays takes time proportional to the largest fd that you provided
+for select(), the select() call scales terribly when the number of
+sockets is high.  footnote:[On the userspace side, generating and
+reading the bit arrays takes time proportional to the number of fds
+that you provided for select().  But on the kernel side, reading the
+bit arrays takes time proportional to the largest fd in the bit array,
+which tends to be around _the total number of fds in use in the whole
+program_, regardless of how many fds are added to the sets in
+select().]
 
 Different operating systems have provided different replacement
 functions for select.  These include poll(), epoll(), kqueue(),
 evports, and /dev/poll.  All of these give better performance than
 select(), and all but poll() give O(1) performance for adding a socket
-as interesting, removing a socket as noninteresting, and for noticing
-that an interesting socket is ready for IO.
+to one of the three sets, removing a socket, and for noticing
+that a socket in one of the three sets is ready for IO.
 
 Unfortunately, none of the efficient interfaces is a ubiquitous
 standard.  Linux has epoll(), the BSDs (including Darwin) have
@@ -224,7 +230,7 @@ include::examples_01/01_rot13_server_libevent.c[]
 (Other things to note in the code: instead of typing the sockets as
 "int", we're using the type evutil_fd_t.  Instead of calling
 fcntl(O_NONBLOCK) to make the sockets nonblocking, we're calling
-evutil_make_soket_nonblocking.  These changes make our code compatible
+evutil_make_socket_nonblocking.  These changes make our code compatible
 with the divergent parts of the Win32 networking API.)
 
 
@@ -232,7 +238,7 @@ What about convenience?  (and what about Windows?)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You've probably noticed that as our code has gotten more efficient,
-has also gotten more complex.  Back when we were forking, we didn't
+it has also gotten more complex.  Back when we were forking, we didn't
 have to manage a buffer for each connection: we just had a separate
 stack-allocated buffer for each process.  We didn't need to explicitly
 track whether each socket was reading or writing: that was implicit in
