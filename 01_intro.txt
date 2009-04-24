@@ -86,9 +86,9 @@ not be as efficient as trying to have have only a few threads per CPU.
 
 But if threading isn't the answer to having multiple connections, what is?
 In the Unix paradigm, you make your sockets _nonblocking_.  The Unix
-call to do this is: 
-[code,C] 
------- 
+call to do this is:
+[code,C]
+------
 fcntl(fd, F_SETFL, O_NONBLOCK);
 ------
 where fd is the file descriptor for the socket.  footnote:[A file descriptor is
