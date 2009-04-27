@@ -14,6 +14,8 @@ A Libevent Reference Manual
 - link:Ref1_libsetup.html[R1: Setting up the Libevent library]
 - link:Ref2_eventbase.html[R2: Getting an event_base]
 - link:Ref3_eventloop.html[R3: Running an event loop]
+- link:Ref4_event.html[R4: Working with events]
+- link:Ref5_evutil.html[R5: Utiltity and portability functions]
 
 include::license.txt[]
 
