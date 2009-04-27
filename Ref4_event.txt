@@ -1,0 +1,433 @@
+include::license.txt[]
+
+:language: C
+
+Working with events
+-------------------
+
+Libevent's basic unit of operation is the 'event'.  Every event
+represents a set of conditions, including:
+
+   - A file descriptor being ready to read from or write to.
+   - A file descriptor _becoming_ ready to read from or write to
+     (Edge-triggered IO only).
+   - A timeout expiring.
+   - A signal occurring.
+   - A user-triggered event.
+
+Events have similar lifecycles.  Once you call a Libevent function to
+set up an event and associate it with an event base, it becomes
+*initialized*.  At this point, you can 'add', which makes it
+*pending*.  in the base.  When the event is pending, if the conditions
+that would trigger an event occur (e.g., its file descriptor changes
+state or its timeout expires), the event becomes *active*, and its
+(user-provided) callback function is run.  If the event is configured
+*persistent*, it remains pending.  If it is not persistent, it stops
+being pending when its callback runs.  You can make a pending event
+non-pending by 'deleting' it, and you can 'add' a non-pending event to
+make it pending again.
+
+Constructing event objects
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To create a new event, use the event_new() interface.
+
+.Interface
+[code]
+--------
+#define EV_TIMEOUT      0x01
+#define EV_READ         0x02
+v#define EV_WRITE        0x04
+#define EV_SIGNAL       0x08
+#define EV_PERSIST      0x10
+#define EV_ET           0x20
+
+struct event *event_new(struct event_base *base, evutil_socket_t fd,
+    short what, void (*cb)(evutil_socket_t, short, void *),
+    void *arg);
+
+void event_free(struct event *event);
+--------
+
+The event_new() function tries to allocate and construct a new event
+for use with 'base'.  The 'what' argument is a set of the flags listed
+above.  (Their semantics are described below.)  If 'fd' is
+nonnegative, it is the file that we'll observe for read or write
+events.  When the event is active, Libevent will invoke the provided
+'cb' function, passing it as arguments: the file descriptor 'fd', a
+bitfield of _all_ the events that triggered, and the value that was passed
+in for 'arg' when the function was constructed.
+
+On an internal error, or invalid arguments, event_new() will return NULL.
+
+All new events are initialized and non-pending.  To make an event
+pending, call event_add() (documented below).
+
+To deallocate an event, call event_free().  It is safe to call
+event_free() on an event that is pending or active: doing do makes the
+event non-pending and in-active befrore deallocating it.
+
+.Example
+[code]
+--------
+void cb_func(evutil_socket_t fd, short what, void *arg)
+{
+        const char *data = arg;
+        printf("Got an event on socket %d:%s%s%s%s [%s]",
+            (int fd),
+            (what&EV_TIMEOUT) ? " timeout" : "",
+            (what&EV_READ)    ? " read" : "",
+            (what&EV_WRITE)   ? " write" : "",
+            (what&EV_WRITE)   ? " signal" : "",
+            data);
+}
+
+...
+
+evutil_socket_t fd1, fd2;
+struct event *ev1, *ev2;
+struct timeval five_seconds = {5,0};
+struct event_base *base = event_base_new();
+
+/* set up fd1, fd2 somehow, and make them nonblocking. */
+
+ev1 = event_new(base, fd1, EV_TIMEOUT|EV_READ|EV_PERSIST, cb_func,
+        "Reading event");
+ev2 = event_new(base, fd2, EV_WRITE|EV_PERSIST, cb_func,
+        "Writing event");
+
+event_add(ev1, &five_seconds);
+event_add(ev2, NULL);
+event_base_dispatch();
+--------
+
+The above functions are defined in <event2/event.h>, and first
+appeared in Libevent 2.0.1-alpha.
+
+The event flags
+^^^^^^^^^^^^^^^
+
+EV_TIMEOUT::
+    This flag indicates an event that becomes active after a timeout
+    elapses.
+
+    The EV_TIMEOUT flag is ignored when constructing an event: you
+    can either set a timeout when you add the event, or not.  It is
+    set in the 'what' argument to the callback function when a timeout
+    has occurred.
+    [FIXME: Is this correct?]
+
+EV_READ::
+    This flag indicates an event that becomes active when the provided
+    file descriptor is ready for reading.
+
+EV_WRITE::
+    This flag indicates an event that becomes active when the provided
+    file descriptor is ready for writing.
+
+EV_SIGNAL::
+    Used to implement signal detection.  See "FIXME" below.
+
+EV_PERSIST::
+    Indicates that the event is 'persistent'.  See "About Event
+    Persistence" below.
+
+EV_ET::
+    Indicates that the event should be edge-triggered, if the
+    underlying event_base backend supports edge-triggered events.
+    This affects the semantics of EV_READ and EV_WRITE.
+
+Since Libevent 2.0.1-alpha, any number of events may be pending for
+the same conditions at the same time.  For example, you may have two
+events that will become active if a given fd becomes ready to read.
+The order in which their callbacks are run is undefined.
+
+These flags are defined in <event2/event.h>.  All have existed since
+before Libevent 1.0, except for EV_ET, which was introduced in
+Libevent 2.0.1-alpha.
+
+About Event Persistence
+^^^^^^^^^^^^^^^^^^^^^^^
+
+By default, whenever a pending event becomes active (because its fd is
+ready to read or write, or because its timeout expires), it becomes
+non-pending right before its
+callback is executed.  Thus, if you want to make the event pending
+again, it is sufficient to call event_add() on it again from inside
+the callback function.
+
+If the EV_PERSIST flag is set on an event, however, the event is
+'persistent.'  In other words, the event remains pending even when its
+callback runs.  If you want to make it non-pending from within its
+callback, you can call event_del() on it.
+
+The timeout on a persistent event resets whenever the event's callback
+runs.  Thus, if you have an event with flags EV_READ|EV_PERSIST and a
+timeout of five seconds, the event will become active:
+  - Whenever the socket is ready for reading.
+  - Whenever five seconds have passed since the event last was active.
+
+Timeout-only events
+^^^^^^^^^^^^^^^^^^^
+
+As a convenience, you can use the evtimer_new to allocate a
+pure-timeout event:
+
+.Interface
+[code]
+--------
+#define evtimer_new(base, callback, arg) \
+    event_new(base, -1, 0, callback, arg)
+--------
+
+FIXME: Say more.
+
+
+Constructing signal events
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Libevent can also watch for POSIX-style signals.  To construct a
+handler for a signal, use:
+
+.Interface
+[code]
+--------
+#define evsignal_new(base, signum, callback, arg) \
+    event_new(base, signum, EV_SIGNAL|EV_PERSIST, cb, arg)
+--------
+
+The arguments are as for event_new, except that we provide a signal
+number instead of a file descriptor.
+
+.Example
+[code]
+--------
+struct event *hup_event;
+
+/* call sighup_function on a HUP signal */
+hup_event = evsignal_new(base, SIGHUP, sighup_function, NULL);
+--------
+
+Note that signal callbacks are run in the event loop after the signal
+occurs, so it is safe for them to call functions that you are not
+supposed to call from a regular POSIX signal handler.
+
+WARNING: Don't set a timeout on a signal event.  It might not be
+supported.  FIXME: true?
+
+Stack- and struct-allocated events
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+For performance and other reasons, some people like to allocate event
+structures on the stack, or as a part of a larger structure.  This
+saves them the cost of a pointer reference here and here, but at the
+risk of breaking their binaries' compatibility with other versions of
+of Libevent, which may have different sizes for the event structure.
+
+You shouldn't do this unless you *know* that you're incurring an
+actual performance penalty for heap-allocating your events.  Using
+this function can cause hard-do-diagnose errors with future versions
+of Libevent if they use a larger event structure than the one you're
+building with.
+
+.Interface
+[code]
+--------
+void event_assign(struct event *event, struct event_base *base,
+    evutil_socket_t fd, short what,
+    void (*callback)(evutil_socket_t, short, void *), void *arg);
+--------
+
+All the arguments of event_assign() are as for event_new(), except for
+the 'event' argument, which must point to an uninitialized event.
+
+.Example
+[code]
+--------
+struct event_pair {
+         evutil_socket_t fd;
+         struct event read_event;
+         struct event write_event;
+};
+static void readcb(evutil_socket_t, short, void *);
+static void writecb(evutil_socket_t, short, void *);
+struct event_pair *event_pair_new(struct event_base *base, evutil_socket_t fd)
+{
+        struct event_pair *p = malloc(sizeof(struct event_pair));
+        if (!p) return NULL;
+        p->fd = fd;
+        event_assign(&p->read_event, base, fd, EV_READ|EV_PERSIST, readcb, p);
+        event_assign(&p->read_event, base, fd, EV_WRITE|EV_PERSIST, writecb, p);
+        return p;
+}
+--------
+
+This function is defined in <event2/event.h>.  It has existed since
+Libevent 2.0.1-alpha.  The event structure itself is defined in
+<event2/event_struct.h>.
+
+Making events pending and non-pending
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Once you have constructed an event, it won't actually do anything
+until you have made it 'pending' by adding it.  You do this with
+event_add:
+
+.Interface
+[code]
+--------
+int event_add(struct event *ev, const struct timeval *tv);
+--------
+
+Calling event_add on a non-pending event makes it pending in its
+configured base.  If it is already pending, there is no effect.  The
+function returns 0 on success, and -1 on failure.  If 'tv' is NULL,
+the event is added with no timeout.  Otherwise, 'tv' is the size of
+the timeout in seconds and microseconds.
+
+NOTE: Do not set 'tv' to the time at which you want the timeout to
+run.  If you say "tv->tv_sec = time(NULL)+10;" on 1 January 2010, your
+timeout will wait 40 years, not 10 seconds.
+
+.Interface
+[code]
+--------
+int event_del(struct event *ev);
+--------
+
+Calling event_del on an initialized event makes it non-pending and
+non-active.  If the event was not pending or active, there is no
+effect.  The return value is 0 on success, -1 on failure.
+
+NOTE: If you delete an event after it becomes active but before
+its callback has a chance to executes, the callback will not be
+executed.
+
+These functions are defined in <event2/event.h>; they have existed
+since before Libevent 1.0.
+
+Events with priorities
+~~~~~~~~~~~~~~~~~~~~~~
+
+When multiple events trigger at the same time, Libevent does not
+define any order with respect to when their callbacks will be
+executed.  You can define some events as more important than others by
+using priorities.
+
+As discussed in an earlier section, each event_base has one or more
+priority values associated with it.  Before adding an event to the
+event_base, but after initializing it, you can set its priority.
+
+.Interface
+[code]
+----------
+int event_priority_set(struct event *event, int priority);
+----------
+
+The priority of the event is a number between 0 and the number of
+priorities in an event_base, minus 1.  The function returns 0 on
+success, and -1 on failure.
+
+When multiple events of multiple priorities become active, the
+low-priority events are not run.  Instead, Libevent runs the high
+priority events, then checks for events again.  Only when no
+high-priority events are active are the low-priority events run.
+
+.Example
+[code]
+----------
+struct event *important, *unimportant;
+struct event_base *base;
+
+base = event_base_new();
+event_base_priority_init(base, 2);
+/* Now base has priority 0, and priority 1 */
+important = event_new(base, fd, EV_WRITE|EVPERSIST, write_cb, NULL);
+unimportant = event_new(base, fd, EV_READ|EVPERSIST, read_cb, NULL);
+event_priority_set(important, 0);
+event_priority_set(unimportant, 1);
+
+/* Now, whenever the fd is ready for writing, the write callback will
+   happen before the read callback.  The read callback won't happen at
+   all until the write callback is no longer active. */
+----------
+
+When you do not set the priority for an event, the default is the
+number of queues in the event base, divided by 2.
+
+This function is declared in <event2/event.h>.  It has existed since
+before Libevent 1.0.
+
+Inspecting event status
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Sometimes you want to tell whether an event has been added, and check
+what it refers to.
+
+.Interface
+[code]
+--------
+int event_pending(struct event *ev, short what, struct timeval *tv_out);
+
+#define event_get_signal(ev) /* ... */
+evutil_socket_t event_get_fd(struct event *ev);
+--------
+
+The event_pending function determines whether the given event is
+pending or active.  If it is, and any of the flags EV_READ, EV_WRITE,
+EV_SIGNAL, and EV_TIMEOUT are set in the 'what' argument, the function
+returns all of the flags that the event is currently pending or active
+on.  If 'tv_out' is provided, and EV_TIMEOUT is set in what, and the
+event is currently pending or active on a timeout, then 'tv_out' is
+set to hold the time when the event's timeout will expire.
+
+The event_get_fd() and event_get_signal() return the configured file
+descriptor or signal number for an event.
+
+
+These functions are declared in <event2/event.h>.  The event_pending()
+functions has existed since before Libevent 1.0.  The others are new in
+Libevent 2.0.1-alpha.
+
+Configuring one-off events
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you don't need to add an event more than once, or delete it once it
+has been added, and it doesn't have to be persistent, you can use
+event_base_once().
+
+.Interface
+[code]
+--------
+int event_base_once(struct event_base *, evutil_socket_t, short,
+  void (*)(evutil_socket_t, short, void *), void *, const struct timeval *);
+--------
+
+This function's interface is the same as event_new(), except that it
+does not support EV_SIGNAL or EV_PERSIST.  The scheduled event is
+inserted and run with the default priority.  When the callback is
+finally done, Libevent frees the internal event structure itself.
+The return value is 0 on success, -1 on failure.
+
+Manually activating an event
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Rarely, you may want to make an event active even though its
+conditions have not triggered.
+
+.Interface
+[code]
+--------
+void event_active(struct event *ev, int what, short ncalls);
+--------
+
+This function makes an event 'ev' become active with the flags 'what'
+(a combination of EV_READ, EV_WRITE, and EV_TIMEOUT).  The event does
+not need to have previously been pending, and activating it does not
+make it pending.
+
+This function is defined in <event2/event.h>.  It has existed
+since before Libevent 1.0.
+
+
+// Not yet documented: event_initialized().  Too stupid to use.

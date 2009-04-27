@@ -8,7 +8,8 @@ GENERATED_HTML= \
 	01_intro.html \
 	Ref1_libsetup.html \
 	Ref2_eventbase.html \
-	Ref3_eventloop.html
+	Ref3_eventloop.html \
+	Ref4_event.html
 
 all: html examples
 
@@ -27,6 +28,7 @@ examples:
 Ref1_libsetup.html: license.txt
 Ref2_eventbase.html: license.txt
 Ref3_eventloop.html: license.txt
+Ref4_event.html: license.txt
 
 clean:
 	rm -f *~
