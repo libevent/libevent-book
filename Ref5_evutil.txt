@@ -43,6 +43,7 @@ century and therefore does does not implement the standard C99
 stdint.h header.  For this situation, Libevent defines its own
 versions of the bit-width-specific integers from stdint.h:
 
+[options="header",width="40%"]
 |==============================
 |  Type      |Width  |Signed
 |ev_uint64_t |64     |No
