@@ -6,6 +6,7 @@ GENERATED_HTML= \
 	TOC.html \
 	00_about.html \
 	01_intro.html \
+	Ref0_meta.html \
 	Ref1_libsetup.html \
 	Ref2_eventbase.html \
 	Ref3_eventloop.html \
@@ -26,6 +27,7 @@ examples:
 
 00_about.html: license.txt
 01_intro.html: examples_01/*.c license.txt
+Ref1_meta.html: license.txt
 Ref1_libsetup.html: license.txt
 Ref2_eventbase.html: license.txt
 Ref3_eventloop.html: license.txt
