@@ -324,3 +324,38 @@ if (fork()) {
 
 The event_reinit() function is defined in <event2/event.h>. It was first
 available in Libevent 1.4.3-alpha.
+
+
+Obsolete event_base functions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Older versions of Libevent relied pretty heavily on the idea of a
+"current" event_base.  The "current" event_base was a global setting
+shared across all threads.  If you forgot to specify which event_base
+you wanted, you got the current one.  Since event_bases weren't
+threadsafe, this could get pretty error-prone.
+
+Instead of event_base_new(), there was:
+
+.Interface
+[code]
+--------
+struct event_base *event_init(void);
+--------
+
+This function worked like event_base_new(), and set the current base
+to the allocated base.  There was no way other way to change the
+curent base.
+
+
+Some of the event_base functions in this section had variants that
+operated on the current base.  These functions behaved as the current
+functions, except that they took no base argument.
+
+[options="header",width="85%"]
+|======================================================================
+| Current function              | Obsolete current-base version
+| event_base_priority_init()    | event_priority_init()
+| event_base_get_method()       | event_get_method()
+|======================================================================
+

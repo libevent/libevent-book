@@ -166,3 +166,26 @@ These functions are declared in <event2/event.h>.  The event_break_loopexit()
 function was first implemented in Libevent 1.0c; event_break_loopbreak() was
 first implemented in Libevent 1.4.3.
 
+Obsolete event loop functions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+As discussed above, older versions of Libevent APIs had a global
+notion of a "current" event_base.
+
+Some of the event loop functions in this section had variants that
+operated on the current base.  These functions behaved as the current
+functions, except that they took no base argument.
+
+[options="header",width="85%"]
+|======================================================================
+| Current function              | Obsolete current-base version
+| event_base_dispatch()         | event_dispatch()
+| event_base_loop()             | event_loop()
+| event_base_loopexit()         | event_loopexit()
+| event_base_loopbreak()        | event_loopbreak()
+|======================================================================
+
+NOTE: Because event_base did not support locking before Libevent 2.0,
+these functions weren't completely threadsafe: it was not permissible
+to call the _loopbreak() or _loopexit() functions from a thread other
+than the one executing the event loop.

@@ -429,5 +429,46 @@ make it pending.
 This function is defined in <event2/event.h>.  It has existed
 since before Libevent 1.0.
 
-
 // Not yet documented: event_initialized().  Too stupid to use.
+
+Obsolete event manipulation functions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Pre-2.0 versions of Libevent did not have event_assign() or
+event_new().  Instead, you had event_set(), which associated the event
+with the "current" base.  If you had more than one base, you needed to
+remember to call event_base_set() afterwards to make sure that the
+event was associated with the base you actually wanted to use.
+
+.Interface
+[code]
+--------
+void event_set(struct event *event, evutil_socket_t fd, short what,
+        void(*callback)(evutil_socket_t, short, void *), void *arg);
+int event_base_set(struct event_base *base, struct event *event);
+--------
+
+The event_set() function was like event_assign(), except for its use
+of the current base.  The event_base_set() function changes the base
+associated with an event.
+
+Since versions of Libevent before 2.0 did not have
+locking support, it wasn't safe to call any of the functions that
+change an event's state with respect to a base from outside the thread
+running the base.  Thse include event_add(), event_del(),
+event_active(), and event_base_once().
+
+There was also an event_once() function that played the role of
+event_base_once(), but used the current base.
+
+The EV_PERSIST flag did not interoperate sensibly with timeouts before
+Libevent 2.0. Instead resetting the timeout whenever the event was
+activated, the EV_PERSIST flag did nothing with the timeout.
+
+Libevent versions before 2.0 did not support having multiple events
+inserted at the same time with the same fd and the same READ/WRITE.
+In other words, only one event at a time could be waiting for read on
+each fd, and only one event at a time could be waiting for write on
+each fd.
+
+

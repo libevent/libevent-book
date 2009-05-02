@@ -163,6 +163,9 @@ Some other notes on working with older versions:
   thread-safe, but only if you made sure to never use the same
   structure from two threads at the same time.
 
+Individual sections below will discuss the obsolete APIs that you
+might encounter for specific areas of the codebase.
+
 Notes on vesion status
 ^^^^^^^^^^^^^^^^^^^^^^
 
