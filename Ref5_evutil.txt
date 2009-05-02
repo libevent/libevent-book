@@ -34,6 +34,7 @@ socket() or accept() wihtout risking pointer truncation on Windows.
 #endif
 --------
 
+This type was introduced in Libevent 2.0.1-alpha.
 
 Standard integer types
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -55,6 +56,8 @@ versions of the bit-width-specific integers from stdint.h:
 |ev_uint8_t  |8      |No
 |ev_int8_t   |8      |Yes
 |=============================
+
+These types were introduced in Libevent 1.4.0-beta.
 
 Timer portability functions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -125,6 +128,11 @@ if (evutil_timercmp(&tv1, &tv2, <))
    puts("It is no longer the past.");
 --------
 
+These functions were introduced in Libevent 1.4.0-beta, except for
+evutil_gettimeofday(), which was introduced in Libevent 2.0.
+
+NOTE: It wasn't safe to use <= or >= with timercmp before Libevent
+1.4.4 beta.
 
 Socket API compatibility
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -198,6 +206,8 @@ protocol 0.  Note that this can fail on some Windows hosts where
 firewall software has cleverly firewalled 127.0.0.1 to keep the host
 from talking to itself.
 
+These functions were introduced in Libevent 1.4.0-beta.
+
 Portable string manipulation functions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -257,6 +267,8 @@ failure.  It recognizes the following address formats:
 
 If no port is given, the port in the resulting sockaddr is set to 0.
 
+The evutil_strtoll() function has been in Libevent since 1.4.2-rc.
+The other functions first appeared in 2.0.1-alpha.
 
 Structure macro portability functions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -269,3 +281,6 @@ Structure macro portability functions
 
 As the standard offsetof macro, yields the number of bytes from the
 start of 'type' at which 'field' occurs.
+
+This function was introduced in Libevent 2.0.1-alpha.
+
