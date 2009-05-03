@@ -215,20 +215,28 @@ supposed to call from a regular POSIX signal handler.
 WARNING: Don't set a timeout on a signal event.  It might not be
 supported.  FIXME: true?
 
-Stack- and struct-allocated events
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Setting up events without heap-allocation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-For performance and other reasons, some people like to allocate event
-structures on the stack, or as a part of a larger structure.  This
-saves them the cost of a pointer reference here and here, but at the
-risk of breaking their binaries' compatibility with other versions of
-of Libevent, which may have different sizes for the event structure.
+For performance and other reasons, some people like to allocate events
+as a part of a larger structure.  For each use of the event, this
+saves them:
+   - The memory allocater overhead for allocating a small object on
+     the heap.
+   - The time overhead for dereferencing the pointer to the
+     struct event.
+   - The time overhead from a possible additional cache miss if the
+     event is not already in the cache.
+Using this method risks breaking binary compatibility with other
+versions of of Libevent, which may have different sizes for the event
+structure.
 
-You shouldn't do this unless you *know* that you're incurring an
-actual performance penalty for heap-allocating your events.  Using
-this function can cause hard-do-diagnose errors with future versions
-of Libevent if they use a larger event structure than the one you're
-building with.
+These are _very_ small costs, and do not matter for most applications.
+You should just stick to using event_new() unless you *know* that
+you're incurring a significant performance penalty for heap-allocating
+your events.  Using this function can cause hard-do-diagnose errors
+with future versions of Libevent if they use a larger event structure
+than the one you're building with.
 
 .Interface
 [code]
@@ -262,9 +270,12 @@ struct event_pair *event_pair_new(struct event_base *base, evutil_socket_t fd)
 }
 --------
 
-This function is defined in <event2/event.h>.  It has existed since
-Libevent 2.0.1-alpha.  The event structure itself is defined in
-<event2/event_struct.h>.
+You can also use event_assign() to initialize stack-allocated or
+statically allocated events.
+
+The event_assign() function is defined in <event2/event.h>.  It has
+existed since Libevent 2.0.1-alpha.  The event structure itself is
+defined in <event2/event_struct.h>.
 
 Making events pending and non-pending
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
