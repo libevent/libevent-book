@@ -382,6 +382,7 @@ int event_pending(struct event *ev, short what, struct timeval *tv_out);
 
 #define event_get_signal(ev) /* ... */
 evutil_socket_t event_get_fd(struct event *ev);
+struct event_base *event_get_base(struct event_base *base);
 --------
 
 The event_pending function determines whether the given event is
@@ -392,13 +393,15 @@ on.  If 'tv_out' is provided, and EV_TIMEOUT is set in what, and the
 event is currently pending or active on a timeout, then 'tv_out' is
 set to hold the time when the event's timeout will expire.
 
-The event_get_fd() and event_get_signal() return the configured file
-descriptor or signal number for an event.
+The event_get_fd() and event_get_signal() functions return the
+configured file descriptor or signal number for an event.  The
+event_get_base() function returns its configured event_base.
 
 
 These functions are declared in <event2/event.h>.  The event_pending()
-functions has existed since before Libevent 1.0.  The others are new in
-Libevent 2.0.1-alpha.
+function has existed since before Libevent 1.0.  Libevent 2.0.2-alpha
+introduced event_get_base().  The others were new in Libevent
+2.0.1-alpha.
 
 Configuring one-off events
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
