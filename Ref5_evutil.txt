@@ -57,6 +57,9 @@ versions of the bit-width-specific integers from stdint.h:
 |ev_int8_t   |8      |Yes
 |=============================
 
+As in the C99 standard, each type has exactly the specified width, in
+bits.
+
 These types were introduced in Libevent 1.4.0-beta.
 
 Timer portability functions
@@ -120,11 +123,11 @@ evutil_gettimeofday(&tv2, NULL);
 evutil_timeradd(&tv1, &tv2, &tv3);
 
 /* all 3 should print true */
-if (evutil_timercmp(&tv1, &tv1, ==))
+if (evutil_timercmp(&tv1, &tv1, ==))  /* == "If tv1 == tv1" */
    puts("5.5 sec == 5.5 sec");
-if (evutil_timercmp(&tv3, &tv2, >=))
+if (evutil_timercmp(&tv3, &tv2, >=))  /* == "If tv3 >= tv2" */
    puts("The future is after the present.");
-if (evutil_timercmp(&tv1, &tv2, <))
+if (evutil_timercmp(&tv1, &tv2, <))   /* == "If tv1 < tv2" */
    puts("It is no longer the past.");
 --------
 
@@ -149,7 +152,8 @@ to pretend that it has.
 --------
 
 This macro closes a socket.  On Unix, it's an alias for close(); on
-Windows, it calls closesocket().
+Windows, it calls closesocket().   (You can't use close() on sockets
+on Windows, and nobody else defines a closesocket().)
 
 .Interface
 [code]
@@ -168,6 +172,9 @@ EVUTIL_SET_SOCKET_ERROR() changes the current socket error code (like
 setting errno on Unix), and evutil_socket_error_to_string() returns a
 string representation of a given socket error code (like strerror() on
 Unix).
+
+(We need these functions because Windows doesn't use errno
+for errors from socket functions, but instead uses WSAGetLastError().)
 
 .Interface
 [code]
@@ -188,7 +195,9 @@ int evutil_make_listen_socket_reuseable(evutil_socket_t sock);
 
 This function makes sure that the address used by a listener socket
 will be available to another socket immediately after the socket is
-closed.  (It sets SO_REUSEADDR on Unix and does nothing on Windows.)
+closed.  (It sets SO_REUSEADDR on Unix and does nothing on Windows.
+You don't want to use SO_REUSEADDR on Windows; it means something
+different there.)
 
 .Interface
 [code]
@@ -199,7 +208,8 @@ int evutil_socketpair(int family, int type, int protocol,
 
 This function behaves as the Unix socketpair() call: it makes two
 sockets that are connected with each other and can be used with
-ordinary socket IO calls.
+ordinary socket IO calls.  It stores the two sockets in sv[0] and
+sv[1], and returns 0 for success and -1 for failure.
 
 On Windows, this only supports family AF_INET, type SOCK_STREAM, and
 protocol 0.  Note that this can fail on some Windows hosts where
@@ -230,8 +240,11 @@ int evutil_vsnprintf(char *buf, size_t buflen, const char *format, va_list ap);
 --------
 
 These snprintf-replacement functions behave as the standard snprintf
-and vsnprintf interfaces.  (They return the number of bytes that would
-have been written into the buffer had it been long enough.)
+and vsnprintf interfaces.  They return the number of bytes that would
+have been written into the buffer had it been long enough, not
+counting the terminating NUL byte.  (This behavior conforms to the C99
+snprintf() standard, and is in contrast to the Windows _snprintf(),
+which returns a negative number if the string would not fit in the buffer.)
 
 IPv6 helper and portability functions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
