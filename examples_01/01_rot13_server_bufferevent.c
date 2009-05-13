@@ -69,6 +69,16 @@ readcb(struct bufferevent *bev, void *ctx)
 void
 errorcb(struct bufferevent *bev, short error, void *ctx)
 {
+    if (error & EVBUFFER_EOF) {
+        /* connection has been closed, do any clean up here */
+        /* ... */
+    } else if (error & EVBUFFER_ERROR) {
+        /* check errno to see what error occurred */
+        /* ... */
+    } else if (error & EVBUFFER_TIMEOUT) {
+        /* must be a timeout event handle, handle it */
+        /* ... */
+    }
     bufferevent_free(bev);
 }
 
