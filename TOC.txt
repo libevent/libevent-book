@@ -18,7 +18,7 @@ A Libevent Reference Manual
 - link:Ref4_event.html[R4: Working with events]
 - link:Ref5_evutil.html[R5: Utiltity and portability functions]
 - link:Ref6_bufferevent.html[R6: Bufferevents: concepts and basics]
-- link:Ref7_evbuffer.html[R6: Evbuffers: utility functionality for buffered IO]
+- link:Ref7_evbuffer.html[R7: Evbuffers: utility functionality for buffered IO]
 
 include::license.txt[]
 
