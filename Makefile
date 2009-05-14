@@ -11,7 +11,8 @@ GENERATED_HTML= \
 	Ref2_eventbase.html \
 	Ref3_eventloop.html \
 	Ref4_event.html \
-	Ref5_evutil.html
+	Ref5_evutil.html \
+	Ref6_bufferevent.html
 
 all: html examples
 
@@ -33,6 +34,7 @@ Ref2_eventbase.html: license.txt
 Ref3_eventloop.html: license.txt
 Ref4_event.html: license.txt
 Ref5_evutil.html: license.txt
+Ref5_bufferevent.html: license.txt
 
 clean:
 	rm -f *~
