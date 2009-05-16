@@ -577,9 +577,12 @@ int evbuffer_remove_cb_entry(struct evbuffer *buffer,
     struct evbuffer_cb_entry *ent);
 int evbuffer_remove_cb(struct evbuffer *buffer, evbuffer_cb_func cb,
     void *cbarg);
-#define EVBUFFER_CB_DISABLED 0
+
 #define EVBUFFER_CB_ENABLED 1
 int evbuffer_cb_set_flags(struct evbuffer *buffer,
+                          struct evbuffer_cb_entry *cb,
+                          ev_uint32_t flags);
+int evbuffer_cb_clear_flags(struct evbuffer *buffer,
                           struct evbuffer_cb_entry *cb,
                           ev_uint32_t flags);
 --------
@@ -588,8 +591,12 @@ You can remove a callback either by the evbuffer_cb_entry you got when
 you added it, or by the callback and pointer you used.  The
 evbuffer_remove_cb() functions return 0 on success and -1 on failure.
 
-FIXME {nickm} : Describe the evbuffer_cb_set_flags interface better
-when we're sure we like it.
+The evbuffer_cb_set_flags() function and the evbuffer_cb_clear_flags()
+fuction make a given flag be set or cleared on a given callback
+respectively.  Right now, only one user-visible flag is supported:
+'EVBUFFER_CB_ENABLED'.  The flag is set by default.  When it is
+cleared, modifications to the evbuffer do not cause this callback to
+get invoked.
 
 .Interface
 [code]
@@ -612,7 +619,9 @@ it is safe to free an evbuffer even if it has deferred callbacks that
 have not yet executed.
 
 
-This entire callback system was new in Libevent 2.0.1-alpha.
+This entire callback system was new in Libevent 2.0.1-alpha.  The
+evbuffer_cb_(set|clear)_flags() functions have existed with their
+present interfaces since 2.0.2-alpha.
 
 Avoiding data copies with evbuffer-based IO
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -624,9 +633,12 @@ with this.
 .Interface
 [code]
 --------
+typedef void (*evbuffer_ref_cleanup_cb)(const void *data,
+    size_t datalen, void *extra);
+
 int evbuffer_add_reference(struct evbuffer *outbuf,
     const void *data, size_t datlen,
-    void (*cleanupfn)(void *extra), void *extra);
+    evbuffer_ref_cleanup_cb cleanupfn, void *extra);
 --------
 
 This function adds a piece of data to the end of an evbuffer by
@@ -634,7 +646,8 @@ reference.  No copy is performed: instead, the evbuffer just stores a
 pointer to the 'datlen' bytes stored at 'data'.  Therefore, the
 pointer must remain valid for as long as the evbuffer is using it.
 When the evbuffer no longer needs data, it will call the provided
-"cleanupfn" function with the provided "extra" pointer as an argument.
+"cleanupfn" function with the provided "data" pointer, "datlen" value,
+and "extra" pointer as arguments.
 This function returns 0 on success, -1 on failure.
 
 .Example
@@ -669,7 +682,9 @@ void free_resource(struct huge_resource *hr) {
         free(hr);
 }
 
-static void cleanup(void *arg) { free_resource(arg); }
+static void cleanup(const void *data, size_t len, void *arg) {
+    free_resource(arg);
+}
 
 /* This is the function that actually adds the resource to the
    buffer. */
@@ -720,7 +735,9 @@ data from disk into RAM.
 The file descriptor will be closed after the data is flushed from the
 evbuffer, or when the evbuffer is freed.
 
-Both functions in this section were introduced in Libevent 2.0.1-alpha.
+Both functions in this section were introduced in Libevent
+2.0.1-alpha.  The evbuffer_add_reference() function has had is present
+interface since 2.0.2-alpha.
 
 Making an evbuffer add- or remove-only
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
