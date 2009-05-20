@@ -1,4 +1,4 @@
-include::license.txt[]
+binclude::license.txt[]
 
 :language: C
 
@@ -89,8 +89,8 @@ of bytes currently stored in the _first_ chunk.
 
 It was introduced in Libevent 2.0.1-alpha.
 
-Adding data to an evbuffer
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+Adding data to an evbuffer: basics
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .Interface
 [code]
@@ -441,6 +441,49 @@ Any call that modifies an evbuffer or its layout invalidates all
 outstanding evbuffer_ptr values, and makes them unsafe to use.
 
 These interfaces were new in Libevent 2.0.1-alpha.
+
+Inspecting data without removing it
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Sometimes, you want to read data in an evbuffer without copying it out (as
+evbuffer_remove() does), and without rearranging the evbuffer's internal
+memory (as evbuffer_pullup() does).  Sometimes you might want to see data in
+the middle of an evbuffer.
+
+You can do this with:
+
+.Interface
+[code]
+--------
+struct evbuffer_iovec {
+	void *iov_base;
+	size_t iov_len;
+};
+
+int evbuffer_peek(struct evbuffer *buffer, ev_ssize_t len,
+    struct evbuffer_ptr *start_at,
+    struct evbuffer_iovec *vec_out, int n_vec);
+--------
+
+When you call evbuffer_peek(), you give it an array of evbuffer_iovec
+structures in 'vec_out'.  The array's length is 'n_vec'.  It sets these
+structures so that each one contains a pointer to a chunk of the evbuffer's
+internal RAM ('iov_base'), and the length of memory that is set in that
+chunk.
+
+If 'len' is less than 0, evbuffer_peek() tries to fill all of the
+evbuffer_iovec structs you have given it.  Otherwise, it fills them until
+either they are all used, or at least 'len' bytes are visible.  If the
+function could give you all the data you asked for, it returns the number of
+evbuffer_iovec structures that it actually used.  Otherwise, it returns the
+number that it would need in order to give what you asked for.
+
+When 'ptr' is NULL, evbuffer_peek() starts at the beginning of the buffer.
+Otherwise, it starts at the pointer given in 'ptr'.
+
+// FIXME: needs an example.
+
+This function is new in Libevent 2.0.2-alpha.
 
 Network IO with evbuffers
 ~~~~~~~~~~~~~~~~~~~~~~~~~
