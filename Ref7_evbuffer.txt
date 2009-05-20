@@ -481,7 +481,77 @@ number that it would need in order to give what you asked for.
 When 'ptr' is NULL, evbuffer_peek() starts at the beginning of the buffer.
 Otherwise, it starts at the pointer given in 'ptr'.
 
-// FIXME: needs an example.
+.Examples
+[code]
+--------
+/* Let's look at the first two chunks of buf, and write them to stderr. */
+int n, i;
+struct evbuffer_iovec v[2];
+n = evbuffer_peek(buf, -1, NULL, v, 2);
+for (i=0; i<n; ++i) { /* There might be less than two chunks available. */
+    fwrite(v[i].iov_base, 1, v[i].iov_len, stderr);
+}
+
+/* Let's send the first 4906 bytes to stdout via write. */
+int n, i;
+struct evbuffer_iovec *v;
+size_t written = 0;
+
+/* determine how many chunks we need. */
+n = evbuffer_peek(buf, 4096, NULL, NULL, 0);
+/* Allocate space for the chunks.  This would be a good time to use
+   alloca() if you have it. */
+v = malloc(sizeof(struct evbuffer_iovec)*n);
+/* Actually fill up v. */
+n = evbuffer_peek(buf, 4096, NULL, v, n);
+for (i=0; i<n; ++i) {
+    size_t len = v[i].iov_len;
+    if (written + len > 4096)
+        len = 4096 - written;
+    r = write(1 /* stdiout */, v[i].iov_base, len);
+    if (r<=0)
+        break;
+    /* We keep track of the bytes written separately; if we don't,
+       we may write more than 4096 bytes if the last chunk puts
+       us over the limit. */
+    written += len;
+}
+free(v);
+
+/* Let's get the first 16K of data after the first occurrence of the
+   string "start\n", and pass it to a consume() function. */
+struct evbuffer_ptr ptr;
+struct evbuffer_iovec v[1];
+size_t n_consumed = 0;
+const char s[] = "start\n";
+
+ptr = evbuffer_search(buf, s, strlen(s), NULL);
+if (ptr.pos == -1)
+    return; /* no start string found. */
+
+/* Advance the pointer past the start string. */
+if (evbuffer_ptr_set(buf, &ptr, strlen(s), EVBUFFER_PTR_ADD) < 0)
+    return; /* off the end of the string. */
+
+while (n_written < 16*1024) {
+    /* Peek at a single chunk. */
+    if (evbuffer_peek(buf, -1, &ptr, v, 1) < 1)
+        break;
+    /* Pass the data to some user-defined consume function */
+    consume(v[0].iov_base, v[0].iov_len);
+    n_written += v[0].iov_len;
+
+    /* Advance the pointer so we see the next chunk next time. */
+    if (evbuffer_ptr_set(buf, &ptr, v[0].iov_len, EVBUFFER_PTR_ADD)<0)
+        break;
+}
+--------
+
+.Note
+Modifying the data pointed to by the evbuffer_iovec can result in
+undefined behavior.  Also, if any function is called that modifies
+the evbuffer, the pointers that evbuffer_peek() yields may become
+invalid.
 
 This function is new in Libevent 2.0.2-alpha.
 
