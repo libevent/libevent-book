@@ -13,7 +13,8 @@ GENERATED_HTML= \
 	Ref4_event.html \
 	Ref5_evutil.html \
 	Ref6_bufferevent.html \
-	Ref7_evbuffer.html
+	Ref7_evbuffer.html \
+	Ref8_listener.html
 
 all: html examples
 
@@ -37,6 +38,7 @@ Ref4_event.html: license.txt
 Ref5_evutil.html: license.txt
 Ref6_bufferevent.html: license.txt
 Ref7_evbuffer.html: license.txt
+Ref8_evbuffer.html: examples_R8/*.c license.txt
 
 clean:
 	rm -f *~
