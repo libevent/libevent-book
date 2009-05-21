@@ -123,25 +123,6 @@ This function alters the last chunk of memory in the buffer, or adds a
 new chunk, such that the buffer is now large enough to contain datlen
 bytes without any further allocations.
 
-//  COMMENTED OUT because I want to deprecate these functions for
-//     sucking.
-//.Interface
-//[code]
-//--------
-//unsigned char *evbuffer_reserve_space(struct evbuffer *buf, size_t size);
-//int evbuffer_commit_space(struct evbuffer *buf, size_t size);
-//--------
-//
-//These functions ensure that an extent of space is available at the end
-//of the buffer, and commit some bytes that we have manually added to
-//that extent, respectively.
-//
-//Because they force the memory to be contiguous, they can wind up
-//leaving gaps in the buffer.  Note that evbuffer_reserve_space() does
-//not prevent any other functions from adding data to the end of the
-//buffer before evbuffer_commit_space() is called; if other functions
-//alter the buffer between these calls, unexpected results may occur.
-
 .Examples
 [code]
 --------
@@ -153,13 +134,6 @@ evbuffer_add(buf, "Hello world 2.0.1", 17);
 evbuffer_printf(buf, "Hello %s %d.%d.%d", "world", 2, 0, 1);
 
 --------
-// /* Via reserving and committing: */
-//evbuffer_lock(buf); /* prevent race condition */
-//char *cp = evbuffer_reserve_space(buf, 64); /* more than enough */
-//memcpy(cp, "Hello world 2.0.1", 17);
-//evbuffer_commit_space(buf, 17);
-//evbuffer_unlock(buf);
-
 
 The evbuffer_add(), evbuffer_add_printf(), and evbuffer_expand() functions
 were introduced before Libevent 1.0;  and evbuffer_add_printf() first
