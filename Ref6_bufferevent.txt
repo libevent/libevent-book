@@ -269,6 +269,10 @@ Libevent-2.0.2-alpha.  Before then, you had to manually call
 connect() on your socket yourself, and when the connection was
 complete, the bufferevent would report it as a write.
 
+Note that you only get a BEV_EVENT_CONNECTED event if you launch the
+connect() attempt using bufferevent_socket_connect().  If you call
+connect() on your own, the connection gets reported as a write.
+
 This function was introduced in Libevent 2.0.2-alpha.
 
 Generic bufferevent operations
