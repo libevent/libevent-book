@@ -547,13 +547,135 @@ while (n_written < 16*1024) {
 }
 --------
 
-.Note
-Modifying the data pointed to by the evbuffer_iovec can result in
-undefined behavior.  Also, if any function is called that modifies
-the evbuffer, the pointers that evbuffer_peek() yields may become
-invalid.
+.Notes
+- Modifying the data pointed to by the evbuffer_iovec can result in
+  undefined behavior.
+- If any function is called that modifies the evbuffer, the pointers
+  that evbuffer_peek() yields may become invalid.
+- If your evbuffer could be used in multiple threads, make sure to lock
+  it with evbuffer_lock() before you call evbuffer_peek(), and unlock it
+  once you are done using the extents that evbuffer_peek() gave you.
 
 This function is new in Libevent 2.0.2-alpha.
+
+Adding data to an evbuffer directly
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Sometimes you want to insert data info an evbuffer directly, without
+first writing it into a character array and then copying it in with
+evbuffer_add().  There are an advanced pair of functions you can use to do
+this: evbuffer_reserve_space() and evbuffer_commit_space().
+As with evbuffer_peek(), these functions use the evbuffer_iovec
+structure to provide direct access to memory inside the evbuffer.
+
+.Interface
+[code]
+--------
+int evbuffer_reserve_space(struct evbuffer *buf, ssize_t size,
+    struct evbuffer_iovec *vec, int n_vecs);
+int evbuffer_commit_space(struct evbuffer *buf,
+    struct evbuffer_iovec *vec, int n_vecs);
+--------
+
+The evbuffer_reserve_space() function gives you pointers to space inside
+the evbuffer.  It expands the buffer as necessary to give you at least
+'size' bytes.  The pointers to these extents, and their lengths, will be
+stored in the array of vectors you pass in with 'vec'; 'n_vec' is the
+length of this array.
+
+The value of 'n_vec' must be at least 1.  If you provide only one
+vector, then Libevent will ensure that you have all the contiguous space
+you requested in a single extent, but it may have to rearrange the
+buffer or waste memory in order to do so.  For better performance,
+provide at least 2 vectors.  The function returns the number of provided
+vectors that it needed for the space you requested.
+
+The data that you write into these vectors is not part of the buffer
+until you call evbuffer_commit_space(), which actually makes the data
+you wrote count as being in the buffer.  If you want to commit less space
+than you asked for, you can decrease the iov_len field in any of the
+evbuffer_iovec structures you were given.  You can also pass back fewer
+vectors than you were given.  The evbuffer_commit_space() function
+returns 0 on success and -1 on failure.
+
+.Notes and Caveats
+- Calling any function that rearranges the evbuffer or adds data to it
+  evbuffer will invalidate the pointers you got from
+  evbuffer_reserve_space().
+- In the current implementation, evbuffer_reserve_space() never uses
+  more than two vectors, no matter how many the user supplies.  This may
+  change in a future release.
+- It is safe to call evbuffer_reserve_space() any number of times.
+- If your evbuffer could be used in multiple threads, make sure to lock
+  it with evbuffer_lock() before you call evbuffer_reserve_space(), and
+  unlock it once you commit.
+
+.Example
+[code]
+--------
+/* Suppose we want to fill a buffer with 2048 bytes of output from a
+   generate_data() function, without copying. */
+struct evbuffer_iovec v[2];
+int n, i;
+size_t n_to_add = 2048;
+
+/* Reserve 2048 bytes.*/
+n = evbuffer_reserve_space(buf, n_to_add, v, 2);
+if (n<=0)
+   return; /* Unable to reserve the space for some reason. */
+
+for (i=0; i<n && n_to_add > 0; ++i) {
+   size_t len = v[i].iov_len;
+   if (len > n_to_add) /* Don't write more than n_to_add bytes. */
+      len = n_to_add;
+   if (generate_data(v[i].iov_base, len) < 0) {
+      /* If there was a data during data generation, we can just stop
+         here; no data will be committed to the buffer. */
+      return;
+   }
+   /* Set iov_len to the number of bytes we actually wrote, so we
+      don't commit too much. */
+   v[i].iov_len = len;
+}
+
+/* We commit the space here.  Note that we give it 'i' (the number of
+   vectors we actually used) rather than 'n' (the number of vectors we
+   had available. */
+if (evbuffer_commit_space(buf, v, i) < 0)
+   return; /* Error committing */
+--------
+
+
+.Bad Examples
+[code]
+--------
+/* Here are some mistakes you can make with evbuffer_reserve().
+   DO NOT IMITATE THIS CODE. */
+
+/* Do not use the pointers from evbuffer_reserve_space() after
+   calling any functions that modify the buffer. */
+evbuffer_reserve_space(buf, 1024, v, 2);
+evbuffer_add(buf, "X", 1);
+/* WRONG: This next line won't work if evbuffer_add needed to rearrange
+   the buffer's contents.  It might even crash your program. Instead,
+   you add the data before calling evbuffer_reserve_space. */
+memset(v[0].iov_base, 'Y', v[0].iov_len-1);
+evbuffer_commit_space(buf, v, 1);
+
+/* Do not modify the iov_base pointers. */
+const char *data = "Here is some data";
+evbuffer_reserve_space(buf, strlen(data), v, 1);
+/* WRONG: The next line will not do what you want.  Instead, you
+   should _copy_ the contents of data into v[0].iov_base. */
+v[0].iov_base = data;
+v[0].iov_len = strlen(data);
+/* In this case, evbuffer_commit_space might give an error if you're
+   lucky */
+evbuffer_commit_space(buf, v, 1);
+--------
+
+These functions have existed with their present interfaces since Libevent
+2.0.2-alpha.
 
 Network IO with evbuffers
 ~~~~~~~~~~~~~~~~~~~~~~~~~
