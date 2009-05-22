@@ -273,6 +273,12 @@ struct event_pair *event_pair_new(struct event_base *base, evutil_socket_t fd)
 You can also use event_assign() to initialize stack-allocated or
 statically allocated events.
 
+.WARNING
+Never call event_assign() on an event that is already pending in an
+event base.  Doing so can lead to extremely hard-to-diagnose
+errors.  If the event is already initialized and pending, call
+event_del() on it *before* you call event_assign() on it again.
+
 The event_assign() function is defined in <event2/event.h>.  It has
 existed since Libevent 2.0.1-alpha.  The event structure itself is
 defined in <event2/event_struct.h>.
@@ -291,10 +297,13 @@ int event_add(struct event *ev, const struct timeval *tv);
 --------
 
 Calling event_add on a non-pending event makes it pending in its
-configured base.  If it is already pending, there is no effect.  The
-function returns 0 on success, and -1 on failure.  If 'tv' is NULL,
-the event is added with no timeout.  Otherwise, 'tv' is the size of
-the timeout in seconds and microseconds.
+configured base.  The function returns 0 on success, and -1 on
+failure.  If 'tv' is NULL, the event is added with no timeout.
+Otherwise, 'tv' is the size of the timeout in seconds and
+microseconds.
+
+If you call event_add() on an event that is _already_ pending, it will
+leave it pending, and reschedule it with the provided timeout.
 
 NOTE: Do not set 'tv' to the time at which you want the timeout to
 run.  If you say "tv->tv_sec = time(NULL)+10;" on 1 January 2010, your
