@@ -122,7 +122,7 @@ The recognized option values for event_config_set_flag() are:
 The above functions that manipulate an event_config all return 0 on success,
 -1 on failure.
 
-NOTE: it is easy to set up an event_config that requires a backend that your
+NOTE: It is easy to set up an event_config that requires a backend that your
 OS does not provide.  For example, as of Libevent 2.0.1-alpha, there is no
 O(1) backend for Windows, and no backend on Linux that provides both
 EV_FEATURE_FDS and EV_FEATURE_O1.  If you have made a configuration that
@@ -344,7 +344,7 @@ struct event_base *event_init(void);
 --------
 
 This function worked like event_base_new(), and set the current base
-to the allocated base.  There was no way other way to change the
+to the allocated base.  There was no other way to change the
 curent base.
 
 

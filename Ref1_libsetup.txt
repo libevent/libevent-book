@@ -159,12 +159,12 @@ void start_counting_bytes(void)
 
 .NOTES
 - Replacing the memory management functions affects all future calls to
-  allocate, resize, or free memory from in Libevent.  Therefore, you
+  allocate, resize, or free memory from Libevent.  Therefore, you
   need to make sure that you replace the functions _before_ you call any
   other Libevent functions.  Otherwise, Libevent will use your version
   of free to deallocate memory returned from the C library's version of
   malloc.
-- Your malloc and realloc functions needs to return memory chunks with
+- Your malloc and realloc functions need to return memory chunks with
   the same alignment as the C library.
 - Your realloc function needs to handle realloc(NULL, sz) correctly
   (that is, by treating it as malloc(sz)).
@@ -176,7 +176,7 @@ void start_counting_bytes(void)
   are using Libevent from more than one thread.
 
 The event_set_mem_functions() function is declared in <event2/event.h>.
-They first appeared in Libevent 2.0.1-alpha.
+It first appeared in Libevent 2.0.1-alpha.
 
 Libevent can be built with event_set_mem_functions() disabled.  If it
 is, then programs using event_set_mem_functions will not compile or link.
@@ -191,7 +191,7 @@ time.
 Libevent structures can generally work three ways with multithreading.
 
 - Some structures are inherently single-threaded: it is never safe to use
-  them from more then one thread at the same time.
+  them from more than one thread at the same time.
 - Some structures are optionally locked: you can tell Libevent for each
   object whether you need to use it from multiple threads at once.
 - Some structures are always locked: if Libevent is running with lock
@@ -312,7 +312,7 @@ may be different.
 You can get a Libevent version in two formats: as a string suitable for
 displaying to users, or as a 4-byte integer suitable for numerical
 comparison.  The integer format uses the high byte for the major version,
-the second byte for the minor version, the byte for the patch version, and
+the second byte for the minor version, the third byte for the patch version, and
 the low byte to indicate release status (0 for release, nonzero for a
 development series after a given release).
 

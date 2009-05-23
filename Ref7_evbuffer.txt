@@ -1,4 +1,4 @@
-binclude::license.txt[]
+include::license.txt[]
 
 :language: C
 
@@ -186,7 +186,7 @@ Rearranging the internal layout of an evbuffer
 
 Sometimes you want to peek at the the first N bytes of data in the
 front of an evbuffer, and see it as a contiguous array of bytes.  To
-do this, you must first ensure that the fron of the buffer really _is_
+do this, you must first ensure that the front of the buffer really _is_
 contiguous.
 
 .Interface
@@ -360,7 +360,7 @@ struct evbuffer_ptr evbuffer_search(struct evbuffer *buffer,
     const char *what, size_t len, const struct evbuffer_ptr *start);
 --------
 
-This function scands the buffer for an occurrence of the
+This function scans the buffer for an occurrence of the
 'len'-character string 'what'.  It returns an evbuffer_ptr containing
 the position of the string, or -1 if the string was not found.  If the
 'start' argument is provided, it's the position at which the search
@@ -689,7 +689,7 @@ attempts to flush as much of the buffer as it can.
 On Unix, these functions should work on any file descriptor that
 supports read and write.  On Windows, only sockets are supported.
 
-Not that when you are using bufferevents, you do not need to call
+Note that when you are using bufferevents, you do not need to call
 these IO functions; the buferevents code does it for you.
 
 The evbuffer_write_atmost() function was introduced in Libevent 2.0.1-alpha.

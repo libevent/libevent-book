@@ -1,4 +1,4 @@
-binclude::license.txt[]
+include::license.txt[]
 
 :language: C
 

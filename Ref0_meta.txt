@@ -35,7 +35,7 @@ Libevent is divided into the following components:
 
 evutil::
     Generic functionality to abstract out the differences between
-    different platforms' networkign implementations.
+    different platforms' networking implementations.
 
 event and event_base::
     This is the heart of Libevent.  It provides an abstract API to
@@ -72,11 +72,11 @@ evrpc::
 The Libraries
 ~~~~~~~~~~~~~
 
-When Libevent is built, by default it it installs the following
+When Libevent is built, by default it installs the following
 libraries:
 
 libevent_core::
-    All core event and buffer functionality functionality.  This
+    All core event and buffer functionality.  This
     library contains all the event_base, evbuffer, bufferevent,
     and utility functions.
 
@@ -102,7 +102,7 @@ libevent_pthreads::
 The Headers
 ~~~~~~~~~~~
 
-All current public Libevent headers are instaleld under the 'event2'
+All current public Libevent headers are installed under the 'event2'
 directory.  Headers fall into three broad classes:
 
 API headers::

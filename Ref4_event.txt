@@ -18,7 +18,7 @@ represents a set of conditions, including:
 Events have similar lifecycles.  Once you call a Libevent function to
 set up an event and associate it with an event base, it becomes
 *initialized*.  At this point, you can 'add', which makes it
-*pending*.  in the base.  When the event is pending, if the conditions
+*pending* in the base.  When the event is pending, if the conditions
 that would trigger an event occur (e.g., its file descriptor changes
 state or its timeout expires), the event becomes *active*, and its
 (user-provided) callback function is run.  If the event is configured
@@ -64,8 +64,8 @@ All new events are initialized and non-pending.  To make an event
 pending, call event_add() (documented below).
 
 To deallocate an event, call event_free().  It is safe to call
-event_free() on an event that is pending or active: doing do makes the
-event non-pending and in-active befrore deallocating it.
+event_free() on an event that is pending or active: doing so makes the
+event non-pending and in-active before deallocating it.
 
 .Example
 [code]
@@ -234,7 +234,7 @@ structure.
 These are _very_ small costs, and do not matter for most applications.
 You should just stick to using event_new() unless you *know* that
 you're incurring a significant performance penalty for heap-allocating
-your events.  Using this function can cause hard-do-diagnose errors
+your events.  Not using this function can cause hard-do-diagnose errors
 with future versions of Libevent if they use a larger event structure
 than the one you're building with.
 
@@ -320,7 +320,7 @@ non-active.  If the event was not pending or active, there is no
 effect.  The return value is 0 on success, -1 on failure.
 
 NOTE: If you delete an event after it becomes active but before
-its callback has a chance to executes, the callback will not be
+its callback has a chance to execute, the callback will not be
 executed.
 
 These functions are defined in <event2/event.h>; they have existed

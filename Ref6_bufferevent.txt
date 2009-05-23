@@ -17,9 +17,9 @@ write data, for example, the usual pattern runs something like:
   wait for the connection to become writeable again.
 
 This buffered IO pattern is common enough that Libevent provides a
-generic mechanism for it.  A "bufferevent" is consists of an
+generic mechanism for it.  A "bufferevent" consists of an
 underlying transport (like a socket), a read buffer, and a write
-buffer.  Instead of regular events, which givecallbacks when the
+buffer.  Instead of regular events, which give callbacks when the
 underlying transport is ready to be read or written, a bufferevent
 invokes its user-supplied callbacks when it has read or written enough
 data.
@@ -74,7 +74,7 @@ and a write callback.  By default, the read callback is called
 whenever any data is read from the underlying transport, and the write
 callback is called whenever enough data is written to the output
 buffer is emptied.  You can override the behavior of these functions
-by adjusting the the read and write "watermarks" of the bufferevent.
+by adjusting the read and write "watermarks" of the bufferevent.
 
 Every bufferevent has four watermarks:
 
@@ -85,7 +85,7 @@ Read low-water mark::
    being invoked.
 
 Read high-water mark::
-   If the bufferevent's input buffer ever gets to than this level, the
+   If the bufferevent's input buffer ever gets to this level, the
    bufferevent stops reading until enough data is drained from the
    input buffer to take us below it again.  Defaults to unlimited, so
    that we never stop reading because of the size of the input buffer.
@@ -96,7 +96,7 @@ Write low-water mark::
    is not invoked unless the output buffer is emptied.
 
 Write high-water mark::
-   Not used by a bufferevent diretly, this watermark can have special
+   Not used by a bufferevent directly, this watermark can have special
    meaning when a bufferevent is used as the underlying transport of
    another bufferevent.  See notes on filtering bufferevents below.
 
@@ -356,7 +356,7 @@ reading, and restarts again when there is space to read.
 By default, a newly created bufferevent has writing enabled, but not
 reading.
 
-These function was introduced before Libevent 1.0.
+These functions were introduced before Libevent 1.0.
 
 .Interface
 [code]
@@ -426,7 +426,7 @@ info1 = malloc(sizeof(struct info));
 info1->name = "buffer 1";
 info1->total_drained = 0;
 
-/* ... Here we should set up the bufferevent and makes sure it gets
+/* ... Here we should set up the bufferevent and make sure it gets
    connected... */
 
 /* Trigger the read callback only whenever there is at least 128 bytes
