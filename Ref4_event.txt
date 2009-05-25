@@ -164,8 +164,10 @@ callback, you can call event_del() on it.
 The timeout on a persistent event resets whenever the event's callback
 runs.  Thus, if you have an event with flags EV_READ|EV_PERSIST and a
 timeout of five seconds, the event will become active:
+
   - Whenever the socket is ready for reading.
-  - Whenever five seconds have passed since the event last was active.
+  - Whenever five seconds have passed since the event last became
+    active.
 
 Timeout-only events
 ^^^^^^^^^^^^^^^^^^^

@@ -72,8 +72,8 @@ Callbacks and watermarks
 Every bufferevent has two data-related callbacks: a read callback
 and a write callback.  By default, the read callback is called
 whenever any data is read from the underlying transport, and the write
-callback is called whenever enough data is written to the output
-buffer is emptied.  You can override the behavior of these functions
+callback is called whenever enough data from the output buffer is emptied to
+the underlying transport.  You can override the behavior of these functions
 by adjusting the read and write "watermarks" of the bufferevent.
 
 Every bufferevent has four watermarks:
