@@ -22,7 +22,7 @@ system hands them out in numeric order.  Using the Windows socket API,
 however, a socket is of type SOCKET, which is really a pointer-like OS
 handle, and the order you receive them is undefined.  We define the
 evutil_socket_t type to be an integer that can hold the output of
-socket() or accept() wihtout risking pointer truncation on Windows.
+socket() or accept() without risking pointer truncation on Windows.
 
 .Definition
 [code]
@@ -40,7 +40,7 @@ Standard integer types
 ^^^^^^^^^^^^^^^^^^^^^^
 
 Often you will find yourself on a C system that missed out on the 21st
-century and therefore does does not implement the standard C99
+century and therefore does not implement the standard C99
 stdint.h header.  For this situation, Libevent defines its own
 versions of the bit-width-specific integers from stdint.h:
 

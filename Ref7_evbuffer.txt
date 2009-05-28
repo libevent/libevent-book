@@ -56,7 +56,7 @@ make a set of operations atomic.  If locking has not been enabled on
 the evbuffer, these functions do nothing.
 
 (Note that you do not need to call evbuffer_lock() and
-evbuffer_unlock() around _invididual_ operations: if locking is
+evbuffer_unlock() around _individual_ operations: if locking is
 enabled on the evbuffer, individual operations are already atomic.
 You only need to lock the evbuffer manually when you have more than
 one operation that need to execute without another thread butting in.)
@@ -184,7 +184,7 @@ shared with a bufferevent.  They were new in Libevent 2.0.1-alpha.
 Rearranging the internal layout of an evbuffer
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Sometimes you want to peek at the the first N bytes of data in the
+Sometimes you want to peek at the first N bytes of data in the
 front of an evbuffer, and see it as a contiguous array of bytes.  To
 do this, you must first ensure that the front of the buffer really _is_
 contiguous.
@@ -482,7 +482,7 @@ for (i=0; i<n; ++i) {
     size_t len = v[i].iov_len;
     if (written + len > 4096)
         len = 4096 - written;
-    r = write(1 /* stdiout */, v[i].iov_base, len);
+    r = write(1 /* stdout */, v[i].iov_base, len);
     if (r<=0)
         break;
     /* We keep track of the bytes written separately; if we don't,
@@ -690,7 +690,7 @@ On Unix, these functions should work on any file descriptor that
 supports read and write.  On Windows, only sockets are supported.
 
 Note that when you are using bufferevents, you do not need to call
-these IO functions; the buferevents code does it for you.
+these IO functions; the bufferevents code does it for you.
 
 The evbuffer_write_atmost() function was introduced in Libevent 2.0.1-alpha.
 
@@ -734,7 +734,7 @@ The evbuffer_add_cb() function adds a callback to an evbuffer, and
 returns an opaque pointer that can later be used to refer to this
 particular callback instance.  The 'cb' argument is the function that
 will be invoked, and the 'cbarg' is the user-supplied pointer to pass
-to the funtion.
+to the function.
 
 You can have multiple callbacks set on a single evbuffer.  Adding a
 new callback does not remove old callbacks.
@@ -801,7 +801,7 @@ you added it, or by the callback and pointer you used.  The
 evbuffer_remove_cb() functions return 0 on success and -1 on failure.
 
 The evbuffer_cb_set_flags() function and the evbuffer_cb_clear_flags()
-fuction make a given flag be set or cleared on a given callback
+function make a given flag be set or cleared on a given callback
 respectively.  Right now, only one user-visible flag is supported:
 'EVBUFFER_CB_ENABLED'.  The flag is set by default.  When it is
 cleared, modifications to the evbuffer do not cause this callback to
@@ -994,7 +994,7 @@ unsigned char *evbuffer_find(struct evbuffer *buffer,
 --------
 
 The evbuffer_readline() function worked like the current
-evbufer_readln(buffer, NULL, EVBUFFER_EOL_ANY).
+evbuffer_readln(buffer, NULL, EVBUFFER_EOL_ANY).
 
 The evbuffer_find() function would search for the first occurrence of
 a string in a buffer, and return a pointer to it.  Unlike

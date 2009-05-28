@@ -23,7 +23,7 @@ Speed::
     overhead as it does so.
 
 Scalability::
-    Libevent is designed to work well even with progams that need to
+    Libevent is designed to work well even with programs that need to
     have tens of thousands of active sockets.
 
 Convenience::
@@ -166,8 +166,8 @@ Some other notes on working with older versions:
 Individual sections below will discuss the obsolete APIs that you
 might encounter for specific areas of the codebase.
 
-Notes on vesion status
-^^^^^^^^^^^^^^^^^^^^^^
+Notes on version status
+^^^^^^^^^^^^^^^^^^^^^^^
 
 Versions of Libevent before 1.4.7 or so should be considered totally
 obsolete.  Versions of Libevent before 1.3e or so should be considered
@@ -175,6 +175,6 @@ hopelessly bug-ridden.
 
 (Also, please don't send the Libevent maintainers any new features for
 1.4.x or earlier---it's supposed to stay as a stable release.  And
-if you encounter a bug in 1.3x or ealier, please make sure that it
+if you encounter a bug in 1.3x or earlier, please make sure that it
 still exists in the latest stable version before you report it:
 subsequent releases have happened for a reason.)

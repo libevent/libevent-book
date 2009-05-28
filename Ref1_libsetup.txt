@@ -203,9 +203,9 @@ functions to use.  You need to do this before you call any Libevent
 function that allocates a structure that needs to be shared between
 threads.
 
-If you are using the pthreads library, or the native windows threading
-code, you're in luck.  There are pre-defined functions that will set up
-the right FIXME
+If you are using the pthreads library, or the native Windows threading
+code, you're in luck.  There are pre-defined functions that will set Libevent
+up to use the right pthreads or Windows functions for you.
 
 .Interface
 [code]
@@ -330,7 +330,7 @@ Thus, the released Libevent 2.0.1-alpha has the version number of [02 00
 int
 make_sandwich(void)
 {
-        /* Let's suppose that Libevent 6.0.5 intruduces a make-me-a
+        /* Let's suppose that Libevent 6.0.5 introduces a make-me-a
            sandwich function. */
 #if LIBEVENT_VERSION_NUMBER >= 0x06000500
         evutil_make_me_a_sandwich();

@@ -25,7 +25,7 @@ include::examples_01/01_sync_webclient.c[]
 -------
 
 All of the network calls in the code above are _blocking_: the
-gethostbyname does not return until it has suceeded or failed in
+gethostbyname does not return until it has succeeded or failed in
 resolving www.google.com; the connect does not return until it has
 connected; the recv calls do not return until they have received data
 or a close; and the send call does not return until it has at least
@@ -82,7 +82,7 @@ you'd want to use a thread pool instead of creating new processes.
 But more fundamentally, threads won't scale as much as you'd like.  If
 your program needs to handle thousands or tens of thousands of
 connections at a time, dealing with tens of thousands of threads will
-not be as efficient as trying to have have only a few threads per CPU.
+not be as efficient as trying to have only a few threads per CPU.
 
 But if threading isn't the answer to having multiple connections, what is?
 In the Unix paradigm, you make your sockets _nonblocking_.  The Unix
@@ -102,7 +102,7 @@ might be naively written as:
 
 [code,C]
 ------
-/* This will work, but the performance will be unforgiveably bad. */
+/* This will work, but the performance will be unforgivably bad. */
 for (i=0; i < n_sockets; ++i)
     fcntl(fd[i], F_SETFL, O_NONBLOCK);
 

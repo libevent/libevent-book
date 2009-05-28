@@ -99,7 +99,8 @@ int event_config_set_flag(struct event_config *cfg,
 Calling event_config_avoid_method tells Libevent to avoid a specific
 available backend by name.  Calling event_config_require_feature() tells
 Libevent not to use any backend that cannot supply all of a set of features.
-Calling event_config_set_flag() AKDJASD FIXME
+
+// Calling event_config_set_flag() XXXXX FIXME
 
 The recognized feature values for event_config_require_features are:
 
@@ -345,7 +346,7 @@ struct event_base *event_init(void);
 
 This function worked like event_base_new(), and set the current base
 to the allocated base.  There was no other way to change the
-curent base.
+current base.
 
 
 Some of the event_base functions in this section had variants that

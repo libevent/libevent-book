@@ -11,10 +11,10 @@ write data, for example, the usual pattern runs something like:
 
 - Decide that we want to write some data to a connection; put that
   data in a buffer.
-- Wait for the connection to become writeable
+- Wait for the connection to become writable
 - Write as much of the data as we can
 - Remember how much we wrote, and if we still have more data to write,
-  wait for the connection to become writeable again.
+  wait for the connection to become writable again.
 
 This buffered IO pattern is common enough that Libevent provides a
 generic mechanism for it.  A "bufferevent" consists of an
@@ -136,7 +136,7 @@ the corresponding condition happens.  (This is true of evbuffer
 callbacks too; we'll get to those later.)  This immediate invocation
 can make trouble when dependencies get complex.  For example, suppose
 that there is a callback that moves data into evbuffer A when it grows
-empty, and another callback that processs data out of evbuffer A when
+empty, and another callback that process data out of evbuffer A when
 it grows full.  Since these calls are all happening on the stack, you
 might risk a stack overflow if the dependency grows nasty enough.
 
@@ -199,7 +199,7 @@ you want to set the file descriptor later.
 
 This function returns a bufferevent on success, and NULL on failure.
 
-The buffervent_socket_new() function was introduced in Libevent 2.0.1-alpha.
+The bufferevent_socket_new() function was introduced in Libevent 2.0.1-alpha.
 
 Launching connections on socket-based bufferevents
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -465,7 +465,7 @@ If writing on the bufferevent was stalled because of too little data
 the output buffer (or removing data from the input buffer) will
 automatically restart it.
 
-These fuctions were introduced in Libevent 2.0.1-alpha.
+These functions were introduced in Libevent 2.0.1-alpha.
 
 .Interface
 [code]
@@ -495,7 +495,7 @@ int bufferevent_read_buffer(struct bufferevent *bufev,
 These functions remove data from a bufferevent's input buffer.  The
 bufferevent_read() function removes up to 'size' bytes from the input
 buffer, storing them into the memory at 'data'.  It returns the number
-of bytes actually removed.  The buferevent_read_buffer() function
+of bytes actually removed.  The bufferevent_read_buffer() function
 drains the entire contents of the input buffer and places them into
 'buf'; it returns 0 on success and -1 on failure.
 
@@ -503,7 +503,7 @@ Note that with bufferevent_read(), the memory chunk at 'data' must
 actually have enough space to hold 'size' bytes of data.
 
 The bufferevent_read() function has existed since before Libevent 1.0;
-bufferevent_read_buffer() was introducd in Libevent 2.0.1-alpha.
+bufferevent_read_buffer() was introduced in Libevent 2.0.1-alpha.
 
 .Example
 [code]
@@ -551,7 +551,7 @@ struct count {
 void
 write_callback_fibonacci(struct bufferevent *bev, void *ctx)
 {
-        /* Here's a callback that adds some fibanocci numbers to the
+        /* Here's a callback that adds some Fibonacci numbers to the
            output buffer of bev.  It stops once we have added 1k of
            data; once this data is drained, we'll add more. */
         struct count *c = ctx;
