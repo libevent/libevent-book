@@ -154,7 +154,7 @@ int evbuffer_remove_buffer(struct evbuffer *src, struct evbuffer *dst,
 --------
 
 The evbuffer_add_buffer() function moves all data from 'src' to the
-end of 'src'.  It returns 0 on success, -1 on failure.
+end of 'dst'.  It returns 0 on success, -1 on failure.
 
 The evbuffer_remove_buffer() function moves exactly 'datlen' bytes
 from 'src' to the end of 'dst', copying as little as possible.  If
