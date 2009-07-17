@@ -180,6 +180,9 @@ It first appeared in Libevent 2.0.1-alpha.
 
 Libevent can be built with event_set_mem_functions() disabled.  If it
 is, then programs using event_set_mem_functions will not compile or link.
+In Libevent 2.0.2-alpha and later, you can detect the presence of
+event_set_mem_functions() by checking whether the
+EVENT_SET_MEM_FUNCTIONS_IMPLEMENTED macro is defined.
 
 Locks and threading
 ~~~~~~~~~~~~~~~~~~~
@@ -212,9 +215,11 @@ up to use the right pthreads or Windows functions for you.
 --------
 #ifdef WIN32
 int evthread_use_windows_threads(void);
+#define EVTHREAD_USE_WINDOWS_THREADS_IMPLEMENTED
 #endif
 #ifdef _EVENT_HAVE_PTHREADS
 int evthread_use_pthreads(void);
+#define EVTHREAD_USE_PTHREADS_IMPLEMENTED
 #endif
 --------
 
@@ -280,7 +285,7 @@ library.
 
 Libevent can be built with locking support disabled.  If it is, then
 programs built to use the above thread-related functions will not
-compile or link.
+run.
 
 
 Detecting the version of Libevent
