@@ -117,8 +117,12 @@ Inspecting an evconnlistener
 .Interface
 [code]
 --------
+evutil_socket_t evconnlistener_get_fd(struct evconnlistener *lev);
 struct event_base *evconnlistener_get_base(struct evconnlistener *lev);
 --------
+
+These functions return a listener's associated socket and event_base
+respectively.
 
 Example code: an echo server.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

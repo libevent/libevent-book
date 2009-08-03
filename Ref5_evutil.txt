@@ -62,6 +62,20 @@ bits.
 
 These types were introduced in Libevent 1.4.0-beta.
 
+Miscellaneous compatibility types
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ev_ssize_t type is defined to ssize_t (signed size_t) on platforms that
+have one, and to a reasonable default on platforms that don't.
+
+Some implementations of the sockets API provide a length type, socklen_t, and
+some do not.  The ev_socklen_t is defined to this type where it exists, and a
+reasonable default otherwise.
+
+The ev_ssize_t type was added in Libevent 2.0.2-alpha.  The ev_socklen_t type
+was new in Libevent 2.0.3-alpha.
+
+
 Timer portability functions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -245,6 +259,24 @@ have been written into the buffer had it been long enough, not
 counting the terminating NUL byte.  (This behavior conforms to the C99
 snprintf() standard, and is in contrast to the Windows _snprintf(),
 which returns a negative number if the string would not fit in the buffer.)
+
+Locale-independent string manipulation functions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Sometimes, when implementing ASCII-based protocols, you want to manipulate
+strings according to ASCII's notion of character type, regardless of your
+current locale.  Libevent provides a few functions to help with this:
+
+.Interface
+[code]
+--------
+int evutil_ascii_strcasecmp(const char *str1, const char *str2);
+int evutil_ascii_strncasecmp(const char *str1, const char *str2, size_t n);
+--------
+
+These functions behave as strcasecmp() and strncasecmp(), except that they
+always compare using the ASCII character set, regardless of the current
+locale.  They were first exposed in Libevent 2.0.3-alpha.
 
 IPv6 helper and portability functions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -545,7 +545,7 @@ structure to provide direct access to memory inside the evbuffer.
 .Interface
 [code]
 --------
-int evbuffer_reserve_space(struct evbuffer *buf, ssize_t size,
+int evbuffer_reserve_space(struct evbuffer *buf, ev_ssize_t size,
     struct evbuffer_iovec *vec, int n_vecs);
 int evbuffer_commit_space(struct evbuffer *buf,
     struct evbuffer_iovec *vec, int n_vecs);

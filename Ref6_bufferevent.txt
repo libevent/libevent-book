@@ -339,6 +339,8 @@ This function was introduced in Libevent 1.4.4.  The type names
 --------
 void bufferevent_enable(struct bufferevent *bufev, short events);
 void bufferevent_disable(struct bufferevent *bufev, short events);
+
+short bufferevent_get_enabled(struct bufferevent *bufev);
 --------
 
 You can enable or disable the events EV_READ, EV_WRITE, or
@@ -356,7 +358,11 @@ reading, and restarts again when there is space to read.
 By default, a newly created bufferevent has writing enabled, but not
 reading.
 
-These functions were introduced before Libevent 1.0.
+You can call bufferevent_get_enabled() to see which events are currently
+enabled on the bufferevent.
+
+These functions were introduced before Libevent 1.0, except for
+bufferevent_get_enabled(), which was introduced in version 2.0.3-alpha.
 
 .Interface
 [code]
