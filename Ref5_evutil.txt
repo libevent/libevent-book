@@ -110,8 +110,8 @@ compares its value against zero.
 The evutil_timercmp macro compares two timevals, and yields true if
 they are in the relationship specified by the relational operator
 'cmp'.  For example, 'evutil_timercmp(t1, t2, <=)' means, "Is t1 <=
-t2?"  Note that unlike some operating systems' definitions of
-timercmp, all C relational operations are supported.
+t2?"  Note that unlike some operating systems' versions, Libevent's timercmp
+supports all the C relational operations (that is, <, >, ==, !=, <=, and >=).
 
 .Interface
 [code]
@@ -181,7 +181,7 @@ on Windows, and nobody else defines a closesocket().)
 These macros access and manipulate socket error codes.
 EVUTIL_SOCKET_ERROR() returns the global error code for the last
 socket operation from this thread, and evutil_socket_geterror() does
-so for a particular socket.  (Both are errno on Unix.)
+so for a particular socket.  (Both are errno on Unix-like systems.)
 EVUTIL_SET_SOCKET_ERROR() changes the current socket error code (like
 setting errno on Unix), and evutil_socket_error_to_string() returns a
 string representation of a given socket error code (like strerror() on
@@ -189,6 +189,9 @@ Unix).
 
 (We need these functions because Windows doesn't use errno
 for errors from socket functions, but instead uses WSAGetLastError().)
+
+Note that the Windows socket errors are not the same as the standard-C
+errors you would see in errno; watch out.
 
 .Interface
 [code]
@@ -248,8 +251,7 @@ platforms, it only supports Base 10.
 .Interface
 [code]
 --------
-int evutil_snprintf(char *buf, size_t buflen, const char *format, ...)
-	EVUTIL_CHECK_FMT(3,4);
+int evutil_snprintf(char *buf, size_t buflen, const char *format, ...);
 int evutil_vsnprintf(char *buf, size_t buflen, const char *format, va_list ap);
 --------
 
@@ -259,6 +261,10 @@ have been written into the buffer had it been long enough, not
 counting the terminating NUL byte.  (This behavior conforms to the C99
 snprintf() standard, and is in contrast to the Windows _snprintf(),
 which returns a negative number if the string would not fit in the buffer.)
+
+// XXXX Is this accurate?
+The evutil_strtoll() function has been in Libevent since 1.4.2-rc.
+These other functions first appeared in 2.0.1-alpha.
 
 Locale-independent string manipulation functions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -278,6 +284,8 @@ These functions behave as strcasecmp() and strncasecmp(), except that they
 always compare using the ASCII character set, regardless of the current
 locale.  They were first exposed in Libevent 2.0.3-alpha.
 
+// XXX explain why you would use these.
+
 IPv6 helper and portability functions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -290,6 +298,7 @@ int evutil_inet_pton(int af, const char *src, void *dst);
 
 These functions behave as the standard inet_ntop() and inet_pton()
 functions for parsing and formatting IPv4 and IPv6 addresses.
+// XXX say more!
 
 .Interface
 [code]
@@ -312,8 +321,7 @@ failure.  It recognizes the following address formats:
 
 If no port is given, the port in the resulting sockaddr is set to 0.
 
-The evutil_strtoll() function has been in Libevent since 1.4.2-rc.
-The other functions first appeared in 2.0.1-alpha.
+// XXX when did these appear?
 
 Structure macro portability functions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -324,8 +332,12 @@ Structure macro portability functions
 #define evutil_offsetof(type, field) /* ... */
 --------
 
-As the standard offsetof macro, yields the number of bytes from the
-start of 'type' at which 'field' occurs.
+As the standard offsetof macro, this macro yields the number of bytes from
+the start of 'type' at which 'field' occurs.
 
-This function was introduced in Libevent 2.0.1-alpha.
+This function was introduced in Libevent 2.0.1-alpha.  It was buggy in every
+version before Libevent 2.0.3-alpha.
+
+// FIXME Undocumented: EVUTIL_CHECK_FMT, evutil_sockaddr_cmp,
+//    evutil_{getaddrinfo,freeadrinfo,gai_strerror}.
 
