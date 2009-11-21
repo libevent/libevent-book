@@ -37,7 +37,7 @@ To create a new event, use the event_new() interface.
 --------
 #define EV_TIMEOUT      0x01
 #define EV_READ         0x02
-v#define EV_WRITE        0x04
+#define EV_WRITE        0x04
 #define EV_SIGNAL       0x08
 #define EV_PERSIST      0x10
 #define EV_ET           0x20
@@ -65,7 +65,7 @@ pending, call event_add() (documented below).
 
 To deallocate an event, call event_free().  It is safe to call
 event_free() on an event that is pending or active: doing so makes the
-event non-pending and in-active before deallocating it.
+event non-pending and inactive before deallocating it.
 
 .Example
 [code]
@@ -280,6 +280,17 @@ Never call event_assign() on an event that is already pending in an
 event base.  Doing so can lead to extremely hard-to-diagnose
 errors.  If the event is already initialized and pending, call
 event_del() on it *before* you call event_assign() on it again.
+
+There are convenience macros you can use to event_assign() a timeout-only or
+a signal event:
+.Interface
+[code]
+--------
+#define evtimer_assign(event, base, callback, arg) \
+    event_assign(event, base, -1, 0, callback, arg)
+#define evsignal_assign(event, base, signum, callback, arg) \
+    event_assign(event, base, signum, EV_SIGNAL|EV_PERSIST, callback, arg)
+--------
 
 The event_assign() function is defined in <event2/event.h>.  It has
 existed since Libevent 2.0.1-alpha.  The event structure itself is

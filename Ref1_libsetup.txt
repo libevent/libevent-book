@@ -80,6 +80,39 @@ void set_logfile(FILE *f)
 These functions are declared in <event2/event.h>.  They first appeared
 in Libevent 1.0c.
 
+Handling fatal errors
+~~~~~~~~~~~~~~~~~~~~~
+
+When Libevent detects a non-recoverable internal error (such as a corrupted
+data structure or a ), its default behavior is to call exit() to leave the
+currently running process.  These errors almost always mean that there is a
+bug somewhere: either in your code, or in Libevent itself.
+
+You can override Libevent's behavior if you want your application to handle
+fatal errors more gracefully, by providing a function that Libevent should
+call in lieu of exiting.
+
+.Interface
+[code,C]
+--------
+typedef void (*event_fatal_cb)(int err);
+void event_set_fatal_callback(event_fatal_cb cb);
+--------
+
+To use these functions, you first define a new function that Libevent should
+call upon encountering a fatal error, then you pass it to
+event_set_fatal_callback().  Later, if Libevent encounters a fatal error, it
+will call the function you provided.
+
+Your function *should not* return control to Libevent; doing so may cause
+undefined behavior, and Libevent might exit anyway to avoid crashing.  Once
+your function has been called, you should not call any other Libevent
+function.
+
+These functions are declared in <event2/event.h>.  They first appeared
+in Libevent 2.0.3-alpha.
+
+
 Memory management
 ~~~~~~~~~~~~~~~~~
 
@@ -249,6 +282,7 @@ void evthread_set_id_callback(
     unsigned long (*id_fn)(void));
 --------
 
+
 Your locks will be passed around as the void * type.  The alloc_fn
 argument must be a function that allocates a new lock; the free_fn
 argument must be a function that frees a lock allocated with alloc_fn.
@@ -303,8 +337,8 @@ you'll want to detect the Libevent version, so that you can:
 .Interface
 [code]
 --------
-#define LIBEVENT_VERSION_NUMBER 0x02000100
-#define LIBEVENT_VERSION "0.2.0.1-alpha"
+#define LIBEVENT_VERSION_NUMBER 0x02000300
+#define LIBEVENT_VERSION "0.2.0.3-alpha"
 const char *event_get_version(void);
 ev_uint32_t event_get_version_number(void);
 --------

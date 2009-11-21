@@ -50,12 +50,12 @@ bufferevent::
     sockets are ready to do, they let you know when IO has actually
     occurred.
 
-// FIXME say this only when it's true. On Windows, this interface
-//   can bypass Libevent's event-based core entirely, and use the
-//   much-faster IOCP implementation.
+    The bufferevent interface also has multiple backends, so that
+    it can take advantage of systems that provide faster ways to do
+    nonblocking IO, such as the Windows IOCP API.
 
 evbuffer::
-    This module implements the the buffers underlying bufferevents,
+    This module implements the buffers underlying bufferevents,
     and provides functions for efficient and/or convenient access.
 
 evhttp::
@@ -88,7 +88,7 @@ libevent_extra::
 libevent::
     This library exists for historical reasons; it contains the
     contents of both libevent_core and libevent_extra.  You shouldn't
-    use it; it will go away in a future version of Libevent.
+    use it; it may go away in a future version of Libevent.
 
 The following libraries are installed only on some platforms:
 
@@ -98,6 +98,13 @@ libevent_pthreads::
     libevent_core so that you don't need to link against pthreads
     to use Libevent unless you are _actually_ using Libevent in a
     multithreaded way.
+
+libevent_openssl::
+    This library provides support for encrypted communications using
+    bufferevents and the OpenSSL library.  It is separated from
+    libevent_core so that you don't need to link against OpenSSL
+    to use Libevent unless you are _actually_ using encrypted
+    connections.
 
 The Headers
 ~~~~~~~~~~~

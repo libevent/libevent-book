@@ -90,7 +90,10 @@ int event_config_require_features(struct event_config *cfg,
                                   enum event_method_feature feature);
 
 enum event_base_config_flag {
-	EVENT_BASE_FLAG_NOLOCK = 0x01,
+    EVENT_BASE_FLAG_NOLOCK = 0x01,
+    EVENT_BASE_FLAG_IGNORE_ENV = 0x02,
+    EVENT_BASE_FLAG_STARTUP_IOCP = 0x04,
+    EVENT_BASE_FLAG_NO_CACHE_TIME = 0x08,
 };
 int event_config_set_flag(struct event_config *cfg,
     enum event_base_config_flag flag);
@@ -99,8 +102,8 @@ int event_config_set_flag(struct event_config *cfg,
 Calling event_config_avoid_method tells Libevent to avoid a specific
 available backend by name.  Calling event_config_require_feature() tells
 Libevent not to use any backend that cannot supply all of a set of features.
-
-// Calling event_config_set_flag() XXXXX FIXME
+Calling event_config_set_flag() tells Libevent to set one or more of
+the run-time flags below when constructing the event base.
 
 The recognized feature values for event_config_require_features are:
 
@@ -119,6 +122,13 @@ The recognized option values for event_config_set_flag() are:
   variables when picking which backend method to use.  Think hard before
   using this flag: it can make it harder for users to debug the interactions
   between your program and Libevent.
+- EVENT_BASE_FLAG_STARTUP_IOCP: On Window only, this flag makes Libevent
+  enable any necessary IOCP dispatch logic on startup, rather than
+  on-demand.
+- EVENT_BASE_FLAG_NO_CACHE_TIME: Instead of checking the current time every
+  time the event loop is ready to run timeout callbacks, check it after
+  every timeout callback.  This can use more CPU than you necessarily
+  intended, so watch out!
 
 The above functions that manipulate an event_config all return 0 on success,
 -1 on failure.
@@ -359,4 +369,7 @@ functions, except that they took no base argument.
 | event_base_priority_init()    | event_priority_init()
 | event_base_get_method()       | event_get_method()
 |======================================================================
+
+// FIXME Undocumented:
+//          event_base_make_notifiable()
 

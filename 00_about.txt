@@ -19,10 +19,3 @@ A note on examples
 The examples in this document should work all right on Linux, FreeBSD,
 OpenBSD, NetBSD, Mac OS X, Solaris, and Android. Some of the examples
 may not compile on Windows.
-
-Why Libevent 2.0?
------------------
-
-XXX Foo.
-
-

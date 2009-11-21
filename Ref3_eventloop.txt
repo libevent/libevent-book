@@ -162,6 +162,23 @@ while (1)
 }
 --------
 
+Sometimes you may want to tell whether your call to event_base_dispatch() or
+event_base_loop() exited normally, or because of a call to
+event_base_loopexit() or event_base_break().  You can use these functions to
+tell whether loopexit or break was called:
+
+.Interface
+[code]
+--------
+int event_base_got_exit(struct event_base *base);
+int event_base_got_break(struct event_base *base);
+--------
+
+These two functions will return true if the loop was stopped with
+event_base_loopexit() or event_base_break() respectively, and false
+otherwise.  Their values will be reset the next time you start the event
+loop.
+
 These functions are declared in <event2/event.h>.  The event_break_loopexit()
 function was first implemented in Libevent 1.0c; event_break_loopbreak() was
 first implemented in Libevent 1.4.3.
