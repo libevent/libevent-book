@@ -243,13 +243,14 @@ than the one you're building with.
 .Interface
 [code]
 --------
-void event_assign(struct event *event, struct event_base *base,
+int event_assign(struct event *event, struct event_base *base,
     evutil_socket_t fd, short what,
     void (*callback)(evutil_socket_t, short, void *), void *arg);
 --------
 
 All the arguments of event_assign() are as for event_new(), except for
-the 'event' argument, which must point to an uninitialized event.
+the 'event' argument, which must point to an uninitialized event.  It returns
+0 on success, and -1 on an internal error or bad arguments.
 
 .Example
 [code]
@@ -292,9 +293,10 @@ a signal event:
     event_assign(event, base, signum, EV_SIGNAL|EV_PERSIST, callback, arg)
 --------
 
-The event_assign() function is defined in <event2/event.h>.  It has
-existed since Libevent 2.0.1-alpha.  The event structure itself is
-defined in <event2/event_struct.h>.
+The event_assign() function is defined in <event2/event.h>.  It has existed
+since Libevent 2.0.1-alpha.  It has returned an int since 2.0.3-alpha;
+previously, it returned void.  The event structure itself is defined in
+<event2/event_struct.h>.
 
 Making events pending and non-pending
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
