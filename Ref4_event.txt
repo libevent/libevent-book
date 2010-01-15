@@ -447,6 +447,10 @@ inserted and run with the default priority.  When the callback is
 finally done, Libevent frees the internal event structure itself.
 The return value is 0 on success, -1 on failure.
 
+Events inserted with event_base_once cannot be deleted or manually
+activated: if you want to be able to cancel an event, create it with the
+regular event_new() or event_assign() interfaces.
+
 Manually activating an event
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

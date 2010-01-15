@@ -84,7 +84,7 @@ Handling fatal errors
 ~~~~~~~~~~~~~~~~~~~~~
 
 When Libevent detects a non-recoverable internal error (such as a corrupted
-data structure or a ), its default behavior is to call exit() to leave the
+data structure), its default behavior is to call exit() or abort() to leave the
 currently running process.  These errors almost always mean that there is a
 bug somewhere: either in your code, or in Libevent itself.
 
@@ -263,47 +263,89 @@ more work ahead of you.  You need to define functions that use your
 library to implement:
 
 - locking
+- unlocking
 - lock allocation
-- lock destruction,
+- lock destruction
 - thread ID detection
 
-Then you tell Libevent about these functions, using:
-[code]
+Then you tell Libevent about these functions, using the
+evthread_set_lock_callbacks and evthread_set_id_callback interfaces.
+
+.Interface
+[code,C]
 --------
-#define EVTHREAD_LOCK	0x01
-#define EVTHREAD_UNLOCK	0x02
 #define EVTHREAD_WRITE	0x04
 #define EVTHREAD_READ	0x08
-void evthread_set_lock_create_callbacks(
-    void *(*alloc_fn)(void), void (*free_fn)(void *));
-void evthread_set_locking_callback(
-    void (*locking_fn)(int mode, void *lock));
-void evthread_set_id_callback(
-    unsigned long (*id_fn)(void));
+#define EVTHREAD_TRY	0x10
+
+#define EVTHREAD_LOCKTYPE_RECURSIVE 1
+#define EVTHREAD_LOCKTYPE_READWRITE 2
+
+#define EVTHREAD_LOCK_API_VERSION 1
+
+struct evthread_lock_callbacks {
+       int lock_api_version;
+       unsigned supported_locktypes;
+       void *(*alloc)(unsigned locktype);
+       void (*free)(void *lock, unsigned locktype);
+       int (*lock)(unsigned mode, void *lock);
+       int (*unlock)(unsigned mode, void *lock);
+};
+
+int evthread_set_lock_callbacks(const struct evthread_lock_callbacks *);
+
+void evthread_set_id_callback(unsigned long (*id_fn)(void));
 --------
 
+The evthread_lock_callbacks structure describes your locking callbacks
+and their abilities.  For the version described above, the
+lock_api_version field must be set to EVTHREAD_LOCK_API_VERSION.  The
+supported_locktypes field must be set to a bitmask of the
+EVTHREAD_LOCKTYPE_* constants to describe which lock types you can
+support.  (As of 2.0.4-alpha, EVTHREAD_LOCK_RECURSIVE is mandatory and
+EVTHREAD_LOCK_READWRITE is unused.)
+The 'alloc' function must return a new lock of the specified type.  The
+'free' function must release all resources held by a lock of the
+specified type.  The 'lock' function must try to acquire the lock in the
+specified mode, returning 0 on success and nonzero on failure.  The
+'unlock' function must try to unlock the lock, returning 0 on success
+and nonzero on failure.
 
-Your locks will be passed around as the void * type.  The alloc_fn
-argument must be a function that allocates a new lock; the free_fn
-argument must be a function that frees a lock allocated with alloc_fn.
+Recognized lock types are:
 
-The locking_fn argument must be a function that implements locking and
-unlocking.  It takes a 'mode' field as its first argument, which will be
-a bitfield containing one of EVTHREAD_LOCK and EVTHREAD_UNLOCK, and one
-of EVTHREAD_WRITE and EVTHREAD_READ.  Its second argument must be a lock
-allocated with alloc_fn.
+0::
+        A regular, not-necessarily recursive lock.
+
+EVTHREAD_LOCKTYPE_RECURSIVE::
+        A lock that does not block a thread already holding it from
+        requiring it again.  Other threads can acquire the lock once
+        the thread holding it has unlocked it as many times as it was
+        initially locked.
+
+EVTHREAD_LOCKTYPE_READWRITE::
+        A lock that allows multiple threads to hold it at once for
+        reading, but only one thread at a time to hold it for writing.
+        A writer excludes all readers.
+
+Recognized lock modes are:
+
+EVTHREAD_READ::
+        For READWRITE locks only: acquire or release the lock for
+        reading.
+
+EVTHREAD_WRITE::
+        For READWRITE locks only: acquire or release the lock for
+        reading.
+
+EVTHREAD_TRY::
+        For locking only: acquire the lock only if the lock can't be
+        acquired immediately.
 
 The id_fn argument must be a function returning an unsigned long
 identifying what thread is calling the function.  It must always return
 the same number for the same thread, and must not ever return the same
 number for two different threads if they are both executing at the same
 time.
-
-Locking must be recursive.  That is, if a thread currently holds a lock
-and tries to lock it again, the second allocation must succeed and not
-deadlock.  The thread now holds the lock _twice_, and no other thread
-should be able to acquire the lock until the thread holding it has
-unlocked it twice.
 
 .Examples
 
@@ -312,15 +354,35 @@ For an example of how to use these functions, see evthread_pthread.c and
 evthread_win32.c in the Libevent source distribution.
 ------
 
-The functions in this section are declared in <event2/thread.h>.  They
-first appeared in Libevent 2.0.1-alpha.  The event_use_pthreads()
-function requires you to link your program against the event_pthreads
-library.
+The functions in this section are declared in <event2/thread.h>.  They first
+appeared in Libevent 2.0.4-alpha.  Libevent versions from 2.0.1-alpha through
+2.0.3-alpha used an older interface to set locking functions.  The
+event_use_pthreads() function requires you to link your program against the
+event_pthreads library.
 
 Libevent can be built with locking support disabled.  If it is, then
 programs built to use the above thread-related functions will not
 run.
 
+Debugging lock usage
+~~~~~~~~~~~~~~~~~~~~
+
+To help debug lock usage, Libevent has an optional "lock debugging"
+feature that wraps its locking calls in order to catch typical lock
+errors, including:
+
+- unlocking a lock that we don't actually hold
+- re-locking a non-recursive lock
+
+If one of these lock errors occurs, Libevent exits with an assertion failure.
+
+.Interface
+[Code,C]
+-----
+void evthread_enable_lock_debuging(void);
+-----
+
+This function is new in Libevent 2.0.4-alpha.
 
 Detecting the version of Libevent
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
