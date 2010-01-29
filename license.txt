@@ -8,5 +8,5 @@ For the latest version of this document, see
    http://wangafu.net/~nickm/libevent-book/TOC.html
 
 To get the source for the latest version of this document, install git
-and run "git clone git://git.torproject.org/~nickm/git/lebook"
+and run "git clone git://github.com/nmathewson/libevent-book.git"
 ______________________________
