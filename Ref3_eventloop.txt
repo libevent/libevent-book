@@ -9,12 +9,11 @@ Running the loop
 ~~~~~~~~~~~~~~~~
 
 Once you have an event_base with some events registered (see the next section
-about how to register events), you will want Libevent to wait for events and
-alert you about them.
-
+about how to create and register events), you will want Libevent to wait for
+events and alert you about them.
 
 .Interface
-[code]
+[code,C]
 --------
 #define EVLOOP_ONCE	0x01
 #define EVLOOP_NONBLOCK	0x02
@@ -42,7 +41,7 @@ To aid in understanding, here's an approximate summary of the event_base_loop
 algorithm:
 
 .Pseudocode
-[code]
+[code,C]
 --------
 while (any events are registered with the loop) {
 
@@ -66,13 +65,14 @@ while (any events are registered with the loop) {
 As a convenience, you can also call:
 
 .Interface
-[code]
+[code,C]
 --------
 int event_base_dispatch(struct event_base *base);
 --------
 
 The event_base_dispatch() call is the same as event_base_loop(), with no
-flags set.
+flags set.  Thus, it keeps running until there are no more registered events
+or until event_base_loopbreak() or event_base_loopexit() is called.
 
 These functions are defined in <event2/event.h>.  They have existed since
 before Libevent 1.0.
@@ -84,7 +84,7 @@ If you want an active event loop to stop running before all events are
 removed from it, you have two slightly different functions you can call.
 
 .Interface
-[code]
+[code,C]
 --------
 int event_base_loopexit(struct event_base *base,
                         const struct timeval *tv);
@@ -93,8 +93,8 @@ int event_base_loopbreak(struct event_base *base);
 
 The event_base_loopexit() function tells an event_base to stop looping after
 a given time has elapsed.  If the 'tv' argument is NULL, the event_base stops
-looping now.  If the event_base is currently processing any active events,
-it will continue processing them, and not exit until it is done.
+looping without a delay.  If the event_base is currently processing any active
+events, it will continue processing them, and not exit until it is done.
 
 The event_base_loopbreak() function tells the event_base to exit its loop
 immediately.  It differs from event_base_loopexit(base, NULL) in that if
@@ -104,8 +104,10 @@ immediately after finishing the one it's currently processing.
 Both of these methods return 0 on success and -1 on failure.
 
 .Example: Shut down immediately
-[code]
+[code,C]
 --------
+#include <event2/event.h>
+
 /* Here's a callback function that calls loopbreak */
 void cb(int sock, short what, void *arg)
 {
@@ -113,10 +115,9 @@ void cb(int sock, short what, void *arg)
     event_base_loopbreak(base);
 }
 
-void main_loop(struct event_base *base)
+void main_loop(struct event_base *base, evutil_socket_t watchdog_fd)
 {
     struct event *watchdog_event;
-    int watchdog_fd = get_watchdog_fd();
 
     /* Construct a new event to trigger whenever there are any bytes to
        read from a watchdog socket.  When that happens, we'll call the
@@ -132,33 +133,27 @@ void main_loop(struct event_base *base)
 --------
 
 .Example: Run an event loop for 10 seconds, then exit.
-[code]
+[code,C]
 --------
-struct event_base *base;
-struct event *ev1, *ev2;
-struct timeval ten_sec;
+#include <event2/event.h>
 
-base = event_base_new();
+void run_base_with_ticks(struct event_base *base)
+{
+  struct timeval ten_sec;
 
-/* We need to get ev1 and ev2 from somewhere. */
-ev1 = ...;
-ev2 = ...;
+  ten_sec.tv_sec = 10;
+  ten_sec.tv_usec = 0;
 
-event_add(ev1, NULL);
-event_add(ev2, NULL);
+  /* Now we run the event_base for a series of 10-second intervals, printing
+     "Tick" after each.  For a much better way to implement a 10-second
+     timer, see the section below about persistent timer events. */
+  while (1) {
+     /* This schedules an exit ten seconds from now. */
+     event_base_loopexit(base, &ten_sec);
 
-ten_sec.tv_sec = 10;
-ten_sec.tv_usec = 0;
-
-/* Now we run the event_base for a series of 10-second intervals, printing
-   "Tick" after each.  For a much better way to implement a 10-second
-   timer, see the section below about persistent timer events. */
-while (1)
-   /* This schedules an exit ten seconds from now. */
-   event_base_loopexit(base, &ten_sec);
-
-   event_base_dispatch(base);
-   puts("Tick");
+     event_base_dispatch(base);
+     puts("Tick");
+  }
 }
 --------
 
@@ -168,7 +163,7 @@ event_base_loopexit() or event_base_break().  You can use these functions to
 tell whether loopexit or break was called:
 
 .Interface
-[code]
+[code,C]
 --------
 int event_base_got_exit(struct event_base *base);
 int event_base_got_break(struct event_base *base);

@@ -184,7 +184,7 @@ You can create a socket-based bufferevent using
 bufferevent_socket_new():
 
 .Interface
-[code]
+[code,C]
 --------
 struct bufferevent *bufferevent_socket_new(
     struct event_base *base,
@@ -208,7 +208,7 @@ If the bufferevent's socket is not yet connected, you can launch a new
 connection.
 
 .Interface
-[code]
+[code,C]
 --------
 int bufferevent_socket_connect(struct bufferevent *bev,
     struct sockaddr *address, int addrlen);
@@ -226,8 +226,13 @@ This function returns 0 if the connect was successfully launched, and
 -1 if an error occurred.
 
 .Example
-[code]
+[code,C]
 --------
+#include <event2/event.h>
+#include <event2/bufferevent.h>
+#include <sys/socket.h>
+#include <string.h>
+
 void eventcb(struct bufferevent *bev, short events, void *ptr)
 {
     if (events & BEV_EVENT_CONNECTED) {
@@ -238,30 +243,32 @@ void eventcb(struct bufferevent *bev, short events, void *ptr)
     }
 }
 
-/* ... */
+int main_loop(void)
+{
+    struct event_base *base;
+    struct bufferevent *bev;
+    struct sockaddr_in sin;
 
-struct event_base *base;
-struct bufferevent *bev;
-struct sockaddr_in sin;
+    base = event_base_new();
 
-base = event_base_new();
+    memset(&sin, 0, sizeof(sin));
+    sin.sin_addr.s_addr = htonl(0x7f000001); /* 127.0.0.1 */
+    sin.sin_port = htons(8080); /* Port 8080 */
 
-memset(&sin, 0, sizeof(sin));
-sin.sin_addr.s_addr = htonl(0x7f000001); /* 127.0.0.1 */
-sin.sin_port = htons(8080); /* Port 8080 */
+    bev = bufferevent_socket_new(base, -1, BEV_OPT_CLOSE_ON_FREE);
 
-bev = bufferevent_socket_new(base, -1, BEV_OPT_CLOSE_ON_FREE);
+    bufferevent_setcb(bev, NULL, NULL, eventcb, NULL);
 
-bufferevent_setcb(bev, NULL, NULL, eventcb);
-
-if (bufferevent_socket_connect(bev,
+    if (bufferevent_socket_connect(bev,
         (struct sockaddr *)&sin, sizeof(sin)) < 0) {
-    /* Error starting connection */
-    bufferevent_free(bev)
-    return -1;
-}
+        /* Error starting connection */
+        bufferevent_free(bev);
+        return -1;
+    }
 
-event_base_loop(base);
+    event_base_dispatch(base);
+    return 0;
+}
 --------
 
 The bufferevent_base_connect() function was introduced in
@@ -285,7 +292,7 @@ Freeing a bufferevent
 ^^^^^^^^^^^^^^^^^^^^^
 
 .Interface
-[code]
+[code,C]
 --------
 void bufferevent_free(struct bufferevent *bev);
 --------
@@ -305,7 +312,7 @@ Manipulating callbacks, watermarks, and enabled operations
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .Interface
-[code]
+[code,C]
 --------
 typedef void (*bufferevent_data_cb)(struct bufferevent *bev, void *ctx);
 typedef void (*bufferevent_event_cb)(struct bufferevent *bev,
@@ -335,7 +342,7 @@ This function was introduced in Libevent 1.4.4.  The type names
 2.0.2-alpha.
 
 .Interface
-[code]
+[code,C]
 --------
 void bufferevent_enable(struct bufferevent *bufev, short events);
 void bufferevent_disable(struct bufferevent *bufev, short events);
@@ -365,7 +372,7 @@ These functions were introduced before Libevent 1.0, except for
 bufferevent_get_enabled(), which was introduced in version 2.0.3-alpha.
 
 .Interface
-[code]
+[code,C]
 --------
 void bufferevent_setwatermark(struct bufferevent *bufev, short events,
     size_t lowmark, size_t highmark);
@@ -381,8 +388,17 @@ A high-water mark of 0 is equivalent to "unlimited".
 This function was first exposed in Libevent 1.4.4.
 
 .Example
-[code]
+[code,C]
 --------
+#include <event2/event.h>
+#include <event2/bufferevent.h>
+#include <event2/buffer.h>
+#include <event2/util.h>
+
+#include <stdlib.h>
+#include <errno.h>
+#include <string.h>
+
 struct info {
     const char *name;
     size_t total_drained;
@@ -425,23 +441,27 @@ void event_callback(struct bufferevent *bev, short events, void *ctx)
     }
 }
 
-struct bufferevent *b1;
-struct info *info1;
+struct bufferevent *setup_bufferevent(void)
+{
+    struct bufferevent *b1;
+    struct info *info1;
 
-info1 = malloc(sizeof(struct info));
-info1->name = "buffer 1";
-info1->total_drained = 0;
+    info1 = malloc(sizeof(struct info));
+    info1->name = "buffer 1";
+    info1->total_drained = 0;
 
-/* ... Here we should set up the bufferevent and make sure it gets
-   connected... */
+    /* ... Here we should set up the bufferevent and make sure it gets
+       connected... */
 
-/* Trigger the read callback only whenever there is at least 128 bytes
-   of data in the buffer. */
-bufferevent_setwatermark(b1, EV_READ, 128, 0);
+    /* Trigger the read callback only whenever there is at least 128 bytes
+       of data in the buffer. */
+    bufferevent_setwatermark(b1, EV_READ, 128, 0);
 
-bufferevent_setcb(b1, read_callback, NULL, event_callback, info1);
+    bufferevent_setcb(b1, read_callback, NULL, event_callback, info1);
 
-bufferevet_enable(b1, EV_READ); /* Start reading. */
+    bufferevent_enable(b1, EV_READ); /* Start reading. */
+    return b1;
+}
 --------
 
 Manipulating data in a bufferevent
@@ -452,7 +472,7 @@ can't look at it.  Bufferevents give you these methods to give them
 data to write, and to get the data to read:
 
 .Interface
-[code]
+[code,C]
 --------
 struct evbuffer *bufferevent_get_input(struct bufferevent *bufev);
 struct evbuffer *bufferevent_get_output(struct bufferevent *bufev);
@@ -474,7 +494,7 @@ automatically restart it.
 These functions were introduced in Libevent 2.0.1-alpha.
 
 .Interface
-[code]
+[code,C]
 --------
 int bufferevent_write(struct bufferevent *bufev,
     const void *data, size_t size);
@@ -491,7 +511,7 @@ buffer.   Both return 0 if successful, or -1 if an error occurred.
 These functions have existed since before Libevent 1.0.
 
 .Interface
-[code]
+[code,C]
 --------
 size_t bufferevent_read(struct bufferevent *bufev, void *data, size_t size);
 int bufferevent_read_buffer(struct bufferevent *bufev,
@@ -512,14 +532,24 @@ The bufferevent_read() function has existed since before Libevent 1.0;
 bufferevent_read_buffer() was introduced in Libevent 2.0.1-alpha.
 
 .Example
-[code]
+[code,C]
 --------
+#include <event2/bufferevent.h>
+#include <event2/buffer.h>
+
+#include <ctype.h>
+
 void
 read_callback_uppercase(struct bufferevent *bev, void *ctx)
 {
         /* This callback removes the data from bev's input buffer 128
            bytes at a time, uppercases it, and starts sending it
-           back. */
+           back.
+
+           (Watch out!  In practice, you shouldn't use toupper to implement
+           a network protocol, unless you know for a fact that the current
+           locale is the one you want to be using.)
+         */
 
         char tmp[128];
         size_t n;
@@ -544,7 +574,7 @@ read_callback_proxy(struct bufferevent *bev, void *ctx)
            a simple proxy: it will take data from one connection (on
            bev), and write it to another, copying as little as
            possible. */
-        struct proxyinfo *inf = ctx;
+        struct proxy_info *inf = ctx;
 
         bufferevent_read_buffer(bev,
             bufferevent_get_output(inf->other_bev));
@@ -564,11 +594,11 @@ write_callback_fibonacci(struct bufferevent *bev, void *ctx)
 
         struct evbuffer *tmp = evbuffer_new();
         while (evbuffer_get_length(tmp) < 1024) {
-                 unsigned long next = c.last_fib[0] + c.last_fib[1];
-                 c.last_fib[0] = c.last_fib[1];
-                 c.last_fib[1] = next;
+                 unsigned long next = c->last_fib[0] + c->last_fib[1];
+                 c->last_fib[0] = c->last_fib[1];
+                 c->last_fib[1] = next;
 
-                 evbuffer_printf(tmp, "%lu", next);
+                 evbuffer_add_printf(tmp, "%lu", next);
         }
 
         /* Now we add the whole contents of tmp to bev. */
@@ -587,7 +617,7 @@ amount of time passes without any data having been successfully
 written or read by a bufferevent.
 
 .Interface
-[code]
+[code,C]
 --------
 void bufferevent_set_timeouts(struct bufferevent *bufev,
     const struct timeval *timeout_read, const struct timeval *timeout_write);
@@ -617,7 +647,7 @@ Initiating a flush on a bufferevent
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .Interface
-[code]
+[code,C]
 --------
 int bufferevent_flush(struct bufferevent *bufev,
     short iotype,
@@ -634,7 +664,7 @@ These bufferevent functions are not supported on all bufferevent
 types.
 
 .Interface
-[code]
+[code,C]
 --------
 int bufferevent_priority_set(struct bufferevent *bufev, int pri);
 --------
@@ -649,7 +679,7 @@ socket-based bufferevents only.
 This function was introduced before Libevent 1.0.
 
 .Interface
-[code]
+[code,C]
 --------
 int bufferevent_setfd(struct bufferevent *bufev, evutil_socket_t fd);
 evutil_socket_t bufferevent_getfd(struct bufferevent *bufev);
@@ -663,7 +693,7 @@ The bufferevent_setfd() function was introduced before Libevent 1.4.4;
 the bufferevent_getfd() function was introduced in Libevent 2.0.2-alpha.
 
 .Interface
-[code]
+[code,C]
 --------
 struct bufferevent *bufferevent_get_underlying(struct bufferevent *bufev);
 --------
@@ -713,7 +743,7 @@ event2/bufferevent_compat.h.
 The interface to set up a bufferevent differed in older versions:
 
 .Interface
-[code]
+[code,C]
 --------
 struct bufferevent *bufferevent_new(evutil_socket_t fd,
     evbuffercb readcb, evbuffercb writecb, everrorcb errorcb, void *cbarg);
@@ -724,7 +754,7 @@ Instead of setting timeouts as struct timeval, they were set as
 numbers of seconds:
 
 .Interface
-[code]
+[code,C]
 --------
 void bufferevent_settimeout(struct bufferevent *bufev,
     int timeout_read, int timeout_write);

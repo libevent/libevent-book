@@ -33,7 +33,7 @@ Constructing event objects
 To create a new event, use the event_new() interface.
 
 .Interface
-[code]
+[code,C]
 --------
 #define EV_TIMEOUT      0x01
 #define EV_READ         0x02
@@ -68,13 +68,15 @@ event_free() on an event that is pending or active: doing so makes the
 event non-pending and inactive before deallocating it.
 
 .Example
-[code]
+[code,C]
 --------
+#include <event2/event.h>
+
 void cb_func(evutil_socket_t fd, short what, void *arg)
 {
         const char *data = arg;
         printf("Got an event on socket %d:%s%s%s%s [%s]",
-            (int fd),
+            (int) fd,
             (what&EV_TIMEOUT) ? " timeout" : "",
             (what&EV_READ)    ? " read" : "",
             (what&EV_WRITE)   ? " write" : "",
@@ -82,23 +84,24 @@ void cb_func(evutil_socket_t fd, short what, void *arg)
             data);
 }
 
-...
+void main_loop(evutil_socket_t fd1, evutil_socket_t fd2)
+{
+        struct event *ev1, *ev2;
+        struct timeval five_seconds = {5,0};
+        struct event_base *base = event_base_new();
 
-evutil_socket_t fd1, fd2;
-struct event *ev1, *ev2;
-struct timeval five_seconds = {5,0};
-struct event_base *base = event_base_new();
+        /* The caller has already set up fd1, fd2 somehow, and make them
+           nonblocking. */
 
-/* set up fd1, fd2 somehow, and make them nonblocking. */
+        ev1 = event_new(base, fd1, EV_TIMEOUT|EV_READ|EV_PERSIST, cb_func,
+           "Reading event");
+        ev2 = event_new(base, fd2, EV_WRITE|EV_PERSIST, cb_func,
+           "Writing event");
 
-ev1 = event_new(base, fd1, EV_TIMEOUT|EV_READ|EV_PERSIST, cb_func,
-        "Reading event");
-ev2 = event_new(base, fd2, EV_WRITE|EV_PERSIST, cb_func,
-        "Writing event");
-
-event_add(ev1, &five_seconds);
-event_add(ev2, NULL);
-event_base_dispatch();
+        event_add(ev1, &five_seconds);
+        event_add(ev2, NULL);
+        event_base_dispatch(base);
+}
 --------
 
 The above functions are defined in <event2/event.h>, and first
@@ -115,7 +118,6 @@ EV_TIMEOUT::
     can either set a timeout when you add the event, or not.  It is
     set in the 'what' argument to the callback function when a timeout
     has occurred.
-    [FIXME: Is this correct?]
 
 EV_READ::
     This flag indicates an event that becomes active when the provided
@@ -126,7 +128,8 @@ EV_WRITE::
     file descriptor is ready for writing.
 
 EV_SIGNAL::
-    Used to implement signal detection.  See "FIXME" below.
+    Used to implement signal detection.  See "Constructing signal events"
+    below.
 
 EV_PERSIST::
     Indicates that the event is 'persistent'.  See "About Event
@@ -153,12 +156,12 @@ By default, whenever a pending event becomes active (because its fd is
 ready to read or write, or because its timeout expires), it becomes
 non-pending right before its
 callback is executed.  Thus, if you want to make the event pending
-again, it is sufficient to call event_add() on it again from inside
+again, you can call event_add() on it again from inside
 the callback function.
 
 If the EV_PERSIST flag is set on an event, however, the event is
-'persistent.'  In other words, the event remains pending even when its
-callback runs.  If you want to make it non-pending from within its
+'persistent.'  This means that event remains pending even when its
+callback is activated.  If you want to make it non-pending from within its
 callback, you can call event_del() on it.
 
 The timeout on a persistent event resets whenever the event's callback
@@ -176,7 +179,7 @@ As a convenience, you can use the evtimer_new to allocate a
 pure-timeout event:
 
 .Interface
-[code]
+[code,C]
 --------
 #define evtimer_new(base, callback, arg) \
     event_new(base, -1, 0, callback, arg)
@@ -192,7 +195,7 @@ Libevent can also watch for POSIX-style signals.  To construct a
 handler for a signal, use:
 
 .Interface
-[code]
+[code,C]
 --------
 #define evsignal_new(base, signum, callback, arg) \
     event_new(base, signum, EV_SIGNAL|EV_PERSIST, cb, arg)
@@ -201,10 +204,12 @@ handler for a signal, use:
 The arguments are as for event_new, except that we provide a signal
 number instead of a file descriptor.
 
+//BUILD: SKIP
 .Example
-[code]
+[code,C]
 --------
 struct event *hup_event;
+struct event_base *base = event_base_new();
 
 /* call sighup_function on a HUP signal */
 hup_event = evsignal_new(base, SIGHUP, sighup_function, NULL);
@@ -241,7 +246,7 @@ with future versions of Libevent if they use a larger event structure
 than the one you're building with.
 
 .Interface
-[code]
+[code,C]
 --------
 int event_assign(struct event *event, struct event_base *base,
     evutil_socket_t fd, short what,
@@ -253,15 +258,19 @@ the 'event' argument, which must point to an uninitialized event.  It returns
 0 on success, and -1 on an internal error or bad arguments.
 
 .Example
-[code]
+[code,C]
 --------
+#include <event2/event.h>
+#include <event2/event_struct.h>
+#include <stdlib.h>
+
 struct event_pair {
          evutil_socket_t fd;
          struct event read_event;
          struct event write_event;
 };
-static void readcb(evutil_socket_t, short, void *);
-static void writecb(evutil_socket_t, short, void *);
+void readcb(evutil_socket_t, short, void *);
+void writecb(evutil_socket_t, short, void *);
 struct event_pair *event_pair_new(struct event_base *base, evutil_socket_t fd)
 {
         struct event_pair *p = malloc(sizeof(struct event_pair));
@@ -285,7 +294,7 @@ event_del() on it *before* you call event_assign() on it again.
 There are convenience macros you can use to event_assign() a timeout-only or
 a signal event:
 .Interface
-[code]
+[code,C]
 --------
 #define evtimer_assign(event, base, callback, arg) \
     event_assign(event, base, -1, 0, callback, arg)
@@ -306,7 +315,7 @@ until you have made it 'pending' by adding it.  You do this with
 event_add:
 
 .Interface
-[code]
+[code,C]
 --------
 int event_add(struct event *ev, const struct timeval *tv);
 --------
@@ -325,7 +334,7 @@ run.  If you say "tv->tv_sec = time(NULL)+10;" on 1 January 2010, your
 timeout will wait 40 years, not 10 seconds.
 
 .Interface
-[code]
+[code,C]
 --------
 int event_del(struct event *ev);
 --------
@@ -354,7 +363,7 @@ priority values associated with it.  Before adding an event to the
 event_base, but after initializing it, you can set its priority.
 
 .Interface
-[code]
+[code,C]
 ----------
 int event_priority_set(struct event *event, int priority);
 ----------
@@ -369,22 +378,30 @@ priority events, then checks for events again.  Only when no
 high-priority events are active are the low-priority events run.
 
 .Example
-[code]
+[code,C]
 ----------
-struct event *important, *unimportant;
-struct event_base *base;
+#include <event2/event.h>
 
-base = event_base_new();
-event_base_priority_init(base, 2);
-/* Now base has priority 0, and priority 1 */
-important = event_new(base, fd, EV_WRITE|EVPERSIST, write_cb, NULL);
-unimportant = event_new(base, fd, EV_READ|EVPERSIST, read_cb, NULL);
-event_priority_set(important, 0);
-event_priority_set(unimportant, 1);
+void read_cb(evutil_socket_t, short, void *);
+void write_cb(evutil_socket_t, short, void *);
 
-/* Now, whenever the fd is ready for writing, the write callback will
-   happen before the read callback.  The read callback won't happen at
-   all until the write callback is no longer active. */
+void main_loop(evutil_socket_t fd)
+{
+  struct event *important, *unimportant;
+  struct event_base *base;
+
+  base = event_base_new();
+  event_base_priority_init(base, 2);
+  /* Now base has priority 0, and priority 1 */
+  important = event_new(base, fd, EV_WRITE|EV_PERSIST, write_cb, NULL);
+  unimportant = event_new(base, fd, EV_READ|EV_PERSIST, read_cb, NULL);
+  event_priority_set(important, 0);
+  event_priority_set(unimportant, 1);
+
+  /* Now, whenever the fd is ready for writing, the write callback will
+     happen before the read callback.  The read callback won't happen at
+     all until the write callback is no longer active. */
+}
 ----------
 
 When you do not set the priority for an event, the default is the
@@ -400,7 +417,7 @@ Sometimes you want to tell whether an event has been added, and check
 what it refers to.
 
 .Interface
-[code]
+[code,C]
 --------
 int event_pending(struct event *ev, short what, struct timeval *tv_out);
 
@@ -435,7 +452,7 @@ has been added, and it doesn't have to be persistent, you can use
 event_base_once().
 
 .Interface
-[code]
+[code,C]
 --------
 int event_base_once(struct event_base *, evutil_socket_t, short,
   void (*)(evutil_socket_t, short, void *), void *, const struct timeval *);
@@ -458,7 +475,7 @@ Rarely, you may want to make an event active even though its
 conditions have not triggered.
 
 .Interface
-[code]
+[code,C]
 --------
 void event_active(struct event *ev, int what, short ncalls);
 --------
@@ -483,7 +500,7 @@ remember to call event_base_set() afterwards to make sure that the
 event was associated with the base you actually wanted to use.
 
 .Interface
-[code]
+[code,C]
 --------
 void event_set(struct event *event, evutil_socket_t fd, short what,
         void(*callback)(evutil_socket_t, short, void *), void *arg);

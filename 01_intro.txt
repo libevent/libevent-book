@@ -19,7 +19,9 @@ Here's an example of a really simple client using blocking network
 calls.  It opens a connection to www.google.com, sends it a simple
 HTTP request, and prints the response to stdout.
 
-[code]
+//BUILD: SKIP
+.Example: A simple blocking HTTP client
+[code,C]
 -------
 include::examples_01/01_sync_webclient.c[]
 -------
@@ -37,16 +39,21 @@ for you.  But suppose that you need to write a program to handle
 multiple connections at once.  To make our example concrete: suppose
 that you want to read input from two connections, and you don't know
 which connection will get input first.  You can't say
+
+//BUILD: FUNCTIONBODY INC:../example_stubs/sec01.h
+.Bad Example
 [code,C]
 -------
 /* This won't work. */
+char buf[1024];
+int i, n;
 while (i_still_want_to_read()) {
     for (i=0; i<n_sockets; ++i) {
         n = recv(fd[i], buf, sizeof(buf), 0);
         if (n==0)
             handle_close(fd[i]);
         else if (n<0)
-            handle_error(fd[i], error)
+            handle_error(fd[i], errno);
         else
             handle_input(fd[i], buf, n);
     }
@@ -69,6 +76,8 @@ at a time, and writes out the ROT13 obfuscation of line each as it
 arrives.  It uses the Unix fork() call to create a new process for
 each incoming connection.
 
+//BUILD: SKIP
+.Example: Forking ROT13 server
 [code,C]
 -------
 include::examples_01/01_rot13_server_forking.c[]
@@ -100,9 +109,13 @@ immediately or return with a special error code to indicate "I
 couldn't make any progress now, try again."  So our two-socket example
 might be naively written as:
 
+//BUILD: FUNCTIONBODY INC:../example_stubs/sec01.h
+.Bad Example: busy-polling all sockets
 [code,C]
 ------
 /* This will work, but the performance will be unforgivably bad. */
+int i, n;
+char buf[1024];
 for (i=0; i < n_sockets; ++i)
     fcntl(fd[i], F_SETFL, O_NONBLOCK);
 
@@ -115,7 +128,7 @@ while (i_still_want_to_read()) {
             if (errno == EAGAIN)
                  ; /* The kernel didn't have any data for us to read. */
             else
-                 handle_error(fd[i]);
+                 handle_error(fd[i], errno);
          } else {
             handle_input(fd[i], buf, n);
          }
@@ -140,10 +153,15 @@ bit arrays): one for reading, one for writing, and one for
 and alters the sets to contain only the sockets ready for use.
 
 Here is our read() example again, using select:
+
+//BUILD: FUNCTIONBODY INC:../example_stubs/sec01.h
+.Example: Using select
 [code,C]
 ------
 /* If you only have a couple dozen fds, this version won't be awful */
 struct fd_set readset;
+int i, n;
+char buf[1024];
 
 while (i_still_want_to_read()) {
     int maxfd = -1;
@@ -168,7 +186,7 @@ while (i_still_want_to_read()) {
                 if (errno == EAGAIN)
                      ; /* The kernel didn't have any data for us to read. */
                 else
-                     handle_error(fd[i]);
+                     handle_error(fd[i], errno);
              } else {
                 handle_input(fd[i], buf, n);
              }
@@ -180,6 +198,9 @@ while (i_still_want_to_read()) {
 
 And here's a reimplementation of our ROT13 server, using select() this
 time.
+
+//BUILD: SKIP
+.Example: select()-based ROT13 server
 [code,C]
 ------
 include::examples_01/01_rot13_server_select.c[]
@@ -222,6 +243,8 @@ are gone now: instead, we associate and disassociate events with a
 struct event_base, which might be implemented in terms of select(),
 poll(), epoll(), kqueue(), etc.
 
+//BUILD: SKIP
+.Example: A low-level ROT13 server with Libevent
 [code,C]
 -------
 include::examples_01/01_rot13_server_libevent.c[]
@@ -264,6 +287,8 @@ on Unix.
 
 Here's our ROT13 server one last time, using the bufferevents API.
 
+//BUILD: SKIP
+.Example: A simpler ROT13 server with Libevent
 [code,C]
 -------
 include::examples_01/01_rot13_server_bufferevent.c[]

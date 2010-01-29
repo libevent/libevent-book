@@ -20,7 +20,7 @@ Creating or freeing an evbuffer
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .Interface
-[code]
+[code,C]
 --------
 struct evbuffer *evbuffer_new(void);
 void evbuffer_free(struct evbuffer *buf);
@@ -36,7 +36,7 @@ Evbuffers and Thread-safety
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .Interface
-[code]
+[code,C]
 --------
 int evbuffer_enable_locking(struct evbuffer *buf, void *lock);
 void evbuffer_lock(struct evbuffer *buf);
@@ -67,7 +67,7 @@ Inspecting an evbuffer
 ~~~~~~~~~~~~~~~~~~~~~~
 
 .Interface
-[code]
+[code,C]
 --------
 size_t evbuffer_get_length(const struct evbuffer *buf);
 --------
@@ -77,7 +77,7 @@ This function returns the number of bytes stored in an evbuffer.
 It was introduced in Libevent 2.0.1-alpha.
 
 .Interface
-[code]
+[code,C]
 --------
 size_t evbuffer_get_contiguous_space(const struct evbuffer *buf);
 --------
@@ -93,7 +93,7 @@ Adding data to an evbuffer: basics
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .Interface
-[code]
+[code,C]
 --------
 int evbuffer_add(struct evbuffer *buf, const void *data, size_t datlen);
 --------
@@ -102,7 +102,7 @@ This function appends the 'datlen' bytes in 'data' to the end of
 'buf'.  It returns 0 on success, and -1 on failure.
 
 .Interface
-[code]
+[code,C]
 --------
 int evbuffer_add_printf(struct evbuffer *buf, const char *fmt, ...)
 int evbuffer_add_vprintf(struct evbuffer *buf, const char *fmt, va_list ap);
@@ -114,7 +114,7 @@ library functions "printf" and "vprintf" respectively.  The functions
 return the number of bytes appended.
 
 .Interface
-[code]
+[code,C]
 --------
 int evbuffer_expand(struct evbuffer *buf, size_t datlen);
 --------
@@ -123,16 +123,16 @@ This function alters the last chunk of memory in the buffer, or adds a
 new chunk, such that the buffer is now large enough to contain datlen
 bytes without any further allocations.
 
+//BUILD: FUNCTIONBODY INC:../example_stubs/Ref7.h
 .Examples
-[code]
+[code,C]
 --------
-/* Here are three ways to add "Hello world 2.0.1" to a buffer. */
+/* Here are two ways to add "Hello world 2.0.1" to a buffer. */
 /* Directly: */
 evbuffer_add(buf, "Hello world 2.0.1", 17);
 
 /* Via printf: */
-evbuffer_printf(buf, "Hello %s %d.%d.%d", "world", 2, 0, 1);
-
+evbuffer_add_printf(buf, "Hello %s %d.%d.%d", "world", 2, 0, 1);
 --------
 
 The evbuffer_add(), evbuffer_add_printf(), and evbuffer_expand() functions
@@ -146,7 +146,7 @@ For efficiency, Libevent has optimized functions for moving data from
 one evbuffer to another.
 
 .Interface
-[code]
+[code,C]
 --------
 int evbuffer_add_buffer(struct evbuffer *dst, struct evbuffer *src);
 int evbuffer_remove_buffer(struct evbuffer *src, struct evbuffer *dst,
@@ -168,7 +168,7 @@ Adding data to the front of an evbuffer
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .Interface
-[code]
+[code,C]
 --------
 int evbuffer_prepend(struct evbuffer *buf, const void *data, size_t size);
 int evbuffer_prepend_buffer(struct evbuffer *dst, struct evbuffer* src);
@@ -190,7 +190,7 @@ do this, you must first ensure that the front of the buffer really _is_
 contiguous.
 
 .Interface
-[code]
+[code,C]
 --------
 unsigned char *evbuffer_pullup(struct evbuffer *buf, ev_ssize_t size);
 --------
@@ -207,27 +207,38 @@ Calling evbuffer_pullup() with a large size can be quite slow, since
 it potentially needs to copy the entire buffer's contents.
 
 .Example
-[code]
+[code,C]
 --------
-/* Let's parse the start of a SOCKS4 request!  The format is easy:
- * 1 byte of version, 1 byte of command, 2 bytes destport, 4 bytes of
- * destip. */
-unsigned char *mem;
-ev_uint16_t port;
-ev_uint32_t addr;
+#include <event2/buffer.h>
+#include <event2/util.h>
 
-mem = evbuffer_pullup(buf, 8);
+#include <string.h>
 
-if (mem == NULL || mem[0] != 4 || mem[1] != 1) {
-    /* Not enough data, or unrecognized protocol or command */
-} else {
-    memcpy(&port, mem+2, 2);
-    memcpy(&addr, mem+4, 4);
-    port = ntohs(port);
-    addr = ntohl(addr);
-    /* Actually remove the data from the buffer now that we know we
-      like it. */
-    evbuffer_drain(buf, 8);
+int parse_socks4(struct evbuffer *buf, ev_uint16_t *port, ev_uint32_t *addr)
+{
+    /* Let's parse the start of a SOCKS4 request!  The format is easy:
+     * 1 byte of version, 1 byte of command, 2 bytes destport, 4 bytes of
+     * destip. */
+    unsigned char *mem;
+
+    mem = evbuffer_pullup(buf, 8);
+
+    if (mem == NULL) {
+        /* Not enough data in the buffer */
+        return 0;
+    } else if (mem[0] != 4 || mem[1] != 1) {
+        /* Unrecognized protocol or command */
+        return -1;
+    } else {
+        memcpy(port, mem+2, 2);
+        memcpy(addr, mem+4, 4);
+        *port = ntohs(*port);
+        *addr = ntohl(*addr);
+        /* Actually remove the data from the buffer now that we know we
+           like it. */
+        evbuffer_drain(buf, 8);
+        return 1;
+    }
 }
 --------
 
@@ -244,7 +255,7 @@ Removing data from an evbuffer
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .Interface
-[code]
+[code,C]
 --------
 int evbuffer_remove(struct evbuffer *buf, void *data, size_t datlen);
 int evbuffer_drain(struct evbuffer *buf, size_t len);
@@ -266,7 +277,7 @@ Line-oriented input
 ~~~~~~~~~~~~~~~~~~~
 
 .Interface
-[code]
+[code,C]
 --------
 enum evbuffer_eol_style {
         EVBUFFER_EOL_ANY,
@@ -313,8 +324,9 @@ EVBUFFER_EOL_ANY::
 default malloc, the string returned by evbuffer_readln will be
 allocated by the malloc-replacement you specified.)
 
+//BUILD: FUNCTIONBODY INC:../example_stubs/Ref7.h
 .Example
-[code]
+[code,C]
 --------
 char *request_line;
 size_t len;
@@ -339,7 +351,7 @@ The evbuffer_ptr structure points to a location within an evbuffer,
 and contains data that you can use to iterate through an evbuffer.
 
 .Interface
-[code]
+[code,C]
 --------
 struct evbuffer_ptr {
         ev_ssize_t pos;
@@ -354,7 +366,7 @@ used by user code.  It indicates a position in the evbuffer as an
 offset from the start.
 
 .Interface
-[code]
+[code,C]
 --------
 struct evbuffer_ptr evbuffer_search(struct evbuffer *buffer,
     const char *what, size_t len, const struct evbuffer_ptr *start);
@@ -367,7 +379,7 @@ the position of the string, or -1 if the string was not found.  If the
 should begin; otherwise, the search is from the start of the string.
 
 .Interface
-[code]
+[code,C]
 --------
 enum evbuffer_ptr_how {
         EVBUFFER_PTR_SET,
@@ -384,9 +396,12 @@ If it is EVBUFFER_PTR_ADD, the pointer moves 'position' bytes
 forward.  This function returns 0 on success and -1 on failure.
 
 .Example
-[code]
+[code,C]
 --------
-/* Count the total occurrences of 'str' in 'buf'.
+#include <event2/buffer.h>
+#include <string.h>
+
+/* Count the total occurrences of 'str' in 'buf'. */
 int count_instances(struct evbuffer *buf, const char *str)
 {
     size_t len = strlen(str);
@@ -427,7 +442,7 @@ the middle of an evbuffer.
 You can do this with:
 
 .Interface
-[code]
+[code,C]
 --------
 struct evbuffer_iovec {
 	void *iov_base;
@@ -455,69 +470,76 @@ number that it would need in order to give what you asked for.
 When 'ptr' is NULL, evbuffer_peek() starts at the beginning of the buffer.
 Otherwise, it starts at the pointer given in 'ptr'.
 
+//BUILD: FUNCTIONBODY INC:event2/buffer.h INC:../example_stubs/Ref7.h
 .Examples
-[code]
+[code,C]
 --------
-/* Let's look at the first two chunks of buf, and write them to stderr. */
-int n, i;
-struct evbuffer_iovec v[2];
-n = evbuffer_peek(buf, -1, NULL, v, 2);
-for (i=0; i<n; ++i) { /* There might be less than two chunks available. */
-    fwrite(v[i].iov_base, 1, v[i].iov_len, stderr);
+{
+    /* Let's look at the first two chunks of buf, and write them to stderr. */
+    int n, i;
+    struct evbuffer_iovec v[2];
+    n = evbuffer_peek(buf, -1, NULL, v, 2);
+    for (i=0; i<n; ++i) { /* There might be less than two chunks available. */
+        fwrite(v[i].iov_base, 1, v[i].iov_len, stderr);
+    }
 }
 
-/* Let's send the first 4906 bytes to stdout via write. */
-int n, i;
-struct evbuffer_iovec *v;
-size_t written = 0;
+{
+    /* Let's send the first 4906 bytes to stdout via write. */
+    int n, i, r;
+    struct evbuffer_iovec *v;
+    size_t written = 0;
 
-/* determine how many chunks we need. */
-n = evbuffer_peek(buf, 4096, NULL, NULL, 0);
-/* Allocate space for the chunks.  This would be a good time to use
-   alloca() if you have it. */
-v = malloc(sizeof(struct evbuffer_iovec)*n);
-/* Actually fill up v. */
-n = evbuffer_peek(buf, 4096, NULL, v, n);
-for (i=0; i<n; ++i) {
-    size_t len = v[i].iov_len;
-    if (written + len > 4096)
-        len = 4096 - written;
-    r = write(1 /* stdout */, v[i].iov_base, len);
-    if (r<=0)
-        break;
-    /* We keep track of the bytes written separately; if we don't,
-       we may write more than 4096 bytes if the last chunk puts
-       us over the limit. */
-    written += len;
+    /* determine how many chunks we need. */
+    n = evbuffer_peek(buf, 4096, NULL, NULL, 0);
+    /* Allocate space for the chunks.  This would be a good time to use
+       alloca() if you have it. */
+    v = malloc(sizeof(struct evbuffer_iovec)*n);
+    /* Actually fill up v. */
+    n = evbuffer_peek(buf, 4096, NULL, v, n);
+    for (i=0; i<n; ++i) {
+        size_t len = v[i].iov_len;
+        if (written + len > 4096)
+            len = 4096 - written;
+        r = write(1 /* stdout */, v[i].iov_base, len);
+        if (r<=0)
+            break;
+        /* We keep track of the bytes written separately; if we don't,
+           we may write more than 4096 bytes if the last chunk puts
+           us over the limit. */
+        written += len;
+    }
+    free(v);
 }
-free(v);
 
-/* Let's get the first 16K of data after the first occurrence of the
-   string "start\n", and pass it to a consume() function. */
-struct evbuffer_ptr ptr;
-struct evbuffer_iovec v[1];
-size_t n_consumed = 0;
-const char s[] = "start\n";
+{
+    /* Let's get the first 16K of data after the first occurrence of the
+       string "start\n", and pass it to a consume() function. */
+    struct evbuffer_ptr ptr;
+    struct evbuffer_iovec v[1];
+    const char s[] = "start\n";
+    int n_written;
 
-ptr = evbuffer_search(buf, s, strlen(s), NULL);
-if (ptr.pos == -1)
-    return; /* no start string found. */
+    ptr = evbuffer_search(buf, s, strlen(s), NULL);
+    if (ptr.pos == -1)
+        return; /* no start string found. */
 
-/* Advance the pointer past the start string. */
-if (evbuffer_ptr_set(buf, &ptr, strlen(s), EVBUFFER_PTR_ADD) < 0)
-    return; /* off the end of the string. */
+    /* Advance the pointer past the start string. */
+    if (evbuffer_ptr_set(buf, &ptr, strlen(s), EVBUFFER_PTR_ADD) < 0)
+        return; /* off the end of the string. */
 
-while (n_written < 16*1024) {
-    /* Peek at a single chunk. */
-    if (evbuffer_peek(buf, -1, &ptr, v, 1) < 1)
-        break;
-    /* Pass the data to some user-defined consume function */
-    consume(v[0].iov_base, v[0].iov_len);
-    n_written += v[0].iov_len;
+    while (n_written < 16*1024) {
+        /* Peek at a single chunk. */
+        if (evbuffer_peek(buf, -1, &ptr, v, 1) < 1)
+            break;
+        /* Pass the data to some user-defined consume function */
+        consume(v[0].iov_base, v[0].iov_len);
+        n_written += v[0].iov_len;
 
-    /* Advance the pointer so we see the next chunk next time. */
-    if (evbuffer_ptr_set(buf, &ptr, v[0].iov_len, EVBUFFER_PTR_ADD)<0)
-        break;
+        /* Advance the pointer so we see the next chunk next time. */
+        if (evbuffer_ptr_set(buf, &ptr, v[0].iov_len, EVBUFFER_PTR_ADD)<0)
+            break;
+    }
 }
 --------
 
@@ -543,7 +565,7 @@ As with evbuffer_peek(), these functions use the evbuffer_iovec
 structure to provide direct access to memory inside the evbuffer.
 
 .Interface
-[code]
+[code,C]
 --------
 int evbuffer_reserve_space(struct evbuffer *buf, ev_ssize_t size,
     struct evbuffer_iovec *vec, int n_vecs);
@@ -584,8 +606,9 @@ returns 0 on success and -1 on failure.
   it with evbuffer_lock() before you call evbuffer_reserve_space(), and
   unlock it once you commit.
 
+//BUILD: FUNCTIONBODY INC:../example_stubs/Ref7.h
 .Example
-[code]
+[code,C]
 --------
 /* Suppose we want to fill a buffer with 2048 bytes of output from a
    generate_data() function, without copying. */
@@ -619,12 +642,13 @@ if (evbuffer_commit_space(buf, v, i) < 0)
    return; /* Error committing */
 --------
 
-
+//BUILD: FUNCTIONBODY INC:../example_stubs/Ref7.h
 .Bad Examples
-[code]
+[code,C]
 --------
 /* Here are some mistakes you can make with evbuffer_reserve().
    DO NOT IMITATE THIS CODE. */
+struct evbuffer_iovec v[2];
 
 /* Do not use the pointers from evbuffer_reserve_space() after
    calling any functions that modify the buffer. */
@@ -637,7 +661,7 @@ memset(v[0].iov_base, 'Y', v[0].iov_len-1);
 evbuffer_commit_space(buf, v, 1);
 
 /* Do not modify the iov_base pointers. */
-const char *data = "Here is some data";
+char *data = "Here is some data";
 evbuffer_reserve_space(buf, strlen(data), v, 1);
 /* WRONG: The next line will not do what you want.  Instead, you
    should _copy_ the contents of data into v[0].iov_base. */
@@ -658,7 +682,7 @@ The most common use case for evbuffers in Libevent is network IO.
 The interface for performing network IO on an evbuffer is:
 
 .Interface
-[code]
+[code,C]
 --------
 int evbuffer_write(struct evbuffer *buffer, evutil_socket_t fd);
 int evbuffer_write_atmost(struct evbuffer *buffer, evutil_socket_t fd,
@@ -702,7 +726,7 @@ removed from an evbuffer.  To support this, Libevent provides a
 generic evbuffer callback mechanism.
 
 .Interface
-[code]
+[code,C]
 --------
 struct evbuffer_cb_info {
         size_t orig_size;
@@ -723,7 +747,7 @@ records how many bytes were added to the buffer, and its n_deleted
 field records how many bytes were removed.
 
 .Interface
-[code]
+[code,C]
 --------
 struct evbuffer_cb_entry;
 struct evbuffer_cb_entry *evbuffer_add_cb(struct evbuffer *buffer,
@@ -740,8 +764,12 @@ You can have multiple callbacks set on a single evbuffer.  Adding a
 new callback does not remove old callbacks.
 
 .Example
-[code]
+[code,C]
 --------
+#include <event2/buffer.h>
+#include <stdio.h>
+#include <stdlib.h>
+
 /* Here's a callback that remembers how many bytes we have drained in
    total from the buffer, and prints a dot every time we hit a
    megabyte. */
@@ -757,18 +785,20 @@ void count_megabytes_cb(struct evbuffer *buffer,
     tp->n += info->n_deleted;
     megabytes = ((tp->n) >> 20) - (old_n >> 20);
     for (i=0; i<megabytes; ++i)
-        putc('.');
+        putc('.', stdout);
 }
 
-/* ... */
-struct total_processed *tp = malloc(sizeof(tp));
-struct evbuffer *buf = evbuffer_new();
-tp->n = 0;
-evbuffer_add_cb(buf, count_megabytes_cb, tp);
+void operation_with_counted_bytes(void)
+{
+    struct total_processed *tp = malloc(sizeof(tp));
+    struct evbuffer *buf = evbuffer_new();
+    tp->n = 0;
+    evbuffer_add_cb(buf, count_megabytes_cb, tp);
 
-/* Use the evbuffer for a while.  When we're done: */
-evbuffer_free(buf);
-free(tp);
+    /* Use the evbuffer for a while.  When we're done: */
+    evbuffer_free(buf);
+    free(tp);
+}
 --------
 
 Note in passing that freeing a nonempty evbuffer does not count as
@@ -780,7 +810,7 @@ can _remove_ it (to make it gone for good), or disable it (to turn it
 off for a while):
 
 .Interface
-[code]
+[code,C]
 --------
 int evbuffer_remove_cb_entry(struct evbuffer *buffer,
     struct evbuffer_cb_entry *ent);
@@ -808,7 +838,7 @@ cleared, modifications to the evbuffer do not cause this callback to
 get invoked.
 
 .Interface
-[code]
+[code,C]
 --------
 int evbuffer_defer_callbacks(struct evbuffer *buffer, struct event_base *base);
 --------
@@ -840,7 +870,7 @@ copies as possible.  Libevent provides some mechanisms to help out
 with this.
 
 .Interface
-[code]
+[code,C]
 --------
 typedef void (*evbuffer_ref_cleanup_cb)(const void *data,
     size_t datalen, void *extra);
@@ -860,14 +890,18 @@ and "extra" pointer as arguments.
 This function returns 0 on success, -1 on failure.
 
 .Example
-[code]
+[code,C]
 --------
+#include <event2/buffer.h>
+#include <stdlib.h>
+#include <string.h>
+
 /* In this example, we have a bunch of evbuffers that we want to use to
    spool a one-megabyte resource out to the network.  We do this
    without keeping any more copies of the resource in memory than
    necessary. */
 
-#define HUGE_RESOURCE_SIZE 1024*1024;
+#define HUGE_RESOURCE_SIZE (1024*1024)
 struct huge_resource {
     /* We keep a count of the references that exist to this structure,
        so that we know when we can free it. */
@@ -881,7 +915,7 @@ struct huge_resource *new_resource(void) {
     /* Here we should fill hr->data with something.  In real life,
        we'd probably load something or do a complex calculation.
        Here, we'll just fill it with EEs. */
-    memset(hr->data, 0xEE sizeof(hr->data));
+    memset(hr->data, 0xEE, sizeof(hr->data));
     return hr;
 }
 
@@ -913,7 +947,7 @@ without ever copying the data to userspace.  You can access these
 mechanisms, where available, with:
 
 .Interface
-[code]
+[code,C]
 --------
 int evbuffer_add_file(struct evbuffer *output, int fd, off_t offset,
     size_t length);
@@ -952,7 +986,7 @@ Making an evbuffer add- or remove-only
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .Interface
-[code]
+[code,C]
 --------
 int evbuffer_freeze(struct evbuffer *buf, int at_front);
 int evbuffer_unfreeze(struct evbuffer *buf, int at_front);
@@ -986,7 +1020,7 @@ Watch out, though: EVBUFFER_DATA(b) is an alias for evbuffer_pullup(b,
 Some other deprecated interfaces are:
 
 .Deprecated Interface
-[code]
+[code,C]
 --------
 char *evbuffer_readline(struct evbuffer *buffer);
 unsigned char *evbuffer_find(struct evbuffer *buffer,
@@ -1005,7 +1039,7 @@ the entire buffer up to the end of the located string.
 The callback interface was different too:
 
 .Deprecated Interface
-[code]
+[code,C]
 ---------
 typedef void (*evbuffer_cb)(struct evbuffer *buffer,
     size_t old_len, size_t new_len, void *arg);

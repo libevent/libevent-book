@@ -15,7 +15,7 @@ Creating or freeing an evconnlistener
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .Interface
-[code]
+[code,C]
 --------
 struct evconnlistener *evconnlistener_new(struct event_base *base,
     evconnlistener_cb cb, void *ptr, unsigned flags, int backlog,
@@ -85,7 +85,7 @@ The connection listener callback
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .Interface
-[code]
+[code,C]
 --------
 typedef void (*evconnlistener_cb)(struct evconnlistener *listener,
     evutil_socket_t sock, struct sockaddr *addr, int len, void *ptr);
@@ -103,7 +103,7 @@ Enabling and disabling an evconnlistener
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .Interface
-[code]
+[code,C]
 --------
 int evconnlistener_disable(struct evconnlistener *lev);
 int evconnlistener_enable(struct evconnlistener *lev);
@@ -115,7 +115,7 @@ Inspecting an evconnlistener
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .Interface
-[code]
+[code,C]
 --------
 evutil_socket_t evconnlistener_get_fd(struct evconnlistener *lev);
 struct event_base *evconnlistener_get_base(struct evconnlistener *lev);
@@ -127,7 +127,9 @@ respectively.
 Example code: an echo server.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-[code]
+//BUILD: SKIP
+.Example
+[code,C]
 --------
 include::examples_R8/R8_echo_server.c[]
 --------

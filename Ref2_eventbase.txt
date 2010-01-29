@@ -139,11 +139,13 @@ O(1) backend for Windows, and no backend on Linux that provides both
 EV_FEATURE_FDS and EV_FEATURE_O1.  If you have made a configuration that
 Libevent can't satisfy, event_base_new_with_config() will return NULL.
 
+
+//BUILD: FUNCTIONBODY INC:event2/event.h
 .Example
 [code,C]
 --------
 struct event_config *cfg;
-struct event_config *base;
+struct event_base *base;
 int i;
 
 /* My program wants to use edge-triggered events if at all possible.  So
@@ -191,6 +193,7 @@ The event_get_supported_methods() function returns a pointer to an array of
 the names of the methods supported in this version of Libevent.  The
 last element in the array is NULL.
 
+//BUILD: FUNCTIONBODY INC:event2/event.h
 .Example
 [code,C]
 --------
@@ -219,11 +222,12 @@ The event_base_get_method() call returns the name of the actual method in use
 by an event_base.  The event_base_get_features() call returns a bitmask of
 the features that it supports.
 
+//BUILD: FUNCTIONBODY INC:event2/event.h
 .Example
-[code]
+[code,C]
 --------
 struct event_base *base;
-enum event_method_features f;
+enum event_method_feature f;
 
 base = event_base_new();
 if (!base) {
@@ -253,7 +257,7 @@ When you are finished with an event_base, you can deallocate it with
 event_base_free().
 
 .Interface
-[code]
+[code,C]
 --------
 void event_base_free(struct event_base *base);
 --------
@@ -274,7 +278,7 @@ though, an event_base supports only a single priority level.  You can set the
 number of priorities on an event_base by calling event_base_priority_init().
 
 .Interface
-[code]
+[code,C]
 --------
 int event_base_priority_init(struct event_base *base, int n_priorities);
 --------
@@ -309,15 +313,16 @@ and you want to continue using an event_base after you have forked, you may
 need to reinitialize it.
 
 .Interface
-[code]
+[code,C]
 --------
 int event_reinit(struct event_base *base);
 --------
 
 The function returns 0 on success, -1 on failure.
 
+//BUILD: FUNCTIONBODY INC:event2/event.h INC:../example_stubs/Ref2.h INC:unistd.h
 .Example
-[code]
+[code,C]
 --------
 struct event_base *base = event_base_new();
 
@@ -349,7 +354,7 @@ threadsafe, this could get pretty error-prone.
 Instead of event_base_new(), there was:
 
 .Interface
-[code]
+[code,C]
 --------
 struct event_base *event_init(void);
 --------

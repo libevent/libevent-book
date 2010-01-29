@@ -42,6 +42,9 @@ NULL as an argument.
 .Examples
 [code,C]
 --------
+#include <event2/event.h>
+#include <stdio.h>
+
 static void discard_cb(int severity, const char *msg)
 {
     /* This callback does nothing. */
@@ -57,7 +60,7 @@ static void write_to_file_cb(int severity, const char *msg)
         case _EVENT_LOG_DEBUG: s = "debug"; break;
         case _EVENT_LOG_MSG:   s = "msg";   break;
         case _EVENT_LOG_WARN:  s = "warn";  break;
-        case _EVENT_LOG_ERR:   s = "error;  break;
+        case _EVENT_LOG_ERR:   s = "error"; break;
         default:               s = "?";     break; /* never reached */
     }
     fprintf(logfile, "[%s] %s\n", s, msg);
@@ -66,7 +69,7 @@ static void write_to_file_cb(int severity, const char *msg)
 /* Turn off all logging from Libevent. */
 void suppress_logging(void)
 {
-    event_set_log_callback(discard_cb)
+    event_set_log_callback(discard_cb);
 }
 
 /* Redirect all Libevent log messages to the C stdio file 'f'. */
@@ -139,6 +142,12 @@ when Libevent is running in multiple threads.
 .Example
 [code,C]
 --------
+#include <event2/event.h>
+#include <sys/types.h>
+#include <stdlib.h>
+
+/* This union's purpose is to be as big as the largest of all the
+ * types it contains. */
 union alignment {
     size_t sz;
     void *ptr;
@@ -146,7 +155,7 @@ union alignment {
 };
 /* We need to make sure that everything we return is on the right
    alignment to hold anything, including a double. */
-#define ALIGNMENT sizeof(alignment)
+#define ALIGNMENT sizeof(union alignment)
 
 /* We need to do this cast-to-char* trick on our pointers to adjust
    them; doing arithmetic on a void* is not standard. */
@@ -174,11 +183,11 @@ static void *replacement_realloc(void *ptr, size_t sz)
         return NULL;
     *(size_t*)ptr = sz;
     total_allocated = total_allocated - old_size + sz;
-    return OUTPTR(chunk);
+    return OUTPTR(ptr);
 }
 static void replacement_free(void *ptr)
 {
-    ptr = INPTR(chunk);
+    ptr = INPTR(ptr);
     total_allocated -= *(size_t*)ptr;
     free(ptr);
 }
@@ -244,7 +253,7 @@ code, you're in luck.  There are pre-defined functions that will set Libevent
 up to use the right pthreads or Windows functions for you.
 
 .Interface
-[code]
+[code,C]
 --------
 #ifdef WIN32
 int evthread_use_windows_threads(void);
@@ -377,7 +386,7 @@ errors, including:
 If one of these lock errors occurs, Libevent exits with an assertion failure.
 
 .Interface
-[Code,C]
+[code,C]
 -----
 void evthread_enable_lock_debuging(void);
 -----
@@ -397,7 +406,7 @@ you'll want to detect the Libevent version, so that you can:
   bugs, or work around them.
 
 .Interface
-[code]
+[code,C]
 --------
 #define LIBEVENT_VERSION_NUMBER 0x02000300
 #define LIBEVENT_VERSION "0.2.0.3-alpha"
@@ -422,8 +431,10 @@ Thus, the released Libevent 2.0.1-alpha has the version number of [02 00
 2.0.2-alpha might have a version number of [02 00 01 08], or 0x02000108.
 
 .Example: Compile-time checks
-[code]
+[code,C]
 --------
+#include <event2/event.h>
+
 #if !defined(LIBEVENT_VERSION_NUMBER) || LIBEVENT_VERSION_NUMBER < 0x02000100
 #error "This version of Libevent is not supported; Get 2.0.1-alpha or later."
 #endif
@@ -443,8 +454,11 @@ make_sandwich(void)
 --------
 
 .Example: Run-time checks
-[code]
+[code,C]
 --------
+#include <event2/event.h>
+#include <string.h>
+
 int
 check_for_old_version(void)
 {
@@ -475,7 +489,9 @@ check_version_match(void)
         printf("Running with a Libevent version (%s) very different from the "
                "one we were built with (%s).\n", event_get_version(),
                LIBEVENT_VERSION);
+        return -1;
     }
+    return 0;
 }
 --------
 

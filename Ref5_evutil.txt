@@ -25,7 +25,7 @@ evutil_socket_t type to be an integer that can hold the output of
 socket() or accept() without risking pointer truncation on Windows.
 
 .Definition
-[code]
+[code,C]
 --------
 #ifdef WIN32
 #define evutil_socket_t intptr_t
@@ -82,7 +82,7 @@ Timer portability functions
 Not every platform defines the standard timeval manipulation functions.
 
 .Interface
-[code]
+[code,C]
 --------
 #define evutil_timeradd(tvp, uvp, vvp) /* ... */
 #define evutil_timersub(tvp, uvp, vvp) /* ... */
@@ -92,7 +92,7 @@ These macros add or subtract (respectively) their first two arguments,
 and stores the result in the third.
 
 .Interface
-[code]
+[code,C]
 --------
 #define evutil_timerclear(tvp) /* ... */
 #define evutil_timerisset(tvp) /* ... */
@@ -102,7 +102,7 @@ Clearing a timeval sets its value to zero.  Checking whether it is set
 compares its value against zero.
 
 .Interface
-[code]
+[code,C]
 --------
 #define	evutil_timercmp(tvp, uvp, cmp)
 --------
@@ -114,7 +114,7 @@ t2?"  Note that unlike some operating systems' versions, Libevent's timercmp
 supports all the C relational operations (that is, <, >, ==, !=, <=, and >=).
 
 .Interface
-[code]
+[code,C]
 --------
 int evutil_gettimeofday(struct timeval *tv, struct timezone *tz);
 --------
@@ -122,8 +122,9 @@ int evutil_gettimeofday(struct timeval *tv, struct timezone *tz);
 The evutil_gettimeofday function sets 'tv' to the current time.  The
 tz argument is unused.
 
+//BUILD: FUNCTIONBODY INC:event2/util.h INC:stdio.h
 .Example
-[code]
+[code,C]
 --------
 struct timeval tv1, tv2, tv3;
 
@@ -160,7 +161,7 @@ nicely compatible) way.  Here are some functions you can use in order
 to pretend that it has.
 
 .Interface
-[code]
+[code,C]
 --------
 #define EVUTIL_CLOSESOCKET(s) /* ... */
 --------
@@ -170,7 +171,7 @@ Windows, it calls closesocket().   (You can't use close() on sockets
 on Windows, and nobody else defines a closesocket().)
 
 .Interface
-[code]
+[code,C]
 --------
 #define EVUTIL_SOCKET_ERROR()
 #define EVUTIL_SET_SOCKET_ERROR(errcode)
@@ -194,7 +195,7 @@ Note that the Windows socket errors are not the same as the standard-C
 errors you would see in errno; watch out.
 
 .Interface
-[code]
+[code,C]
 --------
 int evutil_make_socket_nonblocking(evutil_socket_t sock);
 --------
@@ -205,7 +206,7 @@ or accept()) and turns it into a nonblocking socket.  (It sets O_NONBLOCK
 on Unix and FIONBIO on Windows.)
 
 .Interface
-[code]
+[code,C]
 --------
 int evutil_make_listen_socket_reuseable(evutil_socket_t sock);
 --------
@@ -217,7 +218,7 @@ You don't want to use SO_REUSEADDR on Windows; it means something
 different there.)
 
 .Interface
-[code]
+[code,C]
 --------
 int evutil_socketpair(int family, int type, int protocol,
         evutil_socket_t sv[2]);
@@ -240,7 +241,7 @@ Portable string manipulation functions
 
 
 .Interface
-[code]
+[code,C]
 --------
 ev_int64_t evutil_strtoll(const char *s, char **endptr, int base);
 --------
@@ -249,7 +250,7 @@ This function behaves as strtol, but handles 64-bit integers.  On some
 platforms, it only supports Base 10.
 
 .Interface
-[code]
+[code,C]
 --------
 int evutil_snprintf(char *buf, size_t buflen, const char *format, ...);
 int evutil_vsnprintf(char *buf, size_t buflen, const char *format, va_list ap);
@@ -274,7 +275,7 @@ strings according to ASCII's notion of character type, regardless of your
 current locale.  Libevent provides a few functions to help with this:
 
 .Interface
-[code]
+[code,C]
 --------
 int evutil_ascii_strcasecmp(const char *str1, const char *str2);
 int evutil_ascii_strncasecmp(const char *str1, const char *str2, size_t n);
@@ -290,7 +291,7 @@ IPv6 helper and portability functions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .Interface
-[code]
+[code,C]
 --------
 const char *evutil_inet_ntop(int af, const void *src, char *dst, size_t len);
 int evutil_inet_pton(int af, const char *src, void *dst);
@@ -301,7 +302,7 @@ functions for parsing and formatting IPv4 and IPv6 addresses.
 // XXX say more!
 
 .Interface
-[code]
+[code,C]
 --------
 int evutil_parse_sockaddr_port(const char *str, struct sockaddr *out,
     int *outlen);
@@ -327,7 +328,7 @@ Structure macro portability functions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .Interface
-[code]
+[code,C]
 --------
 #define evutil_offsetof(type, field) /* ... */
 --------
