@@ -2,8 +2,10 @@
 # asciidoc 8.4.3 is known to work.  asciidoc 8.2.5 is known not to work.
 ASCIIDOC=asciidoc
 
-GENERATED_HTML= \
-	TOC.html \
+GENERATED_METAFILES= \
+	TOC.html
+
+GENERATED_CHAPTERS= \
 	00_about.html \
 	01_intro.html \
 	Ref0_meta.html \
@@ -16,12 +18,20 @@ GENERATED_HTML= \
 	Ref7_evbuffer.html \
 	Ref8_listener.html
 
+GENERATED_HTML = $(GENERATED_METAFILES) $(GENERATED_CHAPTERS)
+
 all: html examples
 
 html: $(GENERATED_HTML)
 
+check: examples inline_examples
+
 examples:
 	cd examples_01 && $(MAKE)
+	cd examples_R8 && $(MAKE)
+
+inline_examples:
+	./bin/build_examples.py *_*.txt
 
 .SUFFIXES: .txt .html
 
@@ -45,6 +55,8 @@ clean:
 	rm -f *.o
 	rm -f $(GENERATED_HTML)
 	cd examples_01 && $(MAKE) clean
+	cd examples_R8 && $(MAKE) clean
+	rm -rf tmpcode_*
 
 count:
 	wc -w *.txt
