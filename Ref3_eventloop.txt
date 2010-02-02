@@ -178,6 +178,36 @@ These functions are declared in <event2/event.h>.  The event_break_loopexit()
 function was first implemented in Libevent 1.0c; event_break_loopbreak() was
 first implemented in Libevent 1.4.3.
 
+Checking the internal time cache
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Sometimes you want to get an approximate view of the current time inside
+an event callback, and you want to get it without calling gettimeofday()
+yourself (presumably because your OS implements gettimeofday() as a
+syscall, and you're trying to avoid syscall overhead).
+
+From within a callback, you can ask Libevent for its view of the current
+time when it began executing this round of callbacks:
+
+.Interface
+[code,C]
+-----
+int event_base_gettimeofday_cached(struct event_base *base,
+    struct timeval *tv_out);
+-----
+
+The event_base_gettimeofday_cached() function sets the value of its
+'tv_out' argument to the cached time if the event_base is currently
+executing callbacks.  Otherwise, it calls evutil_gettimeofday() for the
+actual current time.  It returns 0 on success, and negative on failure.
+
+Note that since the timeval is cached when Libevent starts running
+callbacks, it will be at least a little inaccurate. If your callbacks
+take a long time to run, it may be *very* inaccurate.
+
+This function was new in Libevent 2.0.4-alpha.
+
+
 Obsolete event loop functions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
