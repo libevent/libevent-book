@@ -159,7 +159,7 @@ Here is our read() example again, using select:
 [code,C]
 ------
 /* If you only have a couple dozen fds, this version won't be awful */
-struct fd_set readset;
+fd_set readset;
 int i, n;
 char buf[1024];
 
