@@ -370,13 +370,28 @@ offset from the start.
 --------
 struct evbuffer_ptr evbuffer_search(struct evbuffer *buffer,
     const char *what, size_t len, const struct evbuffer_ptr *start);
+struct evbuffer_ptr evbuffer_search_range(struct evbuffer *buffer,
+    const char *what, size_t len, const struct evbuffer_ptr *start,
+    const struct evbuffer_ptr *end);
+struct evbuffer_ptr evbuffer_search_eol(struct evbuffer *buffer,
+    struct evbuffer_ptr *start, size_t *eol_len_out,
+    enum evbuffer_eol_style eol_style);
 --------
 
-This function scans the buffer for an occurrence of the
+The evbuffer_search() function scans the buffer for an occurrence of the
 'len'-character string 'what'.  It returns an evbuffer_ptr containing
 the position of the string, or -1 if the string was not found.  If the
 'start' argument is provided, it's the position at which the search
 should begin; otherwise, the search is from the start of the string.
+
+The evbuffer_search_range() function behaves as evbuffer_search, except that
+it only considers occurrences of 'what' that occur before the evbuffer_ptr
+'end'.
+
+The evbuffer_search_eol() function detects line-endings as evbuffer_readln(),
+but instead of copying out the line, returns an evbuffer_ptr to the
+start of the end-of-line characters(s).  If eol_len_out is non-NULL, it is
+set to the length of the EOL string.
 
 .Interface
 [code,C]
@@ -409,7 +424,8 @@ int count_instances(struct evbuffer *buf, const char *str)
     struct evbuffer_ptr p;
 
     if (!len)
-        return -1; /* Don't try to count the 0-length strings. */
+        /* Don't try to count the occurrences of a 0-length string. */
+        return -1;
 
     evbuffer_ptr_set(buf, &p, 0, EVBUFFER_PTR_SET);
 
