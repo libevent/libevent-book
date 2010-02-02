@@ -391,7 +391,93 @@ If one of these lock errors occurs, Libevent exits with an assertion failure.
 void evthread_enable_lock_debuging(void);
 -----
 
+NOTE: This function MUST be called before any locks are created or used.  To
+be safe, call it just after you set your threading functions.
+
 This function is new in Libevent 2.0.4-alpha.
+
+Debugging event usage
+~~~~~~~~~~~~~~~~~~~~~
+
+There are some common errors in using events that Libevent can detect and
+report for you.  They include:
+
+- Treating an uninitialized struct event as though it were initialized.
+- Try to reinitialize a pending struct event.
+
+Tracking which events are initialized requires that Libevent use extra memory
+and CPU, so you should only enable debug mode when actually debugging your
+program.
+
+.Interface
+[code,C]
+-----
+void event_enable_debug_mode(void);
+-----
+
+This function must only be called before any event_base is created.
+
+When using debug mode, you might run out of memory if your program uses a
+large number of events created with event_assign() [not event_new()].  This
+happens because Libevent has no way of telling when an event created with
+event_assign() will no longer be used.  (It can tell that an event_new()
+event has become invalid when you call event_free() on it.)  If you want to
+avoid running out of memory while debugging, you can explicitly tell Libevent
+that such events are no longer to be treated as assigned:
+
+.Interface
+[code,C]
+-----
+void event_debug_unassign(struct event *ev);
+-----
+
+Calling event_debug_unassign() has no effect when debugging is not enabled.
+
+.Example
+[code,C]
+-----
+#include <event2/event.h>
+#include <event2/event_struct.h>
+
+#include <stdlib.h>
+
+void cb(evutil_socket_t fd, short what, void *ptr)
+{
+    /* We pass 'NULL' as the callback pointer for the heap allocated
+     * event, and we pass the event itself as the callback pointer
+     * for the stack-allocated event. */
+    struct event *ev = ptr;
+
+    if (ev)
+        event_debug_unassign(ev);
+}
+
+/* Here's a simple mainloop that waits until fd1 and fd2 are both
+ * ready to read. */
+void mainloop(evutil_socket_t fd1, evutil_socket_t fd2, int debug_mode)
+{
+    struct event_base *base;
+    struct event event_on_stack, *event_on_heap;
+
+    if (debug_mode)
+       event_enable_debug_mode();
+
+    base = event_base_new();
+
+    event_on_heap = event_new(base, fd1, EV_READ, cb, NULL);
+    event_assign(&event_on_stack, base, fd2, EV_READ, cb, &event_on_stack);
+
+    event_add(event_on_heap, NULL);
+    event_add(&event_on_stack, NULL);
+
+    event_base_dispatch(base);
+
+    event_free(event_on_heap);
+    event_base_free(base);
+}
+-----
+
+These debugging functions were added in Libevent 2.0.4-alpha.
 
 Detecting the version of Libevent
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -498,3 +584,4 @@ check_version_match(void)
 The macros and functions in this section are defined in
 <event2/event.h>.  The event_get_version() function first appeared in
 Libevent 1.0c; the others first appeared in Libevent 2.0.1-alpha.
+
