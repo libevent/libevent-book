@@ -66,7 +66,7 @@ event_base, you pass the event_config to event_base_new_with_config().
 [code,C]
 --------
 struct event_config *event_config_new(void);
-struct event_base *event_base_new_with_config(struct event_config *cfg);
+struct event_base *event_base_new_with_config(const struct event_config *cfg);
 void event_config_free(struct event_config *cfg);
 --------
 
@@ -214,8 +214,8 @@ version of OSX where kqueue is too buggy to use.
 .Interface
 [code,C]
 --------
-const char *event_base_get_method(struct event_base *base);
-enum event_method_feature event_base_get_features(struct event_base *base);
+const char *event_base_get_method(const struct event_base *base);
+enum event_method_feature event_base_get_features(const struct event_base *base);
 --------
 
 The event_base_get_method() call returns the name of the actual method in use

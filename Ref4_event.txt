@@ -509,7 +509,7 @@ what it refers to.
 .Interface
 [code,C]
 --------
-int event_pending(struct event *ev, short what, struct timeval *tv_out);
+int event_pending(const struct event *ev, short what, struct timeval *tv_out);
 
 #define event_get_signal(ev) /* ... */
 evutil_socket_t event_get_fd(const struct event *ev);
