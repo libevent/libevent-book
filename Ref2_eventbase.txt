@@ -288,6 +288,10 @@ the event_base to modify, and n_priorities is the number of priorities to
 support.  It must be at least 1.  The available priorities for new events
 will be numbered from 0 (most important) to n_priorities-1 (least important).
 
+There is a constant, EVENT_MAX_PRIORITIES, that sets the upper bound on the
+value of n_priorities.  It is an error to call this function with a higher
+value for n_priorities.
+
 NOTE: You *must* call this function before any events become active.  It is
 best to call it immediately after creating the event_base.
 
