@@ -666,26 +666,30 @@ if (evbuffer_commit_space(buf, v, i) < 0)
    DO NOT IMITATE THIS CODE. */
 struct evbuffer_iovec v[2];
 
-/* Do not use the pointers from evbuffer_reserve_space() after
-   calling any functions that modify the buffer. */
-evbuffer_reserve_space(buf, 1024, v, 2);
-evbuffer_add(buf, "X", 1);
-/* WRONG: This next line won't work if evbuffer_add needed to rearrange
-   the buffer's contents.  It might even crash your program. Instead,
-   you add the data before calling evbuffer_reserve_space. */
-memset(v[0].iov_base, 'Y', v[0].iov_len-1);
-evbuffer_commit_space(buf, v, 1);
+{
+  /* Do not use the pointers from evbuffer_reserve_space() after
+     calling any functions that modify the buffer. */
+  evbuffer_reserve_space(buf, 1024, v, 2);
+  evbuffer_add(buf, "X", 1);
+  /* WRONG: This next line won't work if evbuffer_add needed to rearrange
+     the buffer's contents.  It might even crash your program. Instead,
+     you add the data before calling evbuffer_reserve_space. */
+  memset(v[0].iov_base, 'Y', v[0].iov_len-1);
+  evbuffer_commit_space(buf, v, 1);
+}
 
-/* Do not modify the iov_base pointers. */
-char *data = "Here is some data";
-evbuffer_reserve_space(buf, strlen(data), v, 1);
-/* WRONG: The next line will not do what you want.  Instead, you
-   should _copy_ the contents of data into v[0].iov_base. */
-v[0].iov_base = data;
-v[0].iov_len = strlen(data);
-/* In this case, evbuffer_commit_space might give an error if you're
-   lucky */
-evbuffer_commit_space(buf, v, 1);
+{
+  /* Do not modify the iov_base pointers. */
+  const char *data = "Here is some data";
+  evbuffer_reserve_space(buf, strlen(data), v, 1);
+  /* WRONG: The next line will not do what you want.  Instead, you
+     should _copy_ the contents of data into v[0].iov_base. */
+  v[0].iov_base = (char*) data;
+  v[0].iov_len = strlen(data);
+  /* In this case, evbuffer_commit_space might give an error if you're
+     lucky */
+  evbuffer_commit_space(buf, v, 1);
+}
 --------
 
 These functions have existed with their present interfaces since Libevent

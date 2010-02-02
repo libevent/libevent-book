@@ -96,9 +96,9 @@ void main_loop(evutil_socket_t fd1, evutil_socket_t fd2)
            nonblocking. */
 
         ev1 = event_new(base, fd1, EV_TIMEOUT|EV_READ|EV_PERSIST, cb_func,
-           "Reading event");
+           (char*)"Reading event");
         ev2 = event_new(base, fd2, EV_WRITE|EV_PERSIST, cb_func,
-           "Writing event");
+           (char*)"Writing event");
 
         event_add(ev1, &five_seconds);
         event_add(ev2, NULL);
