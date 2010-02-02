@@ -95,7 +95,9 @@ if __name__ == '__main__':
     if len(sys.argv) != 2:
         print \
 """%(prog)s expects a single argument: the location of the installed libevent2
-header files.  Example usage: %(prog)s /usr/local/include/event2""" %{
+header files.  Example usage: %(prog)s /usr/local/include/event2
+It requires a GNU ctags.
+""" %{
             "prog":sys.argv[0]
             }
     else:
