@@ -3,6 +3,9 @@
 #include <unistd.h>
 #include <errno.h>
 #include <sys/fcntl.h>
+#include <sys/select.h>
+#include <sys/types.h>
+#include <sys/time.h>
 
 int fd[1000];
 int n_sockets=1000;
