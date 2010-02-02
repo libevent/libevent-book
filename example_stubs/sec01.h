@@ -6,6 +6,7 @@
 #include <sys/select.h>
 #include <sys/types.h>
 #include <sys/time.h>
+#include <sys/socket.h>
 
 int fd[1000];
 int n_sockets=1000;

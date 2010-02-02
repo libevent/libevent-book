@@ -770,7 +770,7 @@ int add_reader(struct reader *r, struct event_base *b)
     struct event *ev = READER_EVENT_PTR(r);
     if (!event_initialized(ev))
         event_assign(ev, b, r->fd, EV_READ, readcb, r);
-    event_add(ev, NULL);
+    return event_add(ev, NULL);
 }
 -----
 

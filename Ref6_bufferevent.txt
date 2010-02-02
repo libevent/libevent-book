@@ -443,7 +443,7 @@ void event_callback(struct bufferevent *bev, short events, void *ctx)
 
 struct bufferevent *setup_bufferevent(void)
 {
-    struct bufferevent *b1;
+    struct bufferevent *b1 = NULL;
     struct info *info1;
 
     info1 = malloc(sizeof(struct info));

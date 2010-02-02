@@ -51,8 +51,6 @@ child(int fd)
             continue;
         }
     }
-
-    free(outbuf);
 }
 
 void
