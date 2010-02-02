@@ -712,6 +712,69 @@ for you.
 
 This functionality was introduced in Libevent 2.0.4-alpha.
 
+Telling a good event apart from cleared memory
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Libevent provides functions that you can use to distinguish an
+initialized event from memory that has been cleared by setting it to 0
+(for example, by allocating it with calloc() or clearing it with
+memset() or bzero()).
+
+.Interface
+[code,C]
+-----
+int event_initialized(const struct event *ev);
+
+#define evsignal_initialized(ev) event_initialized(ev)
+#define evtimer_initialized(ev) event_initialized(ev)
+-----
+
+.Warning
+These functions can't reliably distinguish between an initialized event
+and a hunk of uninitialized memory.  You should not use them
+unless you know that the memory in question is either cleared or
+initialized as an event.
+
+Generally, you shouldn't need to use these functions unless you've got a
+pretty specific application in mind.  Events returned by event_new() are
+always initialized.
+
+.Example
+[code,C]
+-----
+#include <event2/event.h>
+#include <stdlib.h>
+
+struct reader {
+    evutil_socket_t fd;
+};
+
+#define READER_ACTUAL_SIZE() \
+    (sizeof(struct reader) + \
+     event_get_struct_event_size())
+
+#define READER_EVENT_PTR(r) \
+    ((struct event *) (((char*)(r))+sizeof(struct reader)))
+
+struct reader *allocate_reader(evutil_socket_t fd)
+{
+    struct reader *r = calloc(1, READER_ACTUAL_SIZE());
+    if (r)
+        r->fd = fd;
+    return r;
+}
+
+void readcb(evutil_socket_t, short, void *);
+int add_reader(struct reader *r, struct event_base *b)
+{
+    struct event *ev = READER_EVENT_PTR(r);
+    if (!event_initialized(ev))
+        event_assign(ev, b, r->fd, EV_READ, readcb, r);
+    event_add(ev, NULL);
+}
+-----
+
+This function has been present since before Libevent 1.0.
 
 Obsolete event manipulation functions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -753,6 +816,4 @@ In other words, only one event at a time could be waiting for read on
 each fd, and only one event at a time could be waiting for write on
 each fd.
 
-
-// FIXME Not yet documented: event_initialized().  Too stupid to use.
 
