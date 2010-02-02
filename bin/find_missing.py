@@ -51,7 +51,20 @@ def removeIdentifiers(idmap, f):
     f = CountingIter(f)
     for line in f:
         if line.startswith("//"):
+            # If a function is mentioned in a comment, that doesn't count.
             continue
+
+        if (line.startswith(".Example") or
+            line.lower().startswith(".bad example")):
+            # If a function is mentioned only in an example blob, that
+            # doesn't count either.
+            minus_count=0
+            for line in f:
+                if re.match(r'^\-+', line):
+                    minus_count = minus_count + 1
+                    if minus_count == 2:
+                        break
+
         words = C_IDENT_PAT.findall(line)
         for w in words:
             if w.endswith("()"):
