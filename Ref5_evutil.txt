@@ -72,8 +72,13 @@ Some implementations of the sockets API provide a length type, socklen_t, and
 some do not.  The ev_socklen_t is defined to this type where it exists, and a
 reasonable default otherwise.
 
+The ev_intptr_t type is a signed integer that is large enough to hold a
+pointer without loss of bits.  The ev_uintptr_t type is an unsigned integer
+large enough to hold a pointer without loss of bits.
+
 The ev_ssize_t type was added in Libevent 2.0.2-alpha.  The ev_socklen_t type
-was new in Libevent 2.0.3-alpha.
+was new in Libevent 2.0.3-alpha.  The ev_intptr_t and ev_uintptr_t types were
+added in Libevent 2.0.4-alpha.
 
 
 Timer portability functions
@@ -200,10 +205,10 @@ errors you would see in errno; watch out.
 int evutil_make_socket_nonblocking(evutil_socket_t sock);
 --------
 
-Even the call you need to do nonblocking IO on a socket is not
-portable to Windows.  This function takes a new socket (from socket()
-or accept()) and turns it into a nonblocking socket.  (It sets O_NONBLOCK
-on Unix and FIONBIO on Windows.)
+Even the call you need to do nonblocking IO on a socket is not portable to
+Windows.  The evutil_make_socket_nonblocking() function takes a new socket
+(from socket() or accept()) and turns it into a nonblocking socket.  (It sets
+O_NONBLOCK on Unix and FIONBIO on Windows.)
 
 .Interface
 [code,C]
@@ -216,6 +221,16 @@ will be available to another socket immediately after the socket is
 closed.  (It sets SO_REUSEADDR on Unix and does nothing on Windows.
 You don't want to use SO_REUSEADDR on Windows; it means something
 different there.)
+
+.Interface
+[code,C]
+--------
+int evutil_make_socket_closeonexec(evutil_socket_t sock);
+--------
+
+This call tells the operating system that this socket should be closed
+if we ever call exec().  It sets the FD_CLOEXEC flag on Unix, and does
+nothing on Windows.
 
 .Interface
 [code,C]
@@ -234,11 +249,11 @@ protocol 0.  Note that this can fail on some Windows hosts where
 firewall software has cleverly firewalled 127.0.0.1 to keep the host
 from talking to itself.
 
-These functions were introduced in Libevent 1.4.0-beta.
+These functions were introduced in Libevent 1.4.0-beta, except for
+evutil_make_socket_closeonexec(), which was new in Libevent 2.0.4-alpha.
 
 Portable string manipulation functions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 
 .Interface
 [code,C]
@@ -339,6 +354,4 @@ the start of 'type' at which 'field' occurs.
 This function was introduced in Libevent 2.0.1-alpha.  It was buggy in every
 version before Libevent 2.0.3-alpha.
 
-// FIXME Undocumented: EVUTIL_CHECK_FMT, evutil_sockaddr_cmp,
-//    evutil_{getaddrinfo,freeadrinfo,gai_strerror}.
 
