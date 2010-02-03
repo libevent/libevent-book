@@ -22,6 +22,11 @@ GENERATED_HTML = $(GENERATED_METAFILES) $(GENERATED_CHAPTERS)
 
 all: html examples
 
+# Note that this won't give you good results unless you have a very
+# recent asciidoc.  Asciidoc 8.5.3 is recommended.
+pdf:
+	a2x -f pdf OnePage.txt
+
 html: $(GENERATED_HTML)
 
 check: examples inline_examples
