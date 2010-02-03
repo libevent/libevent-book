@@ -44,29 +44,33 @@ century and therefore does not implement the standard C99
 stdint.h header.  For this situation, Libevent defines its own
 versions of the bit-width-specific integers from stdint.h:
 
-[options="header",width="40%"]
+[options="header",width="70%"]
 |==============================
-|  Type      |Width  |Signed
-|ev_uint64_t |64     |No
-|ev_int64_t  |64     |Yes
-|ev_uint32_t |32     |No
-|ev_int32_t  |32     |Yes
-|ev_uint16_t |16     |No
-|ev_int16_t  |16     |Yes
-|ev_uint8_t  |8      |No
-|ev_int8_t   |8      |Yes
+|  Type      |Width  |Signed | Maximum       | Minimum
+|ev_uint64_t |64     |No     | EV_UINT64_MAX | 0
+|ev_int64_t  |64     |Yes    | EV_INT64_MAX  | EV_INT64_MIN
+|ev_uint32_t |32     |No     | EV_UINT32_MAX | 0
+|ev_int32_t  |32     |Yes    | EV_INT32_MAX  | EV_INT32_MIN
+|ev_uint16_t |16     |No     | EV_UINT16_MAX | 0
+|ev_int16_t  |16     |Yes    | EV_INT16_MAX  | EV_INT16_MIN
+|ev_uint8_t  |8      |No     | EV_UINT8_MAX  | 0
+|ev_int8_t   |8      |Yes    | EV_INT8_MAX   | EV_INT8_MIN
 |=============================
 
 As in the C99 standard, each type has exactly the specified width, in
 bits.
 
-These types were introduced in Libevent 1.4.0-beta.
+These types were introduced in Libevent 1.4.0-beta.  The MAX/MIN constants
+first appeared in Libevent 2.0.4-alpha.
 
 Miscellaneous compatibility types
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The ev_ssize_t type is defined to ssize_t (signed size_t) on platforms that
-have one, and to a reasonable default on platforms that don't.
+have one, and to a reasonable default on platforms that don't.  The largest
+possible value of ev_ssize_t is EV_SSIZE_MAX; the smallest is EV_SSIZE_MIN.
+(The largest possible value for size_t is EV_SIZE_MAX, in case your platform
+doesn't define a SIZE_MAX for you.)
 
 Some implementations of the sockets API provide a length type, socklen_t, and
 some do not.  The ev_socklen_t is defined to this type where it exists, and a
@@ -77,9 +81,8 @@ pointer without loss of bits.  The ev_uintptr_t type is an unsigned integer
 large enough to hold a pointer without loss of bits.
 
 The ev_ssize_t type was added in Libevent 2.0.2-alpha.  The ev_socklen_t type
-was new in Libevent 2.0.3-alpha.  The ev_intptr_t and ev_uintptr_t types were
-added in Libevent 2.0.4-alpha.
-
+was new in Libevent 2.0.3-alpha.  The ev_intptr_t and ev_uintptr_t types, and
+the EV_SSIZE_MAX/MIN macros, were added in Libevent 2.0.4-alpha.
 
 Timer portability functions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
