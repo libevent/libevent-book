@@ -28,6 +28,7 @@ check: examples inline_examples
 
 examples:
 	cd examples_01 && $(MAKE)
+	cd examples_R6 && $(MAKE)
 	cd examples_R8 && $(MAKE)
 
 inline_examples:

@@ -1,10 +1,14 @@
 *~
 *.o
 *.html
+.\#*
+\#*\#
 /examples_01/01_rot13_server_bufferevent
 /examples_01/01_rot13_server_libevent
 /examples_01/01_rot13_server_select
 /examples_01/01_rot13_server_forking
 /examples_01/01_sync_webclient
+/examples_R6/R6_http_client
+/examples_R8/R8_echo_server
 
-
+/tmpcode*

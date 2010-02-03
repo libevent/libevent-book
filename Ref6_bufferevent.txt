@@ -282,6 +282,39 @@ connect() on your own, the connection gets reported as a write.
 
 This function was introduced in Libevent 2.0.2-alpha.
 
+Launching connections by hostname
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Quite often, you'd like to combine resolving a hostname and connecting to it
+into a single operation.  There's an interface for that:
+
+.Interface
+[code,C]
+--------
+int bufferevent_socket_connect_hostname(struct bufferevent *bev,
+    struct evdns_base *dns_base, int family, const char *hostname,
+    int port);
+--------
+
+This function resolves the DNS name 'hostname', looking for addresses of type
+'family'.  (Allowable family types are AF_INET, AF_INET6, and AF_UNSPEC.)  If
+the name resolution fails, it invokes the event callback with an error event.
+If it succeeds, it launches a resolution attempt just as bufferevent_connect
+would.
+
+The dns_base argument is optional.  If it is NULL, then Libevent blocks while
+waiting for the name lookup to finish, which usually isn't what you want.  If
+it is provided, then Libevent uses it to look up the hostname asynchronously.
+See link::Ref9_dns.html[chapter R9] for more info on DNS.
+
+.Example: Trivial HTTP v0 client.
+[code,C]
+-------
+include::examples_R6/R6_http_client.c[]
+-------
+
+This function was new in Libevent 2.0.3-alpha.
+
 Generic bufferevent operations
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
