@@ -438,7 +438,7 @@ its callback has a chance to execute, the callback will not be
 executed.
 
 These functions are defined in <event2/event.h>; they have existed
-since before Libevent 1.0.
+since Libevent 0.1.
 
 Events with priorities
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -583,7 +583,7 @@ int replace_callback(struct event *ev, event_callback_fn new_callback,
 ------
 
 These functions are declared in <event2/event.h>.  The event_pending()
-function has existed since before Libevent 1.0.  Libevent 2.0.1-alpha
+function has existed since Libevent 0.1.  Libevent 2.0.1-alpha
 introduced event_get_fd() and event_get_signal().  Libevent 2.0.2-alpha
 introduced event_get_base().  The others were new in Libevent
 2.0.4-alpha.
@@ -630,7 +630,7 @@ not need to have previously been pending, and activating it does not
 make it pending.
 
 This function is defined in <event2/event.h>.  It has existed
-since before Libevent 1.0.
+since Libevent 0.3.
 
 Optimizing common timeouts
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -774,7 +774,7 @@ int add_reader(struct reader *r, struct event_base *b)
 }
 -----
 
-This function has been present since before Libevent 1.0.
+The event_initialized() function has been present since Libevent 0.3.
 
 Obsolete event manipulation functions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
