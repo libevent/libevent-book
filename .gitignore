@@ -10,6 +10,7 @@
 /examples_01/01_sync_webclient
 /examples_R6/R6_http_client
 /examples_R8/R8_echo_server
+/examples_R9/R9_multilookup
 
 /tmpcode*
 

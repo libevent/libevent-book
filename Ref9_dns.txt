@@ -1,0 +1,557 @@
+include::license.txt[]
+
+:language: C
+
+Using DNS with Libevent: high and low-level functionality
+---------------------------------------------------------
+
+Libevent provides a few APIs to use for resolving DNS names, and a
+facility for implementing simple DNS servers.
+
+We'll start by describing the higher-level facilities for name lookup,
+and then describe the low-level and server facilities.
+
+Preliminaries: Portable blocking name resolution
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To aid in porting programs that already use blocking name resolution,
+Libevent provides a portable implementation of the standard
+getaddrinfo() interface.  This can be helpful when your program needs to
+run on platforms where either there is no getaddrinfo() function, or
+where getaddrinfo() doesn't conform to the standard as well as our
+replacement.  (There are shockingly many of each.)
+
+The getaddrinfo() interface is specified in RFC 3493, section 6.1.  See
+the "Compatibility Notes" section below for a summary of how we fall
+short of a conformant implemenation.
+
+.Interface
+[code,C]
+------
+struct evutil_addrinfo {
+    int ai_flags;
+    int ai_family;
+    int ai_socktype;
+    int ai_protocol;
+    size_t ai_addrlen;
+    char *ai_canonname;
+    struct sockaddr *ai_addr;
+    struct evutil_addrinfo *ai_next;
+};
+
+#define EVUTIL_AI_PASSIVE     /* ... */
+#define EVUTIL_AI_CANONNAME   /* ... */
+#define EVUTIL_AI_NUMERICHOST /* ... */
+#define EVUTIL_AI_NUMERICSERV /* ... */
+#define EVUTIL_AI_V4MAPPED    /* ... */
+#define EVUTIL_AI_ALL         /* ... */
+#define EVUTIL_AI_ADDRCONFIG  /* ... */
+
+int evutil_getaddrinfo(const char *nodename, const char *servname,
+    const struct evutil_addrinfo *hints, struct evutil_addrinfo **res);
+void evutil_freeaddrinfo(struct evutil_addrinfo *ai);
+const char *evutil_gai_strerror(int err);
+------
+
+The evutil_getaddrinfo() function tries to resolve the provided nodename
+and servname fields, according to the rules you give it in 'hints', and
+build you a linked list of evutil_addrinfo structures and store them in
+*res.  It returns 0 on success, and a nonzero error code on failure.
+
+You must provide at least one of 'nodename' and 'servname'.  If
+'nodename' is provided, it is either a literal IPv4 address (like
+"127.0.0.1"), a literal IPv6 address (like "::1"), or a DNS name (like
+"www.example.com").  If 'servname' is provided, it is either the
+symbolic name of a network service (like "https") or a string containing
+a port number given in decimal (like "443").
+
+If you do not specify 'servname', then the port values in *res will be
+set to zero.  If you do not specify 'nodename', then the addresses in
+*res will either be for localhost (by default), or for "any" (if
+EVUTIL_AI_PASSIVE is set.)
+
+The ai_flags field of 'hints' tells evutil_getaddrinfo how to perform
+the lookup.  It can contain zero or more of the flags below, ORed together.
+
+EVUTIL_AI_PASSIVE::
+
+        This flag indicates that we're going to be using the address
+        for listening, not for connection.  Ordinarily this makes
+        no difference, except when 'nodename' is NULL: for connecting,
+        a NULL nodename is localhost (127.0.0.1 or ::1), whereas when
+        listening, a NULL node name is ANY (0.0.0.0 or ::0).
+
+EVUTIL_AI_CANONNAME::
+
+        If this flag is set, we try to report the canonical name for the
+        host in the ai_canonname field.
+
+EVUTIL_AI_NUMERICHOST::
+
+        When this flag is set, we only resolve numeric IPv4 and IPv6
+        addresses; if the 'nodename' would require a name lookup,
+        we instead give an EVUTIL_EAI_NONAME error.
+
+EVUTIL_AI_NUMERICSERV::
+
+        When this flag is set, we only resolve numeric service names.
+        If the 'servname' is neither NULL nor a decimal integer,
+        give an EVUTIL_EAI_NONAME error.
+
+EVUTIL_AI_V4MAPPED::
+
+        This flag indicates that if ai_family is AF_INET6, and no IPv6
+        addresses are found, any IPv4 addresses in the result should be
+        returned as v4-mapped IPv6 addresses.  It is not currently
+        supported by evutil_getaddrinfo() unless the OS supports it.
+
+EVUTIL_AI_ALL::
+
+        If this flag and EVUTIL_AI_V4MAPPED are both set, then IPv4
+        addresses in the result included in the result as 4-mapped IPv6
+        addresses, whether there are any IPv6 addresses or not.  It is
+        not currently supported by evutil_getaddrinfo() unless the OS
+        supports it.
+
+EVUTIL_AI_ADDRCONFIG::
+
+        If this flag is set, then IPv4 addresses are only included in
+        the result if the system has a nonlocal IPv4 address, and IPv6
+        addresses are only included in the result if the system has a
+        nonlocal IPv6 address.
+
+The ai_family filed of 'hints' is used to tell evutil_getaddrinfo() which
+addresses it should return.  It can be AF_INET to request IPv4 addresses
+only, AF_INET6 to request IPv6 addresses only, or AF_UNSPEC to request
+all available addresses.
+
+The ai_socktype and ai_protocol fields of 'hints' are used to tell
+evutil_getaddrinfo() how you're going to use the address.  They're the
+same as the socktype and protocol fields you would pass to socket().
+
+If evutil_getaddrinfo() is successful, it allocates a new linked list of
+evutil_addrinfo structures, where each points to the next with its
+"ai_next" pointer, and stores them in *res.  Because this value is
+heap-allocated, you will need to use evutil_freeaddrinfo to free it.
+
+If it fails, it returns one of these numeric error codes:
+
+EVUTIL_EAI_ADDRFAMILY::
+
+      You requested an address family that made no sense for the
+      nodename.
+
+EVUTIL_EAI_AGAIN::
+
+      There was a recoverable error in name resolution; try again later.
+
+EVUTIL_EAI_FAIL::
+
+      There was a non-recoverable error in name resolution; your
+      resolver or your DNS server may be busted.
+
+EVUTIL_EAI_BADFLAGS::
+
+      The ai_flags field in hints was somehow invalid.
+
+EVUTIL_EAI_FAMILY::
+
+      The ai_family field in hints was not one we support.
+
+EVUTIL_EAI_MEMORY::
+
+      We ran out of memory while trying to answer your request.
+
+EVUTIL_EAI_NODATA::
+
+      The host you asked for exists, but has no address information
+      associated with it.  (Or, it has no address information of the
+      type you requested.)
+
+EVUTIL_EAI_NONAME::
+
+      The host you asked for doesn't seem to exist.
+
+EVUTIL_EAI_SERVICE::
+
+      The service you asked for doesn't seem to exist.
+
+EVUTIL_EAI_SOCKTYPE::
+
+      We don't support the socket type you asked for, or it isn't
+      compatible with ai_protocol.
+
+EVUTIL_EAI_SYSTEM::
+
+      There was some other system error during name resolution.  Check
+      errno for more information.
+
+EVUTIL_EAI_CANCEL::
+
+      The application requested that this DNS lookup should be cancelled
+      before it was finished.  The evutil_getaddrinfo() function never
+      produces this error, but it can come from evdns_getaddrinfo()
+      as described in the section below.
+
+You can use evutil_gai_strerror() to convert one of these results into a
+human-readable string.
+
+Note: If your OS defines struct addrinfo, then evutil_addrinfo is just
+an alias for your OS's built-in structure.  Similarly, if your operating
+system defines any of the AI_* flags, then the corresponding EVUTIL_AI_*
+flag is just an alias for the native flag; and if your operating system
+defines any of the EAI_* errors, then the corresponding EVUTIL_EAI_*
+code is the same as your platform's native error code.
+
+.Example: Resolving a hostname and making a blocking connection
+[code,C]
+-----
+#include <event2/util.h>
+
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <stdio.h>
+#include <string.h>
+#include <assert.h>
+
+evutil_socket_t
+get_tcp_socket_for_host(const char *hostname, ev_uint16_t port)
+{
+    char port_buf[6];
+    struct evutil_addrinfo hints;
+    struct evutil_addrinfo *answer = NULL;
+    int err;
+    evutil_socket_t sock;
+
+    /* Convert the port to decimal. */
+    evutil_snprintf(port_buf, sizeof(port_buf), "%d", (int)port);
+
+    /* Build the hints to tell getaddrinfo how to act. */
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_UNSPEC; /* v4 or v6 is fine. */
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_protocol = IPPROTO_TCP; /* We want a TCP socket */
+    /* Only return addresses we can use. */
+    hints.ai_flags = EVUTIL_AI_ADDRCONFIG;
+
+    /* Look up the hostname. */
+    err = evutil_getaddrinfo(hostname, port_buf, &hints, &answer);
+    if (err < 0) {
+          fprintf(stderr, "Error while resolving '%s': %s",
+                  hostname, evutil_gai_strerror(err));
+          return -1;
+    }
+
+    /* If there was no error, we should have at least one answer. */
+    assert(answer);
+    /* Just use the first answer. */
+    sock = socket(answer->ai_family,
+                  answer->ai_socktype,
+                  answer->ai_protocol);
+    if (sock < 0)
+        return -1;
+    if (connect(sock, answer->ai_addr, answer->ai_addrlen)) {
+        /* Note that we're doing a blocking connect in this function.
+         * If this were nonblocking, we'd need to treat some errors
+         * (like EINTR and EAGAIN) specially. */
+        EVUTIL_CLOSESOCKET(sock);
+        return -1;
+    }
+
+    return sock;
+}
+-----
+
+These functions and constants were new in Libevent 2.0.3-alpha.  They
+are declared in event2/util.h.
+
+Non-blocking hostname resolution with evdns_getaddrinfo()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The main problem with the regular getaddrinfo() interface, and with
+evutil_getaddrinfo() above, is that they're blocking: when you call
+them, the thread you're in has to wait while they query your DNS
+server(s) and wait for a response.  Since you're using Libevent, that
+probably isn't the behavior you want.
+
+So for nonblocking use, Libevent provides a set of functions to launch
+DNS requests, and use Libevent to wait for the server to answer.
+
+.Interface
+[code, C]
+-----
+typedef void (*evdns_getaddrinfo_cb)(
+    int result, struct evutil_addrinfo *res, void *arg);
+struct evdns_getaddrinfo_request;
+
+struct evdns_getaddrinfo_request *evdns_getaddrinfo(
+    struct evdns_base *dns_base,
+    const char *nodename, const char *servname,
+    const struct evutil_addrinfo *hints_in,
+    evdns_getaddrinfo_cb cb, void *arg);
+
+void evdns_getaddrinfo_cancel(struct evdns_getaddrinfo_request *req);
+-----
+
+The evdns_getaddrinfo_function() behaves just like evutil_getaddrinfo(),
+except that instead of blocking on DNS servers, it uses Libevent's
+low-level DNS facilities to look hostnames up for you.  Because it can't
+always return you the result immediately, you need to provide it a
+callback function of type evdns_getaddrinfo_cb, and an optional
+user-supplied argument for that callback function.
+
+Additionally, you need to provide evdns_getaddrinfo() with a pointer to
+an evdns_base.  This structure holds the state  and configuration for
+Libevent's DNS resolver.  See the next section for more information on
+how to get one.
+
+The evdns_getaddrinfo() function returns NULL if it fails or succeeds
+immediately.  Otherwise, it returns a pointer to an
+evdns_getaddrinfo_request.  You can use this to cancel the request with
+evdns_getaddrinfo_cancel() at any time before the request is finished.
+
+//BUILD: SKIP
+.Example: Nonblocking lookups with evdns_getaddrinfo()
+[code,C]
+-----
+include::examples_R9/R9_multilookup.c[]
+-----
+These functions were new in Libevent 2.0.3-alpha.  They are declared in
+event2/dns.h.
+
+Creating and configuring an evdns_base
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Before you can do nonblocking DNS lookups with evdns, you'll need to
+configure an evdns_base.  Each evdns_base stores a list of nameservers,
+and DNS configuration options, and tracks active and in-flight DNS
+requests.
+
+.Interface
+[code, C]
+-----
+struct evdns_base *evdns_base_new(struct event_base *event_base,
+       int initialize);
+void evdns_base_free(struct evdns_base *base, int fail_requests);
+-----
+
+The evdns_base_new() function returns a new evdns_base on success, and
+NULL on failure.  If the 'initialize' argument is true, it tries to
+configure the DNS base sensibly given your operating system's default.
+Otherwise, it leaves the evdns_base empty, with no nameservers or
+options configured.
+
+When you no longer need an evdns_base, you can free it with
+evdns_base_free.  If its 'fail_request' argument is true, it will
+make all in-flight requests get their callbacks invoked with a
+'cancelled' error code before it frees the base.
+
+Initializing evdns from the system configuration
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you want a little more control over how the evdns_base is
+initialized, you can pass 0 as the 'initialize' argument to
+evdns_base_new, and invoke one of these functions.
+
+.Interface
+[code, C]
+-----
+#define DNS_OPTION_SEARCH 1
+#define DNS_OPTION_NAMESERVERS 2
+#define DNS_OPTION_MISC 4
+#define DNS_OPTION_HOSTSFILE 8
+#define DNS_OPTIONS_ALL 15
+int evdns_base_resolv_conf_parse(struct evdns_base *base, int flags,
+                                 const char *filename);
+
+#ifdef WIN32
+int evdns_base_config_windows_nameservers(struct evdns_base *);
+#define EVDNS_BASE_CONFIG_WINDOWS_NAMESERVERS_IMPLEMENTED
+#endif
+-----
+
+The evdns_base_resolv_conf_parse() function will scan the resolv.conf
+formatted file stored in 'filename', and read in all the options from it
+that are listed in 'flags'.  (For more information on the resolv.conf
+file, see your local Unix manual pages.)
+
+DNS_OPTION_SEARCH::
+
+     Tells evdns to read the 'domain' and 'search' fields from the
+     resolv.conf file and the 'ndots' option, and use them to decide
+     which domains (if any) to search for hostnames that aren't
+     fully-qualified.
+
+DNS_OPTION_NAMESERVERS::
+
+     This flag tells evdns to learn the nameservers from the resolv.conf
+     file.
+
+DNS_OPTION_MISC::
+
+     Tells evdns to set other configuration options from the resolv.conf
+     file.
+
+DNS_OPTION_HOSTSFILE::
+
+     Tells evdns to read a list of hosts from /etc/hosts as part of
+     loading the resolv.conf file.
+
+DNS_OPTIONS_ALL::
+
+     Tells evdns to learn as much as it can from the resolv.conf file.
+
+On Windows, you don't have a resolv.conf file to tell you where your
+nameservers are, so you can use the
+evdns_base_config_windows_nameservers() function to read all your
+nameservers from your registry (or your NetworkParams, or wherever
+they're hidden).
+
+The resolv.conf file format
++++++++++++++++++++++++++++
+
+The resolv.conf format we recognize is a text file, each line of which
+should either be empty, contain a comment starting with the # character,
+or consist of a token followed zero or more arguments.  The tokens
+we recognize are:
+
+nameserver::
+
+     Must be followed by the IP address of exactly one nameserver.  As
+     an extension, Libevent allows you to specify a nonstandard port for
+     the nameserver, using the IP:Port or the [IPv6]:port syntax.
+
+domain::
+
+     The local domain name.
+
+search::
+
+     A list of names to search when resolving local hostnames.
+     Any name that has fewer than "ndots" dots in it is considered
+     local, and if we can't resolve it as-is, we look in these domain
+     names.  For example, if "search" is example.com and "ndots" is 1,
+     then when the user asks us to resolve "www", we will consider
+     "www.example.com".
+
+options::
+
+     A space-separated list of options.  Each option is given either as
+     a bare string, or (if it takes an argument) in the option:value
+     format.  Recognized options are:
+
+     ndots:INTEGER;;
+        Used to configure searching.  See "search" above.  Defaults to 1.
+     timeout:FLOAT;;
+        How long, in seconds, do we wait for a response from a DNS
+        server before we assume we aren't getting one?  Defaults to 5
+        seconds.
+     max-timeouts:INT;;
+        How many times do we allow a nameserver to time-out in a row
+        before we assume that it's down?  Defaults to 3.
+     max-inflight:INT;;
+        How many DNS requests do we allow to be pending at once?  (If
+        we try to do more requests than this, the extras will stall
+        until the earlier ones are answered or time out.)  Defaults to
+        XXX.
+     attempts:INT;;
+        How many times to we re-transmit a DNS request before giving up
+        on it?  Defaults to XXX.
+     randomize-case:INT;;
+        If nonzero, we randomize the case on outgoing DNS requests and
+        make sure that replies have the same case as our requests.  This
+        so-called "0x20 hack" can help prevent some otherwise simple
+        active events against DNS.  Defaults to 1.
+     bind-to:ADDRESS;;
+        If provided, we bind to the given address whenever we send
+        packets to a nameserver.  As of Libevent 2.0.4-alpha, it only
+        applied to subsequent nameserver entries.
+     initial-probe-timeout:FLOAT;;
+        When we decide that a nameserver is down, we probe it with
+        exponentially decreasing frequency to see if it has come back
+        up.  This option configures the first timeout in the series, in
+        seconds.  Defaults to 10.
+     getaddrinfo-allow-skew:FLOAT;;
+        When evdns_getaddrinfo() requests both an IPv4 address and an
+        IPv6 address, it does so in separate DNS request packets, since
+        some servers can't handle both requests in one packet.  Once
+        it has an answer for one address type, it waits a little while
+        to see if an answer for the other one comes in.  This option
+        configures how long to wait, in seconds.  Defaults to 3 seconds.
+
+Unrecognized tokens and options are ignored.
+
+Configuring evdns manually
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you want even more fine-grained control over evdns's behavior,
+you can use these functions:
+
+.Interface
+[code,C]
+-----
+int evdns_base_nameserver_ip_add(struct evdns_base *base,
+                                 const char *ip_as_string);
+int evdns_base_load_hosts(struct evdns_base *base, const char *hosts_fname);
+
+void evdns_base_search_clear(struct evdns_base *base);
+void evdns_base_search_add(struct evdns_base *base, const char *domain);
+
+int evdns_base_set_option(struct evdns_base *base, const char *option,
+    const char *val, int flags);
+-----
+
+The evdns_base_nameserver_ip_add adds another nameserver to an existing
+evdns_base.  It takes the nameserver in a text string, either as an IPv4
+address, an IPv6 address, an IPv4 address with a port (IPv4:Port), or an
+IPv6 address with a port ([IPv6]:Port).  It returns 0 on success and
+negative on failure.
+
+The evdns_base_load_hosts() function loads a hosts file (in the same
+format as /etc/hosts) from hosts_fname.  It also returns 0 on success
+and negative on failure.
+
+The evdns_base_search_clear() function removes all current search
+suffixes (as configured by the 'search' option) from the evdns_base;
+the evdns_base_search_add() function adds a suffix.
+
+The evdns_base_set_option() function sets a given option to a given
+value in the evdns_base.  Each one is given as a string.  The 'flags'
+argument should be chosen from DNS_OPTION_*, and should generally be
+DNS_OPTIONS_ALL.  (In versions of Libevent before 2.0.3-alpha, the
+'option' argument needed to end with a colon.  This stupid restriction
+was removed in 2.0.3-alpha.)
+
+Library-side configuration
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+There are a couple of functions you can use to specify library-wide
+settings for the evdns module:
+
+.Interface
+[code,C]
+-----
+typedef void (*evdns_debug_log_fn_type)(int is_warning, const char *msg);
+void evdns_set_log_fn(evdns_debug_log_fn_type fn);
+void evdns_set_random_bytes_fn(void (*fn)(char *, size_t));
+-----
+
+For historical reasons, the evdns subsystem does its own logging; you
+can use evdns_set_log_fn() to give it a callback that does something
+with its messages besides discard them.
+
+For security, evdns needs a good source of random numbers: it uses this
+to pick hard-to-guess transaction IDs and to randomize queries when
+using the 0x20 hack.  (See the "randomize-case" option for more info
+here.)  Currently, however, the backend does not provide one of its own
+except on platforms that implement arc4random().  You can give evdns a
+better random number generator by calling evdns_set_random_bytes_fn and
+giving it a function that takes a buffer and a size, and fills that
+buffer with random numbers.
+
+
+// XXXX Add a reference for the 0x20 hack
+// XXXX Add some documentation on entropy
+// XXXX The 'flags' argument to set_option is dumb; can we make it
+//      ignored?
+// XXXX Can't we just add a working rng everywhere?
