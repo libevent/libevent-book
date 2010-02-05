@@ -213,6 +213,7 @@ code is the same as your platform's native error code.
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#include <unistd.h>
 
 evutil_socket_t
 get_tcp_socket_for_host(const char *hostname, ev_uint16_t port)
@@ -278,7 +279,7 @@ So for nonblocking use, Libevent provides a set of functions to launch
 DNS requests, and use Libevent to wait for the server to answer.
 
 .Interface
-[code, C]
+[code,C]
 -----
 typedef void (*evdns_getaddrinfo_cb)(
     int result, struct evutil_addrinfo *res, void *arg);
@@ -328,7 +329,7 @@ and DNS configuration options, and tracks active and in-flight DNS
 requests.
 
 .Interface
-[code, C]
+[code,C]
 -----
 struct evdns_base *evdns_base_new(struct event_base *event_base,
        int initialize);
@@ -354,7 +355,7 @@ initialized, you can pass 0 as the 'initialize' argument to
 evdns_base_new, and invoke one of these functions.
 
 .Interface
-[code, C]
+[code,C]
 -----
 #define DNS_OPTION_SEARCH 1
 #define DNS_OPTION_NAMESERVERS 2
