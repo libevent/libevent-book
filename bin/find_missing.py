@@ -73,6 +73,9 @@ def removeIdentifiers(idmap, f):
                 w = w[:-2]
             if w in idmap:
                 idmap[w][2] = True
+            if w == 'evdns_init':
+                print w, f.count()
+
 
 def findMissing(includeDir):
     start = os.getcwd()
@@ -94,16 +97,22 @@ def findMissing(includeDir):
     for ident, (fname, lineno, found) in idmap.iteritems():
         byfile.setdefault(fname, []).append((lineno, ident, found))
 
+    total_n = total_found = 0
     for fname in sorted(byfile.iterkeys()):
         n = len(byfile[fname])
         nfound = sum(1 for tp in byfile[fname] if tp[2])
         print "%s: (%d%%)"%(fname, int(float(100*nfound)/n))
+
+        total_n += n
+        total_found += nfound
+
         for lineno,ident,found in sorted(byfile[fname]):
             if found:
                 print "\t    %3d:%s"%(lineno, ident)
             else:
                 print "\t*** %3d:%s"%(lineno, ident)
 
+    print "TOTAL: %d%%"%int(float(100*total_found)/total_n)
 
 if __name__ == '__main__':
     import sys
