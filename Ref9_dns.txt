@@ -499,7 +499,7 @@ void evdns_base_search_clear(struct evdns_base *base);
 void evdns_base_search_add(struct evdns_base *base, const char *domain);
 
 int evdns_base_set_option(struct evdns_base *base, const char *option,
-    const char *val, int flags);
+    const char *val);
 -----
 
 The evdns_base_nameserver_ip_add adds another nameserver to an existing
@@ -516,12 +516,8 @@ The evdns_base_search_clear() function removes all current search
 suffixes (as configured by the 'search' option) from the evdns_base;
 the evdns_base_search_add() function adds a suffix.
 
-The evdns_base_set_option() function sets a given option to a given
-value in the evdns_base.  Each one is given as a string.  The 'flags'
-argument should be chosen from DNS_OPTION_*, and should generally be
-DNS_OPTIONS_ALL.  (In versions of Libevent before 2.0.3-alpha, the
-'option' argument needed to end with a colon.  This stupid restriction
-was removed in 2.0.3-alpha.)
+The evdns_base_set_option() function sets a given option to a given value in
+the evdns_base.  Each one is given as a string.
 
 Library-side configuration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -550,9 +546,6 @@ better random number generator by calling evdns_set_random_bytes_fn and
 giving it a function that takes a buffer and a size, and fills that
 buffer with random numbers.
 
-
 // XXXX Add a reference for the 0x20 hack
 // XXXX Add some documentation on entropy
-// XXXX The 'flags' argument to set_option is dumb; can we make it
-//      ignored?
 // XXXX Can't we just add a working rng everywhere?
