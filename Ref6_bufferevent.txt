@@ -307,6 +307,7 @@ waiting for the name lookup to finish, which usually isn't what you want.  If
 it is provided, then Libevent uses it to look up the hostname asynchronously.
 See link::Ref9_dns.html[chapter R9] for more info on DNS.
 
+//BUILD: SKIP
 .Example: Trivial HTTP v0 client.
 [code,C]
 -------
