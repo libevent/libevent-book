@@ -2,7 +2,7 @@ Fast portable non-blocking network programming with Libevent
 ============================================================
 
 ------
-include::license.txt
+include::license.txt[]
 ------
 
 include::00_about.txt[]
@@ -27,6 +27,8 @@ include::Ref6_bufferevent.txt[]
 include::Ref7_evbuffer.txt[]
 
 include::Ref8_listener.txt[]
+
+include::Ref9_dns.txt[]
 
 
 

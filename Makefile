@@ -16,7 +16,8 @@ GENERATED_CHAPTERS= \
 	Ref5_evutil.html \
 	Ref6_bufferevent.html \
 	Ref7_evbuffer.html \
-	Ref8_listener.html
+	Ref8_listener.html \
+	Ref9_dns.html
 
 GENERATED_HTML = $(GENERATED_METAFILES) $(GENERATED_CHAPTERS)
 
@@ -24,8 +25,10 @@ all: html examples
 
 # Note that this won't give you good results unless you have a very
 # recent asciidoc.  Asciidoc 8.5.3 is recommended.
-pdf:
-	a2x -f pdf OnePage.txt
+pdf: LibeventBook.pdf
+
+LibeventBook.pdf: *.txt examples*/*.c
+	a2x -f pdf LibeventBook.txt
 
 html: $(GENERATED_HTML)
 
@@ -35,6 +38,7 @@ examples:
 	cd examples_01 && $(MAKE)
 	cd examples_R6 && $(MAKE)
 	cd examples_R8 && $(MAKE)
+	cd examples_R9 && $(MAKE)
 
 inline_examples:
 	./bin/build_examples.py *_*.txt
@@ -52,9 +56,10 @@ Ref2_eventbase.html: license.txt
 Ref3_eventloop.html: license.txt
 Ref4_event.html: license.txt
 Ref5_evutil.html: license.txt
-Ref6_bufferevent.html: license.txt
+Ref6_bufferevent.html: examples_R6/*.c license.txt
 Ref7_evbuffer.html: license.txt
-Ref8_evbuffer.html: examples_R8/*.c license.txt
+Ref8_listener.html: examples_R8/*.c license.txt
+Ref9_dns.html: examples_R9/*.c license.txt
 
 clean:
 	rm -f *~
