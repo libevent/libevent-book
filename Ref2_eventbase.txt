@@ -305,7 +305,7 @@ By default, all new events associated with this base will be initialized
 with priority equal to n_priorities / 2.
 
 The event_base_priority_init function is defined in <event2/event.h>.  It has
-been available since before Libevent 1.0.
+been available since Libevent 1.0.
 
 
 Reinitializing an event_base after fork()
@@ -367,7 +367,6 @@ This function worked like event_base_new(), and set the current base
 to the allocated base.  There was no other way to change the
 current base.
 
-
 Some of the event_base functions in this section had variants that
 operated on the current base.  These functions behaved as the current
 functions, except that they took no base argument.
@@ -378,7 +377,4 @@ functions, except that they took no base argument.
 | event_base_priority_init()    | event_priority_init()
 | event_base_get_method()       | event_get_method()
 |======================================================================
-
-// FIXME Undocumented:
-//          event_base_make_notifiable()
 

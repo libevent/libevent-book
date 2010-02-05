@@ -340,7 +340,7 @@ If the BEV_OPT_CLOSE_ON_FREE flag was set, and this bufferevent has a
 socket or underlying bufferevent associated with it as its transport,
 that transport is closed when you free the bufferevent.
 
-This function was introduced before Libevent 1.0.
+This function was introduced in Libevent 0.8.
 
 Manipulating callbacks, watermarks, and enabled operations
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -402,7 +402,7 @@ reading.
 You can call bufferevent_get_enabled() to see which events are currently
 enabled on the bufferevent.
 
-These functions were introduced before Libevent 1.0, except for
+These functions were introduced in Libevent 0.8, except for
 bufferevent_get_enabled(), which was introduced in version 2.0.3-alpha.
 
 .Interface
@@ -542,7 +542,7 @@ end of the output buffer.  Calling bufferevent_write_buffer() removes
 the entire contents of 'buf' and puts them at the end of the output
 buffer.   Both return 0 if successful, or -1 if an error occurred.
 
-These functions have existed since before Libevent 1.0.
+These functions have existed since Libevent 0.8.
 
 .Interface
 [code,C]
@@ -562,7 +562,7 @@ drains the entire contents of the input buffer and places them into
 Note that with bufferevent_read(), the memory chunk at 'data' must
 actually have enough space to hold 'size' bytes of data.
 
-The bufferevent_read() function has existed since before Libevent 1.0;
+The bufferevent_read() function has existed since Libevent 0.8;
 bufferevent_read_buffer() was introduced in Libevent 2.0.1-alpha.
 
 .Example
@@ -675,7 +675,7 @@ As of Libevent 2.0.2-alpha, only socket-based bufferevents support
 timeouts.  More bufferevent types should support timeouts in the
 future.
 
-This functions has existed since Libevent 2.0.1-alpha
+This functions has existed since Libevent 2.0.1-alpha.
 
 Initiating a flush on a bufferevent
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -710,7 +710,7 @@ priorities.
 This function returns 0 on success, and -1 on failure.  It works on
 socket-based bufferevents only.
 
-This function was introduced before Libevent 1.0.
+This function was introduced in Libevent 1.0.
 
 .Interface
 [code,C]
@@ -723,7 +723,7 @@ These functions set or return the file descriptor for a fd-based
 event.  Only socket-based bufferevents support setfd().  Both return
 -1 on failure; setfd() returns 0 on success.
 
-The bufferevent_setfd() function was introduced before Libevent 1.4.4;
+The bufferevent_setfd() function was introduced in Libevent 1.4.4;
 the bufferevent_getfd() function was introduced in Libevent 2.0.2-alpha.
 
 .Interface
@@ -770,9 +770,10 @@ Libevent 2.0:
 The old functions were defined in event.h, not in event2/bufferevent.h.
 
 If you still need access to the internals of the common parts of the
-bufferevent struct, include event2/bufferevent_struct.h.  The macros
-and names in this section are available if you include
-event2/bufferevent_compat.h.
+bufferevent struct, you can include event2/bufferevent_struct.h.  We
+recommend against it: the contents of struct bufferevent WILL change between
+versions of Libevent.  The macros and names in this section are available if
+you include event2/bufferevent_compat.h.
 
 The interface to set up a bufferevent differed in older versions:
 
@@ -795,5 +796,5 @@ void bufferevent_settimeout(struct bufferevent *bufev,
 --------
 
 Finally, note that the underlying evbuffer implementation for Libevent
-versions before 2.0 makes using bufferevents for high-performance apps
-kind of questionable.
+versions before 2.0 was pretty inefficient, to the point where using
+bufferevents for high-performance apps was kind of questionable.

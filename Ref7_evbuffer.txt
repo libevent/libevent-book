@@ -30,7 +30,7 @@ These functions should be relatively clear: evbuffer_new() allocates
 and returns a new empty evbuffer, and evbuffer_free() deletes one and
 all of its contents.
 
-These functions have existed since before Libevent 1.0.
+These functions have existed since Libevent 0.8.
 
 Evbuffers and Thread-safety
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -135,9 +135,9 @@ evbuffer_add(buf, "Hello world 2.0.1", 17);
 evbuffer_add_printf(buf, "Hello %s %d.%d.%d", "world", 2, 0, 1);
 --------
 
-The evbuffer_add(), evbuffer_add_printf(), and evbuffer_expand() functions
-were introduced before Libevent 1.0;  and evbuffer_add_printf() first
-appeared in Libevent 1.1.
+The evbuffer_add() and evbuffer_add_printf() functions were introduced in
+Libevent 0.8; evbuffer_expand() was in Libevent 0.9, and
+evbuffer_add_printf() first appeared in Libevent 1.1.
 
 Moving data from one evbuffer to another
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -161,7 +161,7 @@ from 'src' to the end of 'dst', copying as little as possible.  If
 there are fewer than 'datlen' bytes to move, it moves all the bytes.
 It returns the number of bytes moved.
 
-We introduced evbuffer_add_buffer() before Libevent 1.0;
+We introduced evbuffer_add_buffer() in Libevent 0.8;
 evbuffer_remove_buffer() was new in Libevent 2.0.1-alpha.
 
 Adding data to the front of an evbuffer
@@ -271,7 +271,8 @@ The evbuffer_drain() function behaves as evbuffer_remove(), except
 that it does not copy the data: it just removes it from the front of
 the buffer.  It returns 0 on success and -1 on failure.
 
-These functions have existed since before Libevent 1.0.
+Libevent 0.8 introduced evbuffer_drain(); evbuffer_remove() appeared in
+Libevent 0.9.
 
 Line-oriented input
 ~~~~~~~~~~~~~~~~~~~

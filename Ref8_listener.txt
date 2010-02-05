@@ -9,7 +9,8 @@ The evconnlistener mechanism gives you a way to listen for and accept
 incoming TCP connections.
 
 All the functions and types in this section are declared in
-event2/listener.h.  They first appeared in Libevent 2.0.2-alpha.
+event2/listener.h.  They first appeared in Libevent 2.0.2-alpha, unless
+otherwise noted.
 
 Creating or freeing an evconnlistener
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -123,6 +124,8 @@ struct event_base *evconnlistener_get_base(struct evconnlistener *lev);
 
 These functions return a listener's associated socket and event_base
 respectively.
+
+The evconnlistener_get_fd() function first appeared in Libevent 2.0.3-alpha.
 
 Example code: an echo server.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

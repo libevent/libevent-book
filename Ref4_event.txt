@@ -196,7 +196,8 @@ improving the clarity of your code.
     event_pending((ev), (what), (tv_out))
 --------
 
-These macros have been present since before Libevent 1.0.
+These macros have been present since Libevent 0.6, except for evtimer_new(),
+which first appeared in Libevent 2.0.1-alpha.
 
 Constructing signal events
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -498,7 +499,7 @@ When you do not set the priority for an event, the default is the
 number of queues in the event base, divided by 2.
 
 This function is declared in <event2/event.h>.  It has existed since
-before Libevent 1.0.
+Libevent 1.0.
 
 Inspecting event status
 ~~~~~~~~~~~~~~~~~~~~~~~
