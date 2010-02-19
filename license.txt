@@ -5,7 +5,7 @@ license, version 3.0.  Future versions may be made available under a less
 restrictive license.
 
 For the latest version of this document, see
-   http://wangafu.net/~nickm/libevent-book/TOC.html
+   http://www.wangafu.net/~nickm/libevent-book/TOC.html
 
 To get the source for the latest version of this document, install git
 and run "git clone git://github.com/nmathewson/libevent-book.git"
