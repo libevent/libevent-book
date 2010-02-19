@@ -357,4 +357,42 @@ the start of 'type' at which 'field' occurs.
 This function was introduced in Libevent 2.0.1-alpha.  It was buggy in every
 version before Libevent 2.0.3-alpha.
 
+Secure random number generator
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+Many applications (including evdns) need a source of hard-to-predict random
+numbers for their security.
+
+.Interface
+[code,C]
+-----
+void evutil_secure_rng_get_bytes(void *buf, size_t n);
+-----
+
+This function fills n-byte buffer at 'buf' with 'n' bytes of random data.
+
+If your platform provides the arc4random() function, Libevent uses that.
+Otherwise, it uses its own implementation of arc4random(), seeded by your
+operating system's entropy pool (CryptGenRandom on Windows, /dev/urandom
+everywhere else).
+
+.Interface
+[code,C]
+-----
+int evutil_secure_rng_init(void);
+void evutil_secure_rng_add_bytes(const char *dat, size_t datlen);
+-----
+
+You do not need to manually initialize the secure random number
+generator, but if you want to make sure it is successfully
+initialized, you can do so by calling evutil_secure_rng_init().  It
+seeds the RNG (if it was not already seeded) and returns 0 on success.
+If it returns -1, Libevent wasn't able to find a good source of
+entropy on your OS, and you can't use the RNG safely without
+initializing it yourself.
+
+You can add more random bytes to the entropy poll yourself by calling
+evutil_secure_rng_add_bytes(); this shouldn't be necessary in typical
+use.
+
+These functions are new in Libevent 2.0.4-alpha.
