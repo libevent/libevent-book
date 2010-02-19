@@ -497,9 +497,12 @@ int evdns_base_load_hosts(struct evdns_base *base, const char *hosts_fname);
 
 void evdns_base_search_clear(struct evdns_base *base);
 void evdns_base_search_add(struct evdns_base *base, const char *domain);
+void evdns_base_search_ndots_set(struct evdns_base *base, int ndots);
 
 int evdns_base_set_option(struct evdns_base *base, const char *option,
     const char *val);
+
+int evdns_base_count_nameservers(struct evdns_base *base);
 -----
 
 The evdns_base_nameserver_ip_add adds another nameserver to an existing
@@ -512,12 +515,17 @@ The evdns_base_load_hosts() function loads a hosts file (in the same
 format as /etc/hosts) from hosts_fname.  It also returns 0 on success
 and negative on failure.
 
-The evdns_base_search_clear() function removes all current search
-suffixes (as configured by the 'search' option) from the evdns_base;
-the evdns_base_search_add() function adds a suffix.
+The evdns_base_search_clear() function removes all current search suffixes
+(as configured by the 'search' option) from the evdns_base; the
+evdns_base_search_add() function adds a suffix.
 
 The evdns_base_set_option() function sets a given option to a given value in
-the evdns_base.  Each one is given as a string.
+the evdns_base.  Each one is given as a string.  (Before Libevent
+2.0.3, the option name needed to have a colon after it.)
+
+If you've just parsed a set of configuration files and want to see if
+any nameservers were added, you can use evdns_base_count_nameservers()
+to see how many there are.
 
 Library-side configuration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -530,22 +538,169 @@ settings for the evdns module:
 -----
 typedef void (*evdns_debug_log_fn_type)(int is_warning, const char *msg);
 void evdns_set_log_fn(evdns_debug_log_fn_type fn);
-void evdns_set_random_bytes_fn(void (*fn)(char *, size_t));
+void evdns_set_transaction_id_fn(ev_uint16_t (*fn)(void));
 -----
 
 For historical reasons, the evdns subsystem does its own logging; you
 can use evdns_set_log_fn() to give it a callback that does something
 with its messages besides discard them.
 
-For security, evdns needs a good source of random numbers: it uses this
-to pick hard-to-guess transaction IDs and to randomize queries when
-using the 0x20 hack.  (See the "randomize-case" option for more info
-here.)  Currently, however, the backend does not provide one of its own
-except on platforms that implement arc4random().  You can give evdns a
-better random number generator by calling evdns_set_random_bytes_fn and
-giving it a function that takes a buffer and a size, and fills that
-buffer with random numbers.
+For security, evdns needs a good source of random numbers: it uses
+this to pick hard-to-guess transaction IDs and to randomize queries
+when using the 0x20 hack.  (See the "randomize-case" option for more
+info here.)  Older versions of Libevent, did not provide a secure RNG
+of its own, however.  You can give evdns a better random number
+generator by calling evdns_set_transaction_id_fn and giving it a
+function that returns a hard-to-predict two-byte unsigned integer.
+
+In Libevent 2.0.4-alpha and later, Libevent uses its own built-in
+secure RNG; evdns_set_transaction_id_fn() has no effect.
 
 // XXXX Add a reference for the 0x20 hack
-// XXXX Add some documentation on entropy
-// XXXX Can't we just add a working rng everywhere?
+
+Low-level DNS interfaces
+------------------------
+
+Occasionally, you'll want the ability to launch specific DNS requests
+with more fine-grained control than you get from evdns_getaddrinfo().
+Libevent gives you some interfaces to do that.
+
+.Missing features
+Right now, Libevent's DNS support lacks a few features that you'd
+expect from a low-level DNS system, like support for arbitrary request
+types and TCP requests.  If you need features that evdns doesn't have,
+please consider contributing a patch.  You might also look into
+a more full-featured DNS library like c-ares.
+
+.Interface
+[code,C]
+-----
+#define DNS_QUERY_NO_SEARCH /* ... */
+
+#define DNS_IPv4_A         /* ... */
+#define DNS_PTR            /* ... */
+#define DNS_IPv6_AAAA      /* ... */
+
+typedef void (*evdns_callback_type)(int result, char type, int count,
+    int ttl, void *addresses, void *arg);
+
+struct evdns_request *evdns_base_resolve_ipv4(struct evdns_base *base,
+    const char *name, int flags, evdns_callback_type callback, void *ptr);
+struct evdns_request *evdns_base_resolve_ipv6(struct evdns_base *base,
+    const char *name, int flags, evdns_callback_type callback, void *ptr);
+struct evdns_request *evdns_base_resolve_reverse(struct evdns_base *base,
+    const struct in_addr *in, int flags, evdns_callback_type callback,
+    void *ptr);
+struct evdns_request *evdns_base_resolve_reverse_ipv6(
+    struct evdns_base *base, const struct in6_addr *in, int flags,
+    evdns_callback_type callback, void *ptr);
+-----
+
+These resolve functions initiate a DNS request for a particular record.  Each
+takes an evdns_base to use for the request, a resource to look up (either a
+hostname for forward lookups, or an address for reverse lookups), a set of
+flags to determine how to do the lookup, a callback to invoke when the lookup
+is done, and a pointer to pass to the user-supplied callback.
+
+The 'flags' argument is either 0 or DNS_QUERY_NO_SEARCH to explicitly
+suppress searching in the list of search if the original search fails.
+DNS_QUERY_NO_SEARCH has no effect for reverse lookups, since those never do
+searching.
+
+When the request is done---either successfully or not---the callback function
+will be invoked.  The callback takes a 'result' that indicates success or an
+error code (see DNS Errors table below), a record type (one of DNS_IPv4_A,
+DNS_IPv6_AAAA, or DNS_PTR), the number of records in 'addresses', a
+time-to-live in seconds, the addresses themselves, and the user-supplied
+argument pointer.
+
+The 'addresses' argument to the callback is NULL in the event of an error.
+For a PTR record, it's a NUL-terminated string.  For IPv4 records, it is an
+array of four-byte values in network order.  For IPv6 records, it is an array
+of 16-byte records in network order.  (Note that the number of addresses can
+be 0 even if there was no error.  This can happen when the name exists, but
+it has no records of the requested type.)
+
+The errors codes that can be passed to the callback are as follows:
+
+.DNS Errors
+[options="header",width="70%"
+|================
+| Code                | Meaning
+|DNS_ERR_NONE         | No error occurred
+|DNS_ERR_FORMAT       | The server didn't understand the query
+|DNS_ERR_SERVERFAILED | The server reported an internal error
+|DNS_ERR_NOTEXIST     | There was no record with the given name
+|DNS_ERR_NOTIMPL      | The server doesn't understand this kind of query
+|DNS_ERR_REFUSED      | The server rejected the query for policy reasons
+|DNS_ERR_TRUNCATED    | The DNS record wouldn't fit in a UDP packet
+|DNS_ERR_UNKNOWN      | Unknown internal error
+|DNS_ERR_TIMEOUT      | We waited too long for an answer
+|DNS_ERR_SHUTDOWN     | The user asked us to shut down the evdns system
+|DNS_ERR_CANCEL       | The user asked us to cancel this request
+|================
+
+You can decode these error codes to a human-readable string with:
+
+.Interface
+[code,C]
+-----
+const char *evdns_err_to_string(int err);
+-----
+
+Each resolve function returns a pointer to an opaque 'evdns_request'
+structure.  You can use this to cancel the request at any point before the
+callback is invoked:
+
+.Interface
+[code,C]
+-----
+void evdns_cancel_request(struct evdns_base *base,
+    struct evdns_request *req);
+-----
+
+Canceling a request with this function makes its callback get invoked with
+the DNS_ERR_CANCEL result code.
+
+
+
+
+
+DNS server interfaces
+---------------------
+
+
+
+Obsolete DNS interfaces
+-----------------------
+
+.Obsolete Interfaces
+-----
+void evdns_base_search_ndots_set(struct evdns_base *base,
+                                 const int ndots);
+int evdns_base_nameserver_add(struct evdns_base *base,
+    unsigned long int address);
+void evdns_set_random_bytes_fn(void (*fn)(char *, size_t));
+-----
+
+Calling evdns_base_search_ndots_set() is equivalent to using
+evdns_base_set_option() with the "ndots" option.
+
+The evdns_base_nameserver_add() function behaves as
+evdns_base_nameserver_ip_add(), except it can only add nameservers
+with IPv4 addresses.  It takes them, idiosyncratically, as four bytes
+in network order.
+
+From Libevent 2.0.1-alpha through 2.0.3-alpha, you could use
+evdns_set_random_bytes_fn to specify a function to use for generating
+random numbers instead of evdns_set_transaction_id_fn.  It no longer
+has any effect, now that Libevent provides its own secure RNG.
+
+
+// Move nameserver_add to dns_compat.h ?
+// Move the set_random_bytes function to dns_compat.h ?
+
+
+
+
+
