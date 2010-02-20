@@ -215,9 +215,14 @@ int bufferevent_socket_connect(struct bufferevent *bev,
 --------
 
 The address and addrlen arguments are as for the standard call
-connect().  If the bufferevent does not already have an fd set,
+connect().  If the bufferevent does not already have a socket set,
 calling this function allocates a new socket for it, and makes it
 nonblocking.
+
+If the bufferevent *does* have a socket already, calling
+bufferevent_socket_connect() tells Libevent that the socket is not
+connected, and no reads or writes should be done on the socket until
+the connect operation has succeeded.
 
 It is okay to add data to the output buffer before the connect is
 done.
@@ -306,6 +311,11 @@ The dns_base argument is optional.  If it is NULL, then Libevent blocks while
 waiting for the name lookup to finish, which usually isn't what you want.  If
 it is provided, then Libevent uses it to look up the hostname asynchronously.
 See link::Ref9_dns.html[chapter R9] for more info on DNS.
+
+As with bufferevent_socket_connect(), this function tells Libevent that any
+existing socket on the bufferevent is not connected, and no reads or writes
+should be done on the socket until the resolve is finished and the connect
+operation has succeeded.
 
 //BUILD: SKIP
 .Example: Trivial HTTP v0 client.
