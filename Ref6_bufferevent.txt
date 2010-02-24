@@ -670,22 +670,23 @@ void bufferevent_set_timeouts(struct bufferevent *bufev,
 Setting a timeout to NULL removes it.
 
 The read timeout will trigger if the bufferevent waits at least
-'timeout_read' seconds between successfully reading data.  The write
+'timeout_read' seconds while trying to read read.  The write
 timeout will trigger if the bufferevent waits at least 'timeout_read'
-seconds between successfully writing data.
+seconds while trying to write data.
 
 Note that the timeouts only count when the bufferevent would like to
-read or write.  In other words, the read timeout will not trigger if
+read or write.  In other words, the read timeout is not enabled if
 reading is disabled on the bufferevent, or if the input buffer is full
-(at its high-water mark).  Similarly, the write timeout will not
-trigger if writing is disabled, or if there is no data to write.
+(at its high-water mark).  Similarly, the write timeout is not enabled if
+if writing is disabled, or if there is no data to write.
 
-.Note
-As of Libevent 2.0.2-alpha, only socket-based bufferevents support
-timeouts.  More bufferevent types should support timeouts in the
-future.
+When a read or write timeout occurs, the corresponding read or write
+operation becomes disabled on the bufferevent.  The event callback is then
+invoked with either BEV_EVENT_TIMEOUT|BEV_EVENT_READING or
+BEV_EVENT_TIMEOUT|BEV_EVENT_WRITING.
 
-This functions has existed since Libevent 2.0.1-alpha.
+This functions has existed since Libevent 2.0.1-alpha.  It didn't behave
+consistently across bufferevent types until Libevent 2.0.4-alpha.
 
 Initiating a flush on a bufferevent
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
