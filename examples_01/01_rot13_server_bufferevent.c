@@ -59,7 +59,7 @@ readcb(struct bufferevent *bev, void *ctx)
         while (evbuffer_get_length(input)) {
             int n = evbuffer_remove(input, buf, sizeof(buf));
             for (i = 0; i < n; ++i)
-                line[i] = rot13_char(line[i]);
+                buf[i] = rot13_char(buf[i]);
             evbuffer_add(output, buf, n);
         }
         evbuffer_add(output, "\n", 1);
