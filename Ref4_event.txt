@@ -82,7 +82,7 @@ void cb_func(evutil_socket_t fd, short what, void *arg)
             (what&EV_TIMEOUT) ? " timeout" : "",
             (what&EV_READ)    ? " read" : "",
             (what&EV_WRITE)   ? " write" : "",
-            (what&EV_WRITE)   ? " signal" : "",
+            (what&EV_SIGNAL)  ? " signal" : "",
             data);
 }
 
