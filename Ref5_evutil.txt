@@ -87,7 +87,8 @@ the EV_SSIZE_MAX/MIN macros, were added in Libevent 2.0.4-alpha.
 Timer portability functions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Not every platform defines the standard timeval manipulation functions.
+Not every platform defines the standard timeval manipulation functions,
+so we provide our own implementations.
 
 .Interface
 [code,C]
@@ -107,7 +108,7 @@ and stores the result in the third.
 --------
 
 Clearing a timeval sets its value to zero.  Checking whether it is set
-compares its value against zero.
+returns true if it is nonzero and false otherwise.
 
 .Interface
 [code,C]
@@ -158,7 +159,7 @@ These functions were introduced in Libevent 1.4.0-beta, except for
 evutil_gettimeofday(), which was introduced in Libevent 2.0.
 
 NOTE: It wasn't safe to use <= or >= with timercmp before Libevent
-1.4.4 beta.
+1.4.4.
 
 Socket API compatibility
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -281,9 +282,8 @@ counting the terminating NUL byte.  (This behavior conforms to the C99
 snprintf() standard, and is in contrast to the Windows _snprintf(),
 which returns a negative number if the string would not fit in the buffer.)
 
-// XXXX Is this accurate?
 The evutil_strtoll() function has been in Libevent since 1.4.2-rc.
-These other functions first appeared in 2.0.1-alpha.
+These other functions first appeared in version 1.4.5.
 
 Locale-independent string manipulation functions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -301,9 +301,8 @@ int evutil_ascii_strncasecmp(const char *str1, const char *str2, size_t n);
 
 These functions behave as strcasecmp() and strncasecmp(), except that they
 always compare using the ASCII character set, regardless of the current
-locale.  They were first exposed in Libevent 2.0.3-alpha.
-
-// XXX explain why you would use these.
+locale.  The evutil_ascii_str[n]casecmp() functions were first exposed in
+Libevent 2.0.3-alpha.
 
 IPv6 helper and portability functions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -316,8 +315,18 @@ int evutil_inet_pton(int af, const char *src, void *dst);
 --------
 
 These functions behave as the standard inet_ntop() and inet_pton()
-functions for parsing and formatting IPv4 and IPv6 addresses.
-// XXX say more!
+functions for parsing and formatting IPv4 and IPv6 addresses, as
+specified in RFC3493.  That is, to format an IPv4 address, you call
+evutil_inet_ntop() with 'af' set to AF_INET, 'src' pointing to a struct
+in_addr, and 'dst' pointing to a character buffer of size 'len'.  For an
+IPv6 address, 'af' is AF_INET6 and 'src' is a struct in6_addr.  To parse
+an IPv4 address, call evutil_inet_pton() with 'af' set to AF_INET or
+AF_INET6, the string to parse in 'src', and 'dst' pointing to an in_addr
+or an in_addr6 as appropriate.
+
+The return value from evutil_inet_ntop() is NULL on failure and
+otherwise points to dst.  The return value from evutil_inet_pton() is 0
+on success and -1 on failure.
 
 .Interface
 [code,C]
@@ -340,7 +349,26 @@ failure.  It recognizes the following address formats:
 
 If no port is given, the port in the resulting sockaddr is set to 0.
 
-// XXX when did these appear?
+.Interface
+[code,C]
+------
+int evutil_sockaddr_cmp(const struct sockaddr *sa1,
+    const struct sockaddr *sa2, int include_port);
+------
+
+The evutil_sockaddr_cmp() function compares two addresses, and returns
+negative if sa1 precedes sa2, 0 if they are equal, and positive if sa2
+precedes sa1.  It works for AF_INET and AF_INET6 addresses, and returns
+undefined output for other addresses.  It's guaranteed to give a total order
+for these addresses, but the ordering may change between Libevent
+versions.
+
+If the 'include_port' argument is false, then two sockaddrs are treated
+as equal if they differ only in their port.  Otherwise, sockaddrs with
+different ports are treated as unequal.
+
+These functions were introduced in Libevent 2.0.1-alpha, except for
+evutil_sockaddr_cmp(), which introduced in 2.0.3-alpha.
 
 Structure macro portability functions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -354,7 +382,7 @@ Structure macro portability functions
 As the standard offsetof macro, this macro yields the number of bytes from
 the start of 'type' at which 'field' occurs.
 
-This function was introduced in Libevent 2.0.1-alpha.  It was buggy in every
+This macro was introduced in Libevent 2.0.1-alpha.  It was buggy in every
 version before Libevent 2.0.3-alpha.
 
 Secure random number generator
