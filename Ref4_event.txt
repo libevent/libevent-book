@@ -798,6 +798,24 @@ The event_set() function was like event_assign(), except for its use
 of the current base.  The event_base_set() function changes the base
 associated with an event.
 
+There were variants of event_set() for dealing more conveniently with
+timers and signals: evtimer_set() corresponded roughly to evtimer_assign(),
+and evsignal_set() corresponded roughly to evsignal_assign().
+
+Versions of Libevent before 2.0 used "signal_" as the prefix for the
+signal-based variants of event_set() and so on, rather than "evsignal_".
+(That is, they had signal_set(), signal_add(), signal_del(),
+signal_pending(), and signal_initialized().)  Truly ancient versions of
+Libevent (before 0.6) used "timeout_" instead of "evtimer_".  Thus, if you're
+doing code archeology, you might see timeout_add(), timeout_del(),
+timeout_initialized(), timeout_set(), timeout_pending(), and so on.
+
+In place of the event_get_fd() and event_get_signal() functions, older
+versions of Libevent (before 2.0) used two macros called EVENT_FD() and
+EVENT_SIGNAL().  These macros inspected the event structure's contents
+directly and so prevented binary compatibility between versions; in 2.0 and
+later they are just aliases for event_get_fd() and event_get_signal().
+
 Since versions of Libevent before 2.0 did not have
 locking support, it wasn't safe to call any of the functions that
 change an event's state with respect to a base from outside the thread
@@ -816,5 +834,3 @@ inserted at the same time with the same fd and the same READ/WRITE.
 In other words, only one event at a time could be waiting for read on
 each fd, and only one event at a time could be waiting for write on
 each fd.
-
-
