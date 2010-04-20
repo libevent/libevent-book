@@ -172,12 +172,18 @@ to pretend that it has.
 .Interface
 [code,C]
 --------
-#define EVUTIL_CLOSESOCKET(s) /* ... */
+int evutil_closesocket(evutil_socket_t s);
+
+#define EVUTIL_CLOSESOCKET(s) evutil_closesocket(s)
 --------
 
-This macro closes a socket.  On Unix, it's an alias for close(); on
+This function  closes a socket.  On Unix, it's an alias for close(); on
 Windows, it calls closesocket().   (You can't use close() on sockets
 on Windows, and nobody else defines a closesocket().)
+
+The evutil_closesocket function was introduced in Libevent 2.0.5-alpha.
+Before then, you needed to call the EVUTIL_CLOSESOCKET macro.
+
 
 .Interface
 [code,C]
