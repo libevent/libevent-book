@@ -257,15 +257,15 @@ Removing data from an evbuffer
 .Interface
 [code,C]
 --------
-int evbuffer_remove(struct evbuffer *buf, void *data, size_t datlen);
 int evbuffer_drain(struct evbuffer *buf, size_t len);
+int evbuffer_remove(struct evbuffer *buf, void *data, size_t datlen);
 --------
 
-The evbuffer_remove() function copies the first 'datlen' bytes from
-the front of 'buf' into the memory at 'data'.  If there are fewer than
-'datlen' bytes available, the function copies all the bytes there
-are.  The return value is -1 on failure, and is otherwise the number
-of bytes copied.
+The evbuffer_remove() function copies and removes the first 'datlen'
+bytes from the front of 'buf' into the memory at 'data'.  If there are
+fewer than 'datlen' bytes available, the function copies all the bytes
+there are.  The return value is -1 on failure, and is otherwise the
+number of bytes copied.
 
 The evbuffer_drain() function behaves as evbuffer_remove(), except
 that it does not copy the data: it just removes it from the front of
@@ -273,6 +273,76 @@ the buffer.  It returns 0 on success and -1 on failure.
 
 Libevent 0.8 introduced evbuffer_drain(); evbuffer_remove() appeared in
 Libevent 0.9.
+
+Copying data out from an evbuffer
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Sometimes you want to get a copy of the data at the start of a buffer without
+draining it.  For example, you might want to see whether a complete record
+of some kind has arrived, without draining any of the data (as
+evbuffer_remove would do), or rearranging the buffer internally (as
+evbuffer_pullup() would do.)
+
+.Interface
+[code,C]
+--------
+ev_ssize_t evbuffer_copyout(struct evbuffer *buf, void *data, size_t datlen);
+--------
+
+The evbuffer_copyout() behaves just like evbuffer_remove(), but does not
+drain any data from the buffer. That is, it copies the first 'datlen'
+bytes from the front of 'buf' into the memory at 'data'.  If there are
+fewer than 'datlen' bytes available, the function copies all the bytes
+there are.  The return value is -1 on failure, and is otherwise the
+number of bytes copied.
+
+If copying data from the buffer is too slow, use evbuffer_peek() instead.
+
+.Example
+[code,C]
+--------
+#include <event2/buffer.h>
+#include <event2/util.h>
+#include <stdlib.h>
+#include <stdlib.h>
+
+int get_record(struct evbuffer *buf, size_t *size_out, char **record_out)
+{
+    /* Let's assume that we're speaking some protocol where records
+       contain a 4-byte size field in network order, followed by that
+       number of bytes.  We will return 1 and set the 'out' fields if we
+       have a whole record, return 0 if the record isn't here yet, and
+       -1 on error.  */
+    size_t buffer_len = evbuffer_get_length(buf);
+    ev_uint32_t record_len;
+    char *record;
+
+    if (buffer_len < 4)
+       return 0; /* The size field hasn't arrived. */
+
+   /* We use evbuffer_copyout here so that the size field will stay on
+       the buffer for now. */
+    evbuffer_copyout(buf, &record_len, 4);
+    /* Convert len_buf into host order. */
+    record_len = ntohl(record_len);
+    if (buffer_len < record_len + 4)
+        return 0; /* The record hasn't arrived */
+
+    /* Okay, _now_ we can remove the record. */
+    record = malloc(record_len);
+    if (record == NULL)
+        return -1;
+
+    evbuffer_drain(buf, 4);
+    evbuffer_remove(buf, record, record_len);
+
+    *record_out = record;
+    *size_out = record_len;
+    return 1;
+}
+--------
+
+This function first appeared in Libevent 2.0.5-alpha.
 
 Line-oriented input
 ~~~~~~~~~~~~~~~~~~~
@@ -448,11 +518,11 @@ outstanding evbuffer_ptr values, and makes them unsafe to use.
 
 These interfaces were new in Libevent 2.0.1-alpha.
 
-Inspecting data without removing it
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Inspecting data without copying it
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Sometimes, you want to read data in an evbuffer without copying it out (as
-evbuffer_remove() does), and without rearranging the evbuffer's internal
+evbuffer_copyout() does), and without rearranging the evbuffer's internal
 memory (as evbuffer_pullup() does).  Sometimes you might want to see data in
 the middle of an evbuffer.
 
