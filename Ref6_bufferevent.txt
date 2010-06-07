@@ -166,7 +166,14 @@ BEV_OPT_DEFER_CALLBACKS::
     When this flag is set, the bufferevent defers all of its callbacks,
     as described above.
 
-(The above options are new in Libevent 2.0.1-alpha.)
+BEV_OPT_UNLOCK_CALLBACKS::
+    By default, when the bufferevent is set up to be threadsafe, the
+    bufferevent's locks are held whenever the any user-provided
+    callback is invoked.  Setting this option makes Libevent release
+    the bufferevent's lock when it's invoking your callbacks.
+
+(Libevent 2.0.5-beta introduced BEV_OPT_UNLOCK_CALLBACKS.  The other options
+above were new in Libevent 2.0.1-alpha.)
 
 Working with socket-based bufferevents
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
