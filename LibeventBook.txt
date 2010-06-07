@@ -24,6 +24,8 @@ include::Ref5_evutil.txt[]
 
 include::Ref6_bufferevent.txt[]
 
+include::Ref6a_advanced_bufferevents.txt[]
+
 include::Ref7_evbuffer.txt[]
 
 include::Ref8_listener.txt[]

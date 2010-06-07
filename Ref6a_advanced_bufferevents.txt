@@ -1,0 +1,85 @@
+include::license.txt[]
+
+:language: C
+
+Bufferevents: advanced topics
+-----------------------------
+
+This chapter describes some advanced features of Libevent's bufferevent
+implementation that aren't necessary for typical uses.  If you're just
+learning how to use bufferevents, you should skip this chapter for now
+and go on to read link:Ref7_evbuffer.html[the evbuffer chapter].
+
+Paired bufferevents
+~~~~~~~~~~~~~~~~~~~
+
+Sometimes you have a networking program that needs to talk to itself.
+For example, you could have a program written to tunnel user connections
+over some protocol that sometimes also wants to tunnel connections _of
+its own_ over that protocol.  You could achieve this by opening a
+connection to your own listening port and having your program use
+itself, of course, but that would waste resources by having your program
+talk to itself via the network stack.
+
+Instead, you can create a pair of _paired_ bufferevents such that all bytes
+written on one are received on the other (and vice versa), but no actual
+platform sockets are used.
+
+.Interface
+[code,C]
+--------
+int bufferevent_pair_new(struct event_base *base, int options,
+    struct bufferevent *pair[2]);
+--------
+
+Calling bufferevent_pair_new() sets pair[0] and pair[1] to a pair of
+bufferevents, each connected to the other.  All the usual options are
+supported, except for BEV_OPT_CLOSE_ON_FREE, which has no effect, and
+BEV_OPT_DEFER_CALLBACKS, which is always on.
+
+Why do bufferevent pairs need to run with callbacks deferred?  It's pretty
+common for an operation on one element of the pair to invoke a callback that
+alters the bufferevent, thus invoking the other bufferevent's callbacks, and
+so on through many steps.  When the callbacks were not deferred, this chain
+of calls would pretty frequently overflow the stack, starve other
+connections, and require all the callbacks to be reentrant.
+
+Paired bufferevents support flushing; setting the mode argument to either
+either BEV_NORMAL or BEV_FLUSH forces all the relevant data to get
+transferred from one bufferevent in the pair to the other, ignoring the
+watermarks that would otherwise restrict it.  Setting mode to BEV_FINISHED
+additionally generates an EOF event on the opposite bufferevent.
+
+Freeing either member of the pair _does not_ automatically free the other or
+generate an EOF event; it just makes the other member of the pair become
+unlinked.  Once the bufferevent is unlinked, it will no longer successfully
+read or write data or generate any events.
+
+.Interface
+[code,C]
+--------
+struct bufferevent *bufferevent_pair_get_partner(struct bufferevent *bev)
+--------
+
+Sometimes you may need to get the other member of a bufferevent pair given
+only one member.  To do this, you can invoke the
+bufferevent_pair_get_partner() function.  It will return the other member of
+the pair if 'bev' is a member of a pair, and the other member still exists.
+Otherwise, it returns NULL.
+
+Bufferevent pairs were new in Libevent 2.0.1-alpha; the
+bufferevent_pair_get_partner() function was introduced in Libevent 2.0.6.
+
+Filtering bufferevents
+~~~~~~~~~~~~~~~~~~~~~~
+
+Bufferevents and Rate-limiting
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+Bufferevents and SSL
+~~~~~~~~~~~~~~~~~~~~
+
+
+
+
