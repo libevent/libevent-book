@@ -702,12 +702,29 @@ Initiating a flush on a bufferevent
 [code,C]
 --------
 int bufferevent_flush(struct bufferevent *bufev,
-    short iotype,
-    enum bufferevent_flush_mode state);
+    short iotype, enum bufferevent_flush_mode state);
 --------
 
-// XXXX FIXME{nickm}
-TODO: Document this!
+Flushing a bufferevent tells the bufferevent to force as many bytes
+as possible to be read to or written from the underlying transport,
+ignoring other restrictions that might otherwise keep them from
+being written.  Its detailed function depends on the type of the
+bufferevent.
+
+The iotype argument should be EV_READ, EV_WRITE, or EV_READ|EV_WRITE to
+indicate whether bytes being read, written, or both should be
+processed.  The state argument may be one of BEV_NORMAL,
+BEV_FLUSH, or BEV_FINISHED.  BEV_FINISHED indicates that the other
+side should be told that no more data will be sent; the distinction
+between BEV_NORMAL and BEV_FLUSH depends on the type of the
+bufferevent.
+
+The bufferevent_flush() function returns -1 on failure, 0 if no data
+was flushed, or 1 if some data was flushed.
+
+Currently (as of Libevent 2.0.5-beta), bufferevent_flush() is only
+implemented for some bufferevent types.  In particular, socket-based
+bufferevents don't have it.
 
 Type-specific bufferevent functions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
