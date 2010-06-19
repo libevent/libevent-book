@@ -347,6 +347,11 @@ a struct event.  As before, you should only be using this function if
 you know that heap-allocation is actually a significant problem in your
 program, since it can make your code much harder to read and write.
 
+Note that event_get_struct_event_size() may in the future give you a value
+_smaller_ than 'sizeof(struct event)'.  If this happens, it means that
+any extra bytes at the end of 'struct event' are only padding bytes reserved
+for use by a future version of Libevent.
+
 Here's the same example as above, but instead of relying on the size
 of 'struct event' from event_struct.h, we use event_get_struct_size()
 to use the correct size at runtime.
