@@ -1,5 +1,5 @@
 
-# asciidoc 8.4.3 is known to work.  asciidoc 8.2.5 and 8.2.6 are known not to work.
+# asciidoc 8.4.3 and 8.5.2 are known to work.  asciidoc 8.2.5 and 8.2.6 are known not to work.
 ASCIIDOC=asciidoc
 
 GENERATED_METAFILES= \
