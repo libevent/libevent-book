@@ -256,12 +256,14 @@ Setting up events without heap-allocation
 For performance and other reasons, some people like to allocate events
 as a part of a larger structure.  For each use of the event, this
 saves them:
+
    - The memory allocator overhead for allocating a small object on
      the heap.
    - The time overhead for dereferencing the pointer to the
      struct event.
    - The time overhead from a possible additional cache miss if the
      event is not already in the cache.
+
 Using this method risks breaking binary compatibility with other
 versions of of Libevent, which may have different sizes for the event
 structure.
@@ -519,7 +521,7 @@ int event_pending(const struct event *ev, short what, struct timeval *tv_out);
 
 #define event_get_signal(ev) /* ... */
 evutil_socket_t event_get_fd(const struct event *ev);
-struct event_base *event_get_base(const struct even *ev);
+struct event_base *event_get_base(const struct event *ev);
 short event_get_events(const struct event *ev);
 event_callback_fn event_get_callback(const struct event *ev);
 void *event_get_callback_arg(const struct event *ev);
@@ -536,7 +538,7 @@ The event_pending function determines whether the given event is
 pending or active.  If it is, and any of the flags EV_READ, EV_WRITE,
 EV_SIGNAL, and EV_TIMEOUT are set in the 'what' argument, the function
 returns all of the flags that the event is currently pending or active
-on.  If 'tv_out' is provided, and EV_TIMEOUT is set in what, and the
+on.  If 'tv_out' is provided, and EV_TIMEOUT is set in 'what', and the
 event is currently pending or active on a timeout, then 'tv_out' is
 set to hold the time when the event's timeout will expire.
 
