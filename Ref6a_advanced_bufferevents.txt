@@ -76,9 +76,223 @@ Filtering bufferevents
 Bufferevents and Rate-limiting
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+Some programs want to limit the amount of bandwidth used for any single
+bufferevent, or for a group of bufferevents.  Libevent 2.0.4-alpha and
+Libevent 2.0.5-alpha added a basic facility to put caps on individual
+bufferevents, or to assign bufferevents to a rate-limited group.
+
+The rate-limiting model
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Libevent's rate-limiting uses a _token bucket_ algorithm to decide how many
+bytes to read or write at a time.  Every rate-limited object, at any given
+time, has a "read bucket" and a "write bucket", the sizes of which determine
+how many bytes the object is allowed to read or write immediately.  Each
+bucket has a refill rate, a maximum burst size, and a
+timing unit or "tick".  Whenever the timing unit elapses, the bucket is refilled
+proportionally to the refill rate--but if would become fuller than its burst
+size, any excess bytes are lost.
+
+Thus, the refill rate determines the maximum average rate at which the object
+will send or receive bytes, and the burst size determines the largest number
+of bytes that will be sent or received in a single burst.  The timing unit
+determines the smoothness of the traffic.
+
+Setting a rate limit on a bufferevent
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.Interface
+[code,C]
+--------
+struct ev_token_bucket_cfg;
+struct ev_token_bucket_cfg *ev_token_bucket_cfg_new(
+	ev_uint32_t read_rate, ev_uint32_t read_burst,
+	ev_uint32_t write_rate, ev_uint32_t write_burst,
+	const struct timeval *tick_len);
+void ev_token_bucket_cfg_free(struct ev_token_bucket_cfg *cfg);
+int bufferevent_set_rate_limit(struct bufferevent *bev,
+    struct ev_token_bucket_cfg *cfg);
+--------
+
+An 'ev_token_bucket_cfg' structure represents the configuration values for a
+pair of token buckets used to limit reading and writing on a single
+bufferevent or group of bufferevents.  To create one, call the
+ev_token_bucket_cfg_new function and provide the maximum average read rate, the
+maximum read burst, the maximum write rate, the maximum write burst, and the
+length of a tick.  If the 'tick_len' argument is NULL, the length of a tick
+defaults to one second.  The function may return NULL on error.
+
+Note that the 'read_rate' and 'write_rate' arguments are scaled in units of
+bytes per tick.  That is, if the tick is one tenth of a second, and
+'read_rate' is 300, then the maximum average read rate is 3000 bytes per
+second.
+
+To limit a bufferevent's transfer rate, call bufferevent_set_rate_limit() on
+it with an ev_token_bucket_cfg.  The function returns 0 on success, and -1 on
+failure.  You can give any number of bufferevents the same
+ev_token_bucket_cfg.  To remove a bufferevent's rate limits, call
+bufferevent_set_rate_limit(), passing NULL for the 'cfg' parameter.
+
+To free an ev_token_bucket_cfg, call ev_token_bucket_cfg_free().  Note that
+it is NOT currently safe to do this until no bufferevents are using the
+ev_token_bucket_cfg.
+
+Setting a rate limit on a group of bufferevents
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+You can assign bufferevents to a 'rate limiting group' if you want to limit
+their total bandwidth usage.
+
+.Interface
+[code,C]
+--------
+struct bufferevent_rate_limit_group;
+
+struct bufferevent_rate_limit_group *bufferevent_rate_limit_group_new(
+	struct event_base *base,
+	const struct ev_token_bucket_cfg *cfg);
+int bufferevent_rate_limit_group_set_cfg(
+	struct bufferevent_rate_limit_group *group,
+	const struct ev_token_bucket_cfg *cfg);
+void bufferevent_rate_limit_group_free(struct bufferevent_rate_limit_group *);
+int bufferevent_add_to_rate_limit_group(struct bufferevent *bev,
+    struct bufferevent_rate_limit_group *g);
+int bufferevent_remove_from_rate_limit_group(struct bufferevent *bev);
+--------
+
+To construct a rate limiting group, call bufferevent_rate_limit_group() with an
+event_base and an initial ev_token_bucket_cfg.  You can add bufferevents to
+the group with bufferevent_add_to_rate_limit_group() and
+bufferevnt_remove_from_rate_limit_group(); these functions return 0 on
+success and -1 on error.
+
+A single bufferevent can be a member of no more than one rate limiting group
+at a time.  A bufferevent can have both an individual rate limit (as set with
+bufferevent_set_rate_limit()) and a group rate limit.  When both limits are
+set, the lower limit for each bufferevent applies.
+
+You can change the rate limit for an existing group by calling
+bufferevent_rate_limit_group_set_cfg().  It returns 0 on success and -1 on
+failure.  The bufferevent_rate_limit_group_free() function frees a rate limit
+group and removes all of its members.
+
+As of version 2.0, Libevent's group rate limiting tries to be fair on
+aggregate, but the implementation can be unfair on very small timescales.  If
+you care strongly about scheduling fairness, please help out
+with patches for future versions.
+
+Inspecting current rate-limit values
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Sometimes your code may want to inspect the current rate limits that apply
+for a given bufferevent or group.  Libevent provides some functions to do so.
+
+.Interface
+[code,C]
+--------
+ev_ssize_t bufferevent_get_read_limit(struct bufferevent *bev);
+ev_ssize_t bufferevent_get_write_limit(struct bufferevent *bev);
+ev_ssize_t bufferevent_rate_limit_group_get_read_limit(
+	struct bufferevent_rate_limit_group *);
+ev_ssize_t bufferevent_rate_limit_group_get_write_limit(
+	struct bufferevent_rate_limit_group *);
+--------
+
+The above functions return the current size, in bytes, of a bufferevent's or
+a group's read or write token buckets.  Note that these values can be
+negative if a bufferevent has been forced to exceed its allocations.
+
+
+.Interface
+[code,C]
+--------
+ev_ssize_t bufferevent_get_max_to_read(struct bufferevent *bev);
+ev_ssize_t bufferevent_get_max_to_write(struct bufferevent *bev);
+--------
+
+These functions return the number of bytes that a bufferevent would be
+willing to read or write right now, taking into account any rate limits that
+apply to the bufferevent, its rate limiting group (if any), and any
+maximum-to-read/write-at-a-time values imposed by Libevent as a whole.
+
+.Interface
+[code,C]
+--------
+void bufferevent_rate_limit_group_get_totals(
+    struct bufferevent_rate_limit_group *grp,
+    ev_uint64_t *total_read_out, ev_uint64_t *total_written_out);
+void bufferevent_rate_limit_group_reset_totals(
+    struct bufferevent_rate_limit_group *grp);
+--------
+
+Each bufferevent_rate_limit_group tracks the total number of bytes sent over
+it, in total.  You can use this to track total usage by a number of
+bufferevents in the group.   Calling
+bufferevent_rate_limit_group_get_totals() on a group sets *'total_read_out'
+and *'total_written_out' to the total number of bytes read and written on a
+bufferevent group respectively.  These totals start at 0 when the group is
+created, and reset to 0 whenever bufferevent_rate_limit_group_reset_totals()
+is called on a group.
+
+Manually adjusting rate limits
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+For programs with really complex needs, you might want to adjust the current
+values of a token bucket.  You might want to do this, for example, if your
+program is generating traffic in some way that isn't via a bufferevent.
+
+.Interface
+[code,C]
+--------
+int bufferevent_decrement_read_limit(struct bufferevent *bev, ev_ssize_t decr);
+int bufferevent_decrement_write_limit(struct bufferevent *bev, ev_ssize_t decr);
+int bufferevent_rate_limit_group_decrement_read(
+	struct bufferevent_rate_limit_group *grp, ev_ssize_t decr);
+int bufferevent_rate_limit_group_decrement_write(
+	struct bufferevent_rate_limit_group *grp, ev_ssize_t decr);
+--------
+
+These functions decrement a current read or write bucket in a bufferevent or
+rate limiting group.  Note that the decrements are signed: if you want to
+increment a bucket, pass a negative value.
+
+
+Limitations of the rate-limiting implementation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+As of Libevent 2.0, there are some limitations to the rate-limiting
+implementation that you should know.
+
+* Not every bufferevent type supports rate limiting well, or at all.
+
+* Bufferevent rate limiting groups cannot nest, and a bufferevent can only be
+  in a single rate limiting group at a time.
+
+* The rate limiting implementation only counts bytes transferred in TCP
+  packets as data, doesn't include TCP headers.
+
+* The read-limiting implementation relies on the TCP stack noticing that the
+  application is only consuming data at a certain rate, and pushing back on
+  the other side of the TCP connection when its buffers get full.
+
+* Some implementations of bufferevents (particularly the windows IOCP
+  implementation) can over-commit.
+
+* Buckets start out with one full tick's worth of traffic.  This means that a
+  bufferevent can start reading or writing immediately, and not wait until a
+  full tick has passed.  It also means, though, that a bufferevent that has
+  been rate limited for N.1 ticks can potentially transfer N+1 ticks worth of
+  traffic.
+
+* Ticks cannot be smaller than 1 millisecond, and all fractions of a
+  millisecond are ignored.
+
+/// TODO: Write an example for rate-limiting
 
 Bufferevents and SSL
 ~~~~~~~~~~~~~~~~~~~~
+
+
 
 
 
