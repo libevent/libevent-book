@@ -73,6 +73,77 @@ bufferevent_pair_get_partner() function was introduced in Libevent 2.0.6.
 Filtering bufferevents
 ~~~~~~~~~~~~~~~~~~~~~~
 
+Sometimes you want to transform all the data passing through a bufferevent
+object.  You could do this to add a compression layer, or wrap a protocol in
+another protocol for transport.
+
+.Interface
+[code,C]
+--------
+enum bufferevent_filter_result {
+	BEV_OK = 0,
+	BEV_NEED_MORE = 1,
+	BEV_ERROR = 2
+};
+typedef enum bufferevent_filter_result (*bufferevent_filter_cb)(
+    struct evbuffer *source, struct evbuffer *destination, ev_ssize_t dst_limit,
+    enum bufferevent_flush_mode mode, void *ctx);
+
+
+struct bufferevent *bufferevent_filter_new(struct bufferevent *underlying,
+	bufferevent_filter_cb input_filter,
+        bufferevent_filter_cb output_filter,
+	int options,
+	void (*free_context)(void *),
+	void *ctx);
+--------
+
+The bufferevent_filter_new() function creates a new filtering bufferevent,
+wrapped around and existing "underlying" bufferevent.  All data received via
+the underlying bufferevent is transformed with the "input" filter before
+arriving at the filtering bufferevent, and all data sent via the filtering
+bufferevent is transformed with an "output" filter before being sent out to
+the underlying bufferevent.
+
+Adding a filter to an underlying bufferevent replaces the callbacks on the
+underlying bufferevent.  You can still add callbacks to the underlying
+bufferevent's evbuffers, but you can't set the callbacks on the bufferevent
+itself if you want the filter to still work.
+
+The 'input_filter' and 'output_filter' functions are described below.
+All the usual options are supported in 'options'.  If BEV_OPT_CLOSE_ON_FREE
+is set, then freeing the filtering bufferevent also frees the underlying
+bufferevent.  The 'ctx' field is an arbitrary pointer passed to the filter
+functions; if a 'free_context' function is provided, it is called on 'ctx' just
+before the filtering bufferevent is closed.
+
+The input filter function will be called whenever there is new readable data
+on the underlying input buffer.  The output filter function is called
+whenever there is new writable data on the filter's output buffer.  Each one
+receives a pair of evbuffers: a 'source' evbuffer to read data from, and a
+'destination' evbuffer to write data to.  The 'dst_limit' argument describes
+the upper bound of bytes to add to 'destination'.  The filter function is
+allowed to ignore this value, but doing so might violate high-water marks
+or rate limits.  If 'dst_limit' is -1, there is no limit.  The 'mode'
+parameter tells the filter how aggressive to be in writing.  If it is
+BEV_NORMAL, then it should write as much as can be conveniently transformed.
+The BEV_FLUSH value means to write as much as possible, and BEV_FINISHED
+means that the filtering function should additionally do any cleanup
+necessary at the end of the stream.  Finally, the filter function's 'ctx'
+argument is a void pointer as provided to the bufferevent_filter_new()
+constructor.
+
+Filter functions must return BEV_OK if any data was successfully written to
+the destination buffer, BEV_NEED_MORE if no more data can be written to the
+destination buffer without getting more input or using a different flush
+mode, and BEV_ERROR if there is a non-recoverable error on the filter.
+
+You don't need to specify both an input filter and an output filter: any
+filter you omit is replaced with one that passes data on without transforming
+it.
+
+// TODO: Write a couple of examples.
+
 Bufferevents and Rate-limiting
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -201,6 +272,7 @@ ev_ssize_t bufferevent_rate_limit_group_get_write_limit(
 The above functions return the current size, in bytes, of a bufferevent's or
 a group's read or write token buckets.  Note that these values can be
 negative if a bufferevent has been forced to exceed its allocations.
+(Flushing the bufferevent can do this.)
 
 
 .Interface
@@ -292,8 +364,5 @@ implementation that you should know.
 Bufferevents and SSL
 ~~~~~~~~~~~~~~~~~~~~
 
-
-
-
-
+// TODO: write this.
 
