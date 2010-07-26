@@ -657,7 +657,7 @@ doubly-linked queue implementation.
 Naturally, you wouldn't want to use a queue for all of your timeout
 values, since a queue is only faster for constant timeout values.  If
 some of the timeouts are more-or-less randomly distributed, then adding
-one of those timeout to a queue would take O(n) time, which would be
+one of those timeouts to a queue would take O(n) time, which would be
 significantly worse than a binary heap.
 
 Libevent lets you solve this by placing some of your timeouts in queues,
