@@ -11,6 +11,12 @@ facility for implementing simple DNS servers.
 We'll start by describing the higher-level facilities for name lookup,
 and then describe the low-level and server facilities.
 
+.Note
+There are known limitations in Libevent's current DNS client implementation.
+It doesn't support TCP lookups, DNSSec, or arbitrary record types.  We'd like
+to fix all of these in some future version of Libevent, but for now, they're
+not there.
+
 Preliminaries: Portable blocking name resolution
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -663,13 +669,218 @@ Canceling a request with this function makes its callback get invoked with
 the DNS_ERR_CANCEL result code.
 
 
-
-
-
 DNS server interfaces
 ---------------------
 
+Libevent provides simple functionality for acting as a trivial DNS
+server and responding to UDP DNS requests.
 
+This section assumes some familiarity with the DNS protocol.
+
+Creating and closing a DNS server
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.Interface
+[code,C]
+-----
+struct evdns_server_port *evdns_add_server_port_with_base(
+    struct event_base *base,
+    evutil_socket_t socket,
+    int flags,
+    evdns_request_callback_fn_type callback,
+    void *user_data);
+
+typedef void (*evdns_request_callback_fn_type)(
+    struct evdns_server_request *request,
+    void *user_data);
+
+void evdns_close_server_port(struct evdns_server_port *port);
+-----
+
+To begin listening for DNS requests, call evdns_add_server_port_with_base().
+It takes an event_base to use for event handling; a UDP socket to listen on;
+a flags variable (always 0 for now); a callback function to call when a new
+DNS query is received; and a pointer to user data that will be passed to the
+callback.  It returns a new evdns_server_port object.
+
+When you are done with the DNS server, you can pass it to
+evdns_close_server_port().
+
+The evdns_add_server_port_with_base() function was new in 2.0.1-alpha;
+evdns_close_server_port() was introduced in 1.3.
+
+Examining a DNS request
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Unfortunately, Libevent doesn't currently provide a great way to look at DNS
+requests via a programmatic interface.  Instead, you're stuck including
+event2/dns_struct.h and looking at the evdns_server_request structure
+manually.
+
+It would be great if a future version of Libevent provided a better way to do
+this.
+
+.Interface
+[code,C]
+------
+struct evdns_server_request {
+	int flags;
+	int nquestions;
+	struct evdns_server_question **questions;
+};
+struct evdns_server_question {
+	int type;
+	int dns_question_class;
+	char name[1];
+};
+------
+
+The 'flags' fieldn of the request contains the DNS flags set in the request;
+the 'nquestions' field is the number of questions in the request; and
+'questions' is an array of pointers to struct evdns_server_question.  Each
+evdns_server_question includes the resource type of the request (see below
+for a list of EVDNS_*_TYPE macros), the class of the request (typically
+EVDNS_CLASS_INET), and the name of the requested hostname.
+
+These structures were introduced in Libevent 1.3.  Before Libevent 1.4,
+dns_question_class was called "class", which made trouble for the C++ people.
+C programs that still use the old "class" name will stop working in a future
+release.
+
+.Interface
+[code,C]
+------
+int evdns_server_request_get_requesting_addr(struct evdns_server_request *req,
+        struct sockaddr *sa, int addr_len);
+------
+
+Sometimes you'll want to know which address made a particular DNS request.
+You can check this by calling evdns_server_request_get_requesting_addr() on
+it.  You should pass in a sockaddr with enough storage to hold the address:
+struct sockaddr_storage is recommended.
+
+This function was introduced in Libevent 1.3c.
+
+Responding to DNS requests
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Every time your DNS server receives a request, the request is passed to
+the callback function you provided, along with your user_data pointer.  The
+callback function must either respond to the request, ignore the request, or
+make sure that the request is _eventually_ answered or ignored.
+
+Before you respond to a request, you can add one or more answers to your
+response:
+
+.Interface
+[code,C]
+------
+int evdns_server_request_add_a_reply(struct evdns_server_request *req,
+    const char *name, int n, const void *addrs, int ttl);
+int evdns_server_request_add_aaaa_reply(struct evdns_server_request *req,
+    const char *name, int n, const void *addrs, int ttl);
+int evdns_server_request_add_cname_reply(struct evdns_server_request *req,
+    const char *name, const char *cname, int ttl);
+------
+
+The functions above all add a single RR (of type A, AAAA, or CNAME
+respectively) to the answers section of a DNS reply for the request 'req'.
+In each case the argument 'name' is the hostname to add an answer for, and
+'ttl' is the time-to-live value of the answer in seconds.  For A and AAAA
+records, 'n' is the number of addresses to add, and 'addrs' is a pointer to
+the raw addresses, either given as a sequence of n*4 bytes for IPv4 addresses
+in an A record, or as a sequence of n*16 bytes for IPv6 addresses in an AAAA
+record.
+
+These functions return 0 on success and -1 on failure.
+
+.Interface
+[code,C]
+------
+int evdns_server_request_add_ptr_reply(struct evdns_server_request *req,
+    struct in_addr *in, const char *inaddr_name, const char *hostname,
+    int ttl);
+------
+
+This function adds a PTR record to the answer section of a request.  The
+arguments 'req' and 'ttl' are as above.  You must provide exactly one of 'in'
+(an IPv4 address) or 'inaddr_name' (an address in the .arpa domain) to
+indicate which address you're providing a response for.  The 'hostname'
+argument is the answer for the PTR lookup.
+
+.Interface
+[code,C]
+------
+#define EVDNS_ANSWER_SECTION 0
+#define EVDNS_AUTHORITY_SECTION 1
+#define EVDNS_ADDITIONAL_SECTION 2
+
+#define EVDNS_TYPE_A	   1
+#define EVDNS_TYPE_NS	   2
+#define EVDNS_TYPE_CNAME   5
+#define EVDNS_TYPE_SOA	   6
+#define EVDNS_TYPE_PTR	  12
+#define EVDNS_TYPE_MX	  15
+#define EVDNS_TYPE_TXT	  16
+#define EVDNS_TYPE_AAAA	  28
+
+#define EVDNS_CLASS_INET   1
+
+int evdns_server_request_add_reply(struct evdns_server_request *req,
+    int section, const char *name, int type, int dns_class, int ttl,
+    int datalen, int is_name, const char *data);
+------
+
+This function adds an arbitrary RR to the DNS reply of a request 'req'.
+The 'section' argument describes which section to add it to, and should be
+one of the EVDNS_*_SECTION values.  The 'name' argument is the name field of
+the RR.  The 'type' argument is the 'type' field of the RR, and should be one
+of the EVDNS_TYPE_* values if possible.  The 'dns_class' argument is the
+class field of the RR, and should generally be EVDNS_CLASS_INET.  The 'ttl'
+argument is the time-to-live in seconds of the RR.  The rdata and rdlength
+fields of the RR will be generated from the 'datalen' bytes provided in
+'data'.  If is_name is true, the data will be encoded as a DNS name (i.e.,
+with dns name compression).  Otherwise, it's included verbatim.
+
+.Interface
+[code,C]
+------
+int evdns_server_request_respond(struct evdns_server_request *req, int err);
+int evdns_server_request_drop(struct evdns_server_request *req);
+------
+
+The evdns_server_request_respond() function sends a DNS response to a
+request, including all of the RRs that you attached to it, with the error
+code 'err'.  If you get a request that you don't want to respond to, you can
+ignore it by calling evdns_server_request_drop() on it to release all the
+associated memory and bookkeeping structures.
+
+.Interface
+[code,C]
+------
+#define EVDNS_FLAGS_AA	0x400
+#define EVDNS_FLAGS_RD	0x080
+
+void evdns_server_request_set_flags(struct evdns_server_request *req,
+                                    int flags);
+------
+
+If you want to set any flags on your response message, you can call this
+function at any time before you send the response.
+
+
+All the functions in this section were introduced in Libevent 1.3, except for
+evdns_server_request_set_flags() which first appeared in Libevent 2.0.1-alpha.
+
+DNS Server example
+~~~~~~~~~~~~~~~~~~
+
+//BUILD: SKIP
+.Example: A trivial DNS responder
+[code,C]
+-----
+include::examples_R9/R9_dns_server.c[]
+-----
 
 Obsolete DNS interfaces
 -----------------------
@@ -681,6 +892,9 @@ void evdns_base_search_ndots_set(struct evdns_base *base,
 int evdns_base_nameserver_add(struct evdns_base *base,
     unsigned long int address);
 void evdns_set_random_bytes_fn(void (*fn)(char *, size_t));
+
+struct evdns_server_port *evdns_add_server_port(evutil_socket_t socket,
+    int flags, evdns_request_callback_fn_type callback, void *user_data);
 -----
 
 Calling evdns_base_search_ndots_set() is equivalent to using
@@ -691,6 +905,10 @@ evdns_base_nameserver_ip_add(), except it can only add nameservers
 with IPv4 addresses.  It takes them, idiosyncratically, as four bytes
 in network order.
 
+Before Libevent 2.0.1-alpha, there was no way to specify a event base for a
+DNS server port.  You had to use evdns_add_server_port() instead, which took
+the default event_base.
+
 From Libevent 2.0.1-alpha through 2.0.3-alpha, you could use
 evdns_set_random_bytes_fn to specify a function to use for generating
 random numbers instead of evdns_set_transaction_id_fn.  It no longer
@@ -699,8 +917,3 @@ has any effect, now that Libevent provides its own secure RNG.
 
 // Move nameserver_add to dns_compat.h ?
 // Move the set_random_bytes function to dns_compat.h ?
-
-
-
-
-
