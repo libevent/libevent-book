@@ -5,6 +5,10 @@ Fast portable non-blocking network programming with Libevent
 include::license.txt[]
 ------
 
+------
+include::license_bsd.txt[]
+------
+
 include::00_about.txt[]
 
 include::01_intro.txt[]

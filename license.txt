@@ -1,8 +1,13 @@
 ______________________________
-These documents are Copyright (c) 2009 by Nick Mathewson, and are made
+These documents are Copyright (c) 2009-2010 by Nick Mathewson, and are made
 available under the Creative Commons Attribution-Noncommercial-Share Alike
 license, version 3.0.  Future versions may be made available under a less
 restrictive license.
+
+Additionally, the source code examples in these documents are also licensed
+under the so-called "3-Clause" or "Modified" BSD license. See
+link:license_bsd.html[the license_bsd file] distributed with these documents
+for the full terms.
 
 For the latest version of this document, see
    http://www.wangafu.net/~nickm/libevent-book/TOC.html
