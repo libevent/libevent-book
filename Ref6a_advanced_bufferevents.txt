@@ -328,6 +328,38 @@ These functions decrement a current read or write bucket in a bufferevent or
 rate limiting group.  Note that the decrements are signed: if you want to
 increment a bucket, pass a negative value.
 
+Setting the smallest share possible in a rate-limited group
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Frequently, you don't want to divide the bytes available in a rate-limiting
+group up evenly among all bufferevents in every tick.  For example, if you
+had 10,000 active bufferevents in a rate-limiting group with 10,000 bytes
+available for writing every tick, it wouldn't be efficient to let each
+bufferevent write only 1 byte per tick, due to the overheads of system calls
+and TCP headers.
+
+To solve this, each rate-limiting group has a notion of its "minimum share".
+In the situation above, instead of every bufferevent being allowed to write 1
+byte per tick, 10,000/SHARE bufferevents will be allowed to write SHARE bytes
+each every tick, and the rest will be allowed to write nothing.  Which
+bufferevents are allowed to write first is chosen randomly each tick.
+
+The default minimum share is chosen to give decent performance, and is
+currently (as of 2.0.6-rc) set to 64. You can adjust this value with the
+following function:
+
+.Interface
+[code,C]
+--------
+int bufferevent_rate_limit_group_set_min_share(
+	struct bufferevent_rate_limit_group *group, size_t min_share);
+--------
+
+Setting the min_share to 0 disables the minimum-share code entirely.
+
+Libevent's rate-limiting has had minimum shares since it was first
+introduced.  The function to change them was first exposed in Libevent
+2.0.6-rc.
 
 Limitations of the rate-limiting implementation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
