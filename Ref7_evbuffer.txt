@@ -413,7 +413,8 @@ if (!request_line) {
 }
 --------
 
-The evbuffer_readln() interface was new in Libevent 2.0.1-alpha.
+The evbuffer_readln() interface is available in Libevent 1.4.14-stable and
+later.
 
 Searching within an evbuffer
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
