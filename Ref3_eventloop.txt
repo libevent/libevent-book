@@ -207,6 +207,23 @@ take a long time to run, it may be *very* inaccurate.
 
 This function was new in Libevent 2.0.4-alpha.
 
+Dumping the event_base status
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.Interface
+[code,C]
+--------
+void event_base_dump_events(struct event_base *base, FILE *f);
+--------
+
+For help debugging your program (or debugging Libevent!) you might sometimes
+want a complete list of all events added in the event_base and their status.
+Calling event_base_dump_events() writes this list to the stdio file provided.
+
+The list is meant to be human-readable; its format *will* change in future
+versions of Libevent.
+
+This function was introduced in Libevent 2.0.1-alpha.
 
 Obsolete event loop functions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
