@@ -4,6 +4,7 @@
 #include <event2/dns.h>
 #include <event2/bufferevent.h>
 #include <event2/buffer.h>
+#include <event2/util.h>
 #include <event2/event.h>
 
 #include <stdio.h>
@@ -24,6 +25,11 @@ void eventcb(struct bufferevent *bev, short events, void *ptr)
          printf("Connect okay.\n");
     } else if (events & (BEV_EVENT_ERROR|BEV_EVENT_EOF)) {
          struct event_base *base = ptr;
+         if (events & BEV_EVENT_ERROR) {
+		 int err = bufferevent_socket_get_dns_error(bev);
+		 if (err)
+			 printf("DNS error: %s\n", evutil_gai_strerror(err));
+         }
          printf("Closing\n");
          bufferevent_free(bev);
          event_base_loopexit(base, NULL);
