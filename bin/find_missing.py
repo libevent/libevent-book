@@ -73,9 +73,6 @@ def removeIdentifiers(idmap, f):
                 w = w[:-2]
             if w in idmap:
                 idmap[w][2] = True
-            if w == 'evdns_init':
-                print w, f.count()
-
 
 def findMissing(includeDir):
     start = os.getcwd()
