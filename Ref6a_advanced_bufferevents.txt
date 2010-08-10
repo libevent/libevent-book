@@ -396,5 +396,95 @@ implementation that you should know.
 Bufferevents and SSL
 ~~~~~~~~~~~~~~~~~~~~
 
-// TODO: write this.
+Bufferevents can use the OpenSSL library to implement the SSL/TLS secure
+transport layer.  Because many applications don't need or want to link
+OpenSSL, this functionality is implemented in a separate library installed as
+"libevent_openssl".  Future versions of Libevent could add support for other
+SSL/TLS libraries such as NSS or GnuTLS, but right now OpenSSL is all that's
+there.
+
+OpenSSL functionality was introduced in Libevent 2.0.3-alpha, though it didn't
+work so well before Libevent 2.0.5-beta or Libevent 2.0.6-rc.
+
+This section is not a tutorial on OpenSSL, SSL/TLS, or cryptography in general.
+
+These functions are all declared in the header "event2/bufferevent_ssl.h".
+
+Setting up and using an OpenSSL-based bufferevent
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.Interface
+[code,C]
+--------
+enum bufferevent_ssl_state {
+	BUFFEREVENT_SSL_OPEN = 0,
+	BUFFEREVENT_SSL_CONNECTING = 1,
+	BUFFEREVENT_SSL_ACCEPTING = 2
+};
+
+struct bufferevent *
+bufferevent_openssl_filter_new(struct event_base *base,
+    struct bufferevent *underlying,
+    SSL *ssl,
+    enum bufferevent_ssl_state state,
+    int options);
+
+struct bufferevent *
+bufferevent_openssl_socket_new(struct event_base *base,
+    evutil_socket_t fd,
+    SSL *ssl,
+    enum bufferevent_ssl_state state,
+    int options);
+--------
+
+You can create two kinds of SSL bufferevents: a filter-based bufferevent that
+communicates over another underlying bufferevent, or an socket-based
+bufferevent that tells OpenSSL to communicate with the network directly over.  In
+either case, you must provide an SSL object and a description of the SSL
+object's state.  The state should be BUFFEREVENT_SSL_CONNECTING if the SSL is
+currently performing negotiation as a client, BUFFEREVENT_SSL_ACCEPTING
+if the SSL is currently performing negotiation as a server, or
+BUFFEREVENT_SSL_OPEN if the SSL handshake is done.
+
+The usual options are accepted; BEV_OPT_CLOSE_ON_FREE makes the SSL object
+and the underlying fd or bufferevent get closed when the openssl bufferevent
+itself is closed.
+
+If you're creating an socket-based bufferevent and the SSL object already
+has a socket set, you do not need to provide the socket yourself: just pass
+-1.  You can also set the fd later with bufferevent_setfd().
+
+.Interface
+[code,C]
+--------
+SSL *bufferevent_openssl_get_ssl(struct bufferevent *bev);
+--------
+
+This function returns the SSL object used by an OpenSSL bufferevent, or NULL
+if 'bev' is not an OpenSSL-based bufferevent.
+
+.Interface
+[code,C]
+--------
+unsigned long bufferevent_get_openssl_error(struct bufferevent *bev);
+--------
+
+This function returns the first pending OpenSSL error for a given
+bufferevent's operations, or 0 if there was no pending error.  The error
+format is as returned by ERR_get_error() in the openssl library.
+
+.Interface
+[code,C]
+--------
+int bufferevent_ssl_renegotiate(struct bufferevent *bev);
+--------
+
+Calling this function tells the SSL to renegotiate, and the bufferevent to
+invoke appropriate callbacks.  This is an advanced topic; you should
+generally avoid it unless you really know what you're doing, especially since
+many SSL versions have had known security issues related to renegotiation.
+
+/// TODO: Write an example for SSL
+
+
 
