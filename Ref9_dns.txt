@@ -668,6 +668,25 @@ void evdns_cancel_request(struct evdns_base *base,
 Canceling a request with this function makes its callback get invoked with
 the DNS_ERR_CANCEL result code.
 
+Suspending DNS client operations and changing nameservers
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Sometimes you want to reconfigure or shut down the DNS subsystem without
+affecting in-flight DNS request too much.
+
+.Interface
+[code,C]
+--------
+int evdns_base_clear_nameservers_and_suspend(struct evdns_base *base);
+int evdns_base_resume(struct evdns_base *base);
+--------
+
+If you call evdns_base_clear_nameservers_and_suspend() on an evdns_base,
+all nameservers are removed, and pending requests are left in limbo until
+later you re-add nameservers and call evdns_base_resume().
+
+These functions return 0 on success and -1 on failure.  They were introduced
+in Libevent 2.0.1-alpha.
 
 DNS server interfaces
 ---------------------
@@ -728,6 +747,8 @@ struct evdns_server_request {
 	int nquestions;
 	struct evdns_server_question **questions;
 };
+#define EVDNS_QTYPE_AXFR 252
+#define EVDNS_QTYPE_ALL	 255
 struct evdns_server_question {
 	int type;
 	int dns_question_class;
@@ -914,6 +935,39 @@ evdns_set_random_bytes_fn to specify a function to use for generating
 random numbers instead of evdns_set_transaction_id_fn.  It no longer
 has any effect, now that Libevent provides its own secure RNG.
 
+The DNS_QUERY_NO_SEARCH flag has also been called DNS_NO_SEARCH.
+
+Before Libevent 2.0.1-alpha, there was no separate notion of an evdns_base:
+all information in the evdns subsystem was stored globally, and the functions
+that manipulated it took no evdns_base as an argument.  They are all now
+deprecated, and declared only in event2/dns_compat.h.  They are implemented
+via a single global evdns_base; you can access this base by calling
+the evdns_get_global_base() function introduced in Libevent 2.0.3-alpha.
+
+[options="header",width="85%"]
+|======================================================================
+| Current function                           | Obsolete global-evdns_base version
+| event_base_new()                           | evdns_init()
+| evdns_base_free()                          | evdns_shutdown()
+| evdns_base_nameserver_add()                | evdns_nameserver_add()
+| evdns_base_count_nameservers()             | evdns_count_nameservers()
+| evdns_base_clear_nameservers_and_suspend() | evdns_clear_nameservers_and_suspend()
+| evdns_base_resume()                        | evdns_resume()
+| evdns_base_nameserver_ip_add()             | evdns_nameserver_ip_add()
+| evdns_base_resolve_ipv4()                  | evdns_resolve_ipv4()
+| evdns_base_resolve_ipv6()                  | evdns_resolve_ipv6()
+| evdns_base_resolve_reverse()               | evdns_resolve_reverse()
+| evdns_base_resolve_reverse_ipv6()          | evdns_resolve_reverse_ipv6()
+| evdns_base_set_option()                    | evdns_set_option()
+| evdns_base_resolv_conf_parse()             | evdns_resolv_conf_parse()
+| evdns_base_search_clear()                  | evdns_search_clear()
+| evdns_base_search_add()                    | evdns_search_add()
+| evdns_base_search_ndots_set()              | evdns_search_ndots_set()
+| evdns_base_config_windows_nameservers()    | evdns_config_windows_nameservers()
+|======================================================================
+
+The EVDNS_CONFIG_WINDOWS_NAMESERVERS_IMPLEMENTED macro is defined if and
+only if evdns_config_windows_nameservers() is available.
 
 // Move nameserver_add to dns_compat.h ?
 // Move the set_random_bytes function to dns_compat.h ?
