@@ -306,6 +306,7 @@ into a single operation.  There's an interface for that:
 int bufferevent_socket_connect_hostname(struct bufferevent *bev,
     struct evdns_base *dns_base, int family, const char *hostname,
     int port);
+int bufferevent_socket_get_dns_error(struct bufferevent *bev);
 --------
 
 This function resolves the DNS name 'hostname', looking for addresses of type
@@ -324,6 +325,11 @@ existing socket on the bufferevent is not connected, and no reads or writes
 should be done on the socket until the resolve is finished and the connect
 operation has succeeded.
 
+If an error occurs, it might be a DNS hostname lookup error.  You can find
+out what the most recent error was by calling
+bufferevent_socket_get_dns_error().  If the returned error code is 0, no DNS
+error was detected.
+
 //BUILD: SKIP
 .Example: Trivial HTTP v0 client.
 [code,C]
@@ -331,7 +337,8 @@ operation has succeeded.
 include::examples_R6/R6_http_client.c[]
 -------
 
-This function was new in Libevent 2.0.3-alpha.
+The bufferevent_socket_connect_hostname() function was new in Libevent
+2.0.3-alpha; bufferevent_socket_get_dns_error() was new in 2.0.5-beta.
 
 Generic bufferevent operations
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -773,6 +780,30 @@ would occur, see notes on filtering bufferevents.
 
 This function was introduced in Libevent 2.0.2-alpha.
 
+Manually locking and unlocking a bufferevent
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+As with evbuffers, sometimes you want to ensure that a number of operations
+on a bufferevent are all performed atomically.  Libevent exposes functions
+that you can use to manually lock and unlock a bufferevent.
+
+.Interface
+[code,C]
+--------
+void bufferevent_lock(struct bufferevent *bufev);
+void bufferevent_unlock(struct bufferevent *bufev);
+--------
+
+Note that locking a bufferevent has no effect if the bufferevent was not
+given the BEV_OPT_THREADSAFE thread on creation, or if Libevent's threading
+support wasn't activated.
+
+Locking the bufferevent with this function will lock its associated evbuffers
+as well.  These functions are recursive: it is safe to lock a bufferevent for
+which you already hold the lock.  You must, of course, call unlock once for
+every time that you locked the bufferevent.
+
+These functions were introduced in Libevent 2.0.6-rc.
 
 Obsolete bufferevent functionality
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
