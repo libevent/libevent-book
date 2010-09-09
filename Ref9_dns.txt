@@ -497,6 +497,9 @@ you can use these functions:
 .Interface
 [code,C]
 -----
+int evdns_base_nameserver_sockaddr_add(struct evdns_base *base,
+                                 const struct sockaddr *sa, ev_socklen_t len,
+                                 unsigned flags);
 int evdns_base_nameserver_ip_add(struct evdns_base *base,
                                  const char *ip_as_string);
 int evdns_base_load_hosts(struct evdns_base *base, const char *hosts_fname);
@@ -511,7 +514,12 @@ int evdns_base_set_option(struct evdns_base *base, const char *option,
 int evdns_base_count_nameservers(struct evdns_base *base);
 -----
 
-The evdns_base_nameserver_ip_add adds another nameserver to an existing
+The evdns_base_nameserver_sockdaddr_add() function adds a nameserver to an
+existing evdns_base by its address.  The 'flags' argument is currently
+ignored, and should be 0 for forward-compatibility.  The function returns 0 on
+success and negative on failure.  (It was added in Libevent 2.0.7-rc.)
+
+The evdns_base_nameserver_ip_add function adds a nameserver to an existing
 evdns_base.  It takes the nameserver in a text string, either as an IPv4
 address, an IPv6 address, an IPv4 address with a port (IPv4:Port), or an
 IPv6 address with a port ([IPv6]:Port).  It returns 0 on success and

@@ -271,11 +271,18 @@ If you need to use a different threading library, then you have a little
 more work ahead of you.  You need to define functions that use your
 library to implement:
 
-- locking
-- unlocking
-- lock allocation
-- lock destruction
-- thread ID detection
+- Locks
+  - locking
+  - unlocking
+  - lock allocation
+  - lock destruction
+- Conditinos
+  - condition variable creation
+  - condition variable destruction
+  - waiting on a condition variable
+  - signaling/broadcasting to a condition variable
+- Threads
+  - thread ID detection
 
 Then you tell Libevent about these functions, using the
 evthread_set_lock_callbacks and evthread_set_id_callback interfaces.
@@ -304,6 +311,18 @@ struct evthread_lock_callbacks {
 int evthread_set_lock_callbacks(const struct evthread_lock_callbacks *);
 
 void evthread_set_id_callback(unsigned long (*id_fn)(void));
+
+struct evthread_condition_callbacks {
+        int condition_api_version;
+        void *(*alloc_condition)(unsigned condtype);
+        void (*free_condition)(void *cond);
+        int (*signal_condition)(void *cond, int broadcast);
+        int (*wait_condition)(void *cond, void *lock,
+            const struct timeval *timeout);
+};
+
+int evthread_set_condition_callbacks(
+        const struct evthread_condition_callbacks *);
 --------
 
 The evthread_lock_callbacks structure describes your locking callbacks
@@ -356,6 +375,28 @@ the same number for the same thread, and must not ever return the same
 number for two different threads if they are both executing at the same
 time.
 
+The evthread_condition_callbacks structure describes callbacks related to
+condition variables.  For the version described above, the lock_api_version
+field must be set to EVTHREAD_CONDITION_API_VERSION.  The alloc_condition
+function must return a pointer to a new condition variable.  It receives 0 as
+its argument.  The free_condition function must release storage and resources
+held by a condition variable.  The wait_condition function takes three
+arguments: a condition allocated by alloc_condition, a lock allocated by the
+evthread_lock_callbacks.alloc function you provided, and an optional timeout.
+The lock will be held whenever the function is called; the function must
+release the lock, and wait until the condition becomes signalled or until the
+(optional) timeout has elapsed.  The wait_condition function should return -1
+on an error, 0 if the condition is signalled, and 1 on a timeout.  Before it
+returns, it should make sure it holds the lock again.  Finally, the
+signal_condition function should cause _one_ thread waiting on the condition
+to wake up (if its broadcast argument is false) and _all_ threads currently
+waiting on the condition to wake up (if its broadcast argument is true).  It
+will only be held while holding the lock associated with the condition.
+
+For more information on condition variables, look at the documentation for
+pthreads's pthread_cond_* functions, or Windows's CONDITION_VARIABLE
+functions.
+
 .Examples
 
 ------
@@ -363,11 +404,15 @@ For an example of how to use these functions, see evthread_pthread.c and
 evthread_win32.c in the Libevent source distribution.
 ------
 
-The functions in this section are declared in <event2/thread.h>.  They first
+The functions in this section are declared in <event2/thread.h>.  Most of
+them first
 appeared in Libevent 2.0.4-alpha.  Libevent versions from 2.0.1-alpha through
 2.0.3-alpha used an older interface to set locking functions.  The
 event_use_pthreads() function requires you to link your program against the
 event_pthreads library.
+
+The condition-variable functions were new in Libevent 2.0.7-rc; they were
+added to solve some otherwise intractable deadlock problems.
 
 Libevent can be built with locking support disabled.  If it is, then
 programs built to use the above thread-related functions will not

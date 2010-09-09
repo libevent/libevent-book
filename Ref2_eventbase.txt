@@ -139,6 +139,17 @@ O(1) backend for Windows, and no backend on Linux that provides both
 EV_FEATURE_FDS and EV_FEATURE_O1.  If you have made a configuration that
 Libevent can't satisfy, event_base_new_with_config() will return NULL.
 
+.Interface
+[code,C]
+--------
+int event_config_set_num_cpus_hint(struct event_config *cfg, int cpus)
+--------
+
+This function is currently only useful with Windows when using IOCP, though
+it may become useful for other platforms in the future.  Calling it tells the
+event_config that the event_base it generates should try to make good use of
+a given number of CPUs when multithreading.  Note that this is only a hint:
+the event base may wind up using more or fewer CPUs than you select.
 
 //BUILD: FUNCTIONBODY INC:event2/event.h
 .Example
@@ -175,6 +186,7 @@ for (i=0; i<2; ++i) {
 These functions and types are declared in <event2/event.h>.
 
 The EVENT_BASE_FLAG_IGNORE_ENV flag first appeared in Libevent 2.0.2-alpha.
+The  event_config_set_num_cpus_hint function was new in Libevent 2.0.7-rc.
 Everything else in this section first appeared in Libevent 2.0.1-alpha.
 
 Examining an event_base's backend method
