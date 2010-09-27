@@ -15,6 +15,7 @@ GENERATED_CHAPTERS= \
 	Ref4_event.html \
 	Ref5_evutil.html \
 	Ref6_bufferevent.html \
+	Ref6a_advanced_bufferevents.html \
 	Ref7_evbuffer.html \
 	Ref8_listener.html \
 	Ref9_dns.html \
