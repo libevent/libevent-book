@@ -440,7 +440,7 @@ void bufferevent_setwatermark(struct bufferevent *bufev, short events,
 The bufferevent_setwatermark() function adjusts the read watermarks,
 the write watermarks, or both, of a single bufferevent.  (If EV_READ
 is set in the events field, the read watermarks are adjusted.  If
-EV_WRITE is set in the events field, the high watermarks are adjusted.
+EV_WRITE is set in the events field, the write watermarks are adjusted.)
 
 A high-water mark of 0 is equivalent to "unlimited".
 
