@@ -224,8 +224,8 @@ int bufferevent_socket_connect(struct bufferevent *bev,
 
 The address and addrlen arguments are as for the standard call
 connect().  If the bufferevent does not already have a socket set,
-calling this function allocates a new socket for it, and makes it
-nonblocking.
+calling this function allocates a new stream socket for it, and makes
+it nonblocking.
 
 If the bufferevent *does* have a socket already, calling
 bufferevent_socket_connect() tells Libevent that the socket is not
