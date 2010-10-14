@@ -250,6 +250,16 @@ with signal events.
 The evsignal_* macros have been present since Libevent 2.0.1-alpha.
 Prior versions called them signal_add(), signal_del(), and so on.
 
+Caveats when working with signals
++++++++++++++++++++++++++++++++++
+
+With current versions of Libevent, with most backends, only one event_base
+per process at a time can be listening for signals.  If you add signal events
+to two event_bases at once ---even the signals are different!--- only one
+event_base will get the signals.
+
+The kqueue backend does not have this limitation.
+
 Setting up events without heap-allocation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

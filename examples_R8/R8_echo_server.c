@@ -7,6 +7,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <errno.h>
 
 static void
 echo_read_cb(struct bufferevent *bev, void *ctx)
@@ -42,6 +43,17 @@ accept_conn_cb(struct evconnlistener *listener,
 	bufferevent_setcb(bev, echo_read_cb, NULL, echo_event_cb, NULL);
 
 	bufferevent_enable(bev, EV_READ|EV_WRITE);
+}
+
+static void
+accept_error_cb(struct evconnlistener *listener, void *ctx)
+{
+	struct event_base *base = evconnlistener_get_base(listener);
+	int err = EVUTIL_SOCKET_ERROR();
+	fprintf(stderr, "Got an error %d (%s) on the listener. "
+		"Shutting down.\n", err, evutil_socket_error_to_string(err));
+
+	event_base_loopexit(base, NULL);
 }
 
 int
@@ -84,6 +96,7 @@ main(int argc, char **argv)
 		perror("Couldn't create listener");
 		return 1;
 	}
+        evconnlistener_set_error_cb(listener, accept_error_cb);
 
 	event_base_dispatch(base);
 	return 0;

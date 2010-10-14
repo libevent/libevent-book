@@ -29,11 +29,11 @@ interface.  As of this writing, the following types exist:
 
 socket-based bufferevents::
     A bufferevent that sends and receives data from an underlying
-    socket, using the event_* interface as its backend.
+    stream socket, using the event_* interface as its backend.
 
 asynchronous-IO bufferevents::
     A bufferevent that uses the Windows IOCP interface to send and
-    receive data to an underlying socket.  (Windows only;
+    receive data to an underlying stream socket.  (Windows only;
     experimental.)
 
 filtering bufferevents::
@@ -49,6 +49,10 @@ As of Libevent 2.0.2-alpha, the bufferevents interfaces here are still
 not fully orthogonal across all bufferevent types.  In other words,
 not every interface described below will work on all bufferevent types.
 The Libevent developers intend to correct this in future versions.
+
+.NOTE ALSO
+Bufferevents currently only work for stream-oriented protocols like TCP.
+There may in the future be support for datagram-oriented protocols like UDP.
 
 All of the functions and types in this section are declared in
 event2/bufferevent.h.  Functions specifically related to evbuffers are

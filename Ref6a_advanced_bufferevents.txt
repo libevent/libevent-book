@@ -138,6 +138,14 @@ the destination buffer, BEV_NEED_MORE if no more data can be written to the
 destination buffer without getting more input or using a different flush
 mode, and BEV_ERROR if there is a non-recoverable error on the filter.
 
+Creating the filter enables both reading and writing on the underlying
+bufferevent.  You do not need to manage reads/writes on your own: the filter
+will suspend reading on the underlying bufferevent for you whenever it
+doesn't want to read.  For 2.0.8-rc and later, it is permissible to
+enable/disable reading and writing on the underlying bufferevent
+independently from the filter.  If you do this, though, you may keep the
+filter from successfully getting the data it wants.
+
 You don't need to specify both an input filter and an output filter: any
 filter you omit is replaced with one that passes data on without transforming
 it.

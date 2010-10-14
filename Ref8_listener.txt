@@ -82,6 +82,10 @@ LEV_OPT_REUSEABLE::
     reusable, so that once it is closed, another socket can be
     opened to listen on the same port.
 
+LEV_OPT_THREADSAFE::
+    Allocate locks for the listener, so that it's safe to use it from
+    multiple threads.  New in Libevent 2.0.8-rc.
+
 The connection listener callback
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -126,6 +130,28 @@ These functions return a listener's associated socket and event_base
 respectively.
 
 The evconnlistener_get_fd() function first appeared in Libevent 2.0.3-alpha.
+
+Detecting errors
+~~~~~~~~~~~~~~~~
+
+You can set an error callback that gets informed whenever an accept() call
+fails on the listener.  This can be important to do if you're facing an error
+condition that would lock the process unless you addressed it.
+
+.Interface
+[code,C]
+--------
+typedef void (*evconnlistener_errorcb)(struct evconnlistener *lis, void *ptr);
+void evconnlistener_set_error_cb(struct evconnlistener *lev,
+    evconnlistener_errorcb errorcb);
+--------
+
+If you use evconnlistener_set_error_cb() to set an error callback on a
+listener, the callback will be invoked every time that an error occurs on the
+listener.  It will receive the listener as its first argument, and the
+argument passed as 'ptr' to evconnlistener_new() as its second argument.
+
+This function was introduced in Libevent 2.0.8-rc.
 
 Example code: an echo server.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
