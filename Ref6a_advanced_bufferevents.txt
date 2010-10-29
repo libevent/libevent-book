@@ -446,7 +446,7 @@ bufferevent_openssl_socket_new(struct event_base *base,
 --------
 
 You can create two kinds of SSL bufferevents: a filter-based bufferevent that
-communicates over another underlying bufferevent, or an socket-based
+communicates over another underlying bufferevent, or a socket-based
 bufferevent that tells OpenSSL to communicate with the network directly over.  In
 either case, you must provide an SSL object and a description of the SSL
 object's state.  The state should be BUFFEREVENT_SSL_CONNECTING if the SSL is
@@ -458,7 +458,7 @@ The usual options are accepted; BEV_OPT_CLOSE_ON_FREE makes the SSL object
 and the underlying fd or bufferevent get closed when the openssl bufferevent
 itself is closed.
 
-If you're creating an socket-based bufferevent and the SSL object already
+If you're creating a socket-based bufferevent and the SSL object already
 has a socket set, you do not need to provide the socket yourself: just pass
 -1.  You can also set the fd later with bufferevent_setfd().
 

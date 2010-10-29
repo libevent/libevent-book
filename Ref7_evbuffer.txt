@@ -380,7 +380,7 @@ EVBUFFER_EOL_CRLF_STRICT::
 
 EVBUFFER_EOL_CRLF::
     The end of the line is an optional carriage return, followed by a
-    linefeed.  (In other words, it is either a "\r\n" or an "\n".)
+    linefeed.  (In other words, it is either a "\r\n" or a "\n".)
     This format is useful in parsing text-based Internet
     protocols, since the standards generally prescribe a "\r\n"
     line-terminator, but nonconformant clients sometimes say just
