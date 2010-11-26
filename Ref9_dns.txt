@@ -194,7 +194,7 @@ EVUTIL_EAI_SYSTEM::
 
 EVUTIL_EAI_CANCEL::
 
-      The application requested that this DNS lookup should be cancelled
+      The application requested that this DNS lookup should be canceled
       before it was finished.  The evutil_getaddrinfo() function never
       produces this error, but it can come from evdns_getaddrinfo()
       as described in the section below.
@@ -351,7 +351,7 @@ options configured.
 When you no longer need an evdns_base, you can free it with
 evdns_base_free.  If its 'fail_request' argument is true, it will
 make all in-flight requests get their callbacks invoked with a
-'cancelled' error code before it frees the base.
+'canceled' error code before it frees the base.
 
 Initializing evdns from the system configuration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

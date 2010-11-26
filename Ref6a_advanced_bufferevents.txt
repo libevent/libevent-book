@@ -183,10 +183,11 @@ Setting a rate limit on a bufferevent
 .Interface
 [code,C]
 --------
+#define EV_RATE_LIMIT_MAX EV_SSIZE_MAX
 struct ev_token_bucket_cfg;
 struct ev_token_bucket_cfg *ev_token_bucket_cfg_new(
-	ev_uint32_t read_rate, ev_uint32_t read_burst,
-	ev_uint32_t write_rate, ev_uint32_t write_burst,
+	size_t read_rate, sizee_t read_burst,
+	size_t write_rate, size_t write_burst,
 	const struct timeval *tick_len);
 void ev_token_bucket_cfg_free(struct ev_token_bucket_cfg *cfg);
 int bufferevent_set_rate_limit(struct bufferevent *bev,
@@ -204,7 +205,7 @@ defaults to one second.  The function may return NULL on error.
 Note that the 'read_rate' and 'write_rate' arguments are scaled in units of
 bytes per tick.  That is, if the tick is one tenth of a second, and
 'read_rate' is 300, then the maximum average read rate is 3000 bytes per
-second.
+second.  Rate and burst values over EV_RATE_LIMIT_MAX are not supported.
 
 To limit a bufferevent's transfer rate, call bufferevent_set_rate_limit() on
 it with an ev_token_bucket_cfg.  The function returns 0 on success, and -1 on

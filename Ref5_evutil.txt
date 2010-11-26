@@ -72,6 +72,10 @@ possible value of ev_ssize_t is EV_SSIZE_MAX; the smallest is EV_SSIZE_MIN.
 (The largest possible value for size_t is EV_SIZE_MAX, in case your platform
 doesn't define a SIZE_MAX for you.)
 
+The ev_off_t type is used to represent offset into a file or a chunk of
+memory.  It is defined to off_t on platforms with a reasonable off_t
+definition, and to ev_int64_t on Windows.
+
 Some implementations of the sockets API provide a length type, socklen_t, and
 some do not.  The ev_socklen_t is defined to this type where it exists, and a
 reasonable default otherwise.
@@ -82,7 +86,8 @@ large enough to hold a pointer without loss of bits.
 
 The ev_ssize_t type was added in Libevent 2.0.2-alpha.  The ev_socklen_t type
 was new in Libevent 2.0.3-alpha.  The ev_intptr_t and ev_uintptr_t types, and
-the EV_SSIZE_MAX/MIN macros, were added in Libevent 2.0.4-alpha.
+the EV_SSIZE_MAX/MIN macros, were added in Libevent 2.0.4-alpha.  The
+ev_off_t type first appeared in Libevent 2.0.9-rc.
 
 Timer portability functions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~

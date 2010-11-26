@@ -118,7 +118,7 @@ The recognized option values for event_config_set_flag() are:
 - EVENT_BASE_FLAG_NOLOCK: Do not allocate locks for the event_base. Setting
   this option may save a little time for locking and releasing the
   event_base, but will make it unsafe to access it from multiple threads.
-- EVENT_BASE_FLAG_IGNORE_ENV: Do not check the EVENT_NO* environment
+- EVENT_BASE_FLAG_IGNORE_ENV: Do not check the EVENT_* environment
   variables when picking which backend method to use.  Think hard before
   using this flag: it can make it harder for users to debug the interactions
   between your program and Libevent.
@@ -129,6 +129,15 @@ The recognized option values for event_config_set_flag() are:
   time the event loop is ready to run timeout callbacks, check it after
   every timeout callback.  This can use more CPU than you necessarily
   intended, so watch out!
+- EVENT_BASE_FLAG_EPOLL_USE_CHANGELIST: Tells Libevent that, if it decides to
+  use the epoll backend, it is safe to use the faster "changelist"-based
+  backend.  The epoll-changelist backend can avoid needless system calls in
+  cases where the same fd has its status modified more than once between
+  calls to the backend's dispatch function, but it also trigger a kernel bug
+  that causes erroneous results if you give Libevent any fds cloned by
+  dup() or its variants.  This flag has no effect if you use a backend
+  other than epoll.  You can also turn on the epoll-changelist option by
+  setting the EVENT_EPOLL_uSE_CHANGELIST environment variable.
 
 The above functions that manipulate an event_config all return 0 on success,
 -1 on failure.

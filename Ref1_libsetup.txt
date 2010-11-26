@@ -80,6 +80,14 @@ void set_logfile(FILE *f)
 }
 --------
 
+.NOTE
+It is not safe to invoke Libevent functions from within a user-provided
+event_log_cb callback!  For instance, if try to write a log callback that
+uses bufferevents to send warning messages to a network socket, you are
+likely to run into strange and hard-to-diagnose bugs.  This restriction may
+be removed for some functions in a future version of Libevent.
+
+
 These functions are declared in <event2/event.h>.  They first appeared
 in Libevent 1.0c.
 

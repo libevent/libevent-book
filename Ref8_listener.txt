@@ -34,7 +34,8 @@ When a new connection arrives, it invokes the callback function you give it.
 
 In both functions, the 'base' parameter is an event_base that the listener
 should use to listen for connections.  The 'cb' function is a callback to
-invoke when a new connection is received.  The 'ptr' pointer will be passed
+invoke when a new connection is received; if 'cb' is NULL, the listener is
+treated as disabled until a callback is set.  The 'ptr' pointer will be passed
 to the callback.  The 'flags' argument controls the behavior of the listener
 -- more on this below.  The 'backlog' parameter controls the maximum number
 of pending connections that the network stack should allow to wait in a
@@ -115,6 +116,19 @@ int evconnlistener_enable(struct evconnlistener *lev);
 --------
 
 These functions temporarily disable or reenable listening for new connections.
+
+Adjusting an evconnlistener's callback
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.Interface
+[code,C]
+--------
+void evconnlistener_set_cb(struct evconnlistener *lev,
+    evconnlistener_cb cb, void *arg);
+--------
+
+This function adjusts the callback and callback argument of an existing
+evconnlistener.  It was introduced in 2.0.9-rc.
 
 Inspecting an evconnlistener
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~

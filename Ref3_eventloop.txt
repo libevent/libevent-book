@@ -29,10 +29,11 @@ ready to expire).  Once this happens, it marks all triggered events as
 "active", and starts to run them.
 
 You can change the behavior of event_base_loop() by setting one or more flags
-in its 'flags' argument.  If EVLOOP_ONCE is set, then the loop will stop
-immediately after running any active events.  If EVLOOP_NONBLOCK is set, then
+in its 'flags' argument.  If EVLOOP_ONCE is set, then the loop will wait
+until some events become active, then run active events until there are no
+more to run, then return.  If EVLOOP_NONBLOCK is set, then
 the loop will not wait for events to trigger: it will only check whether
-any events are ready to trigger immediately.
+any events are ready to trigger immediately, and run their callbacks if so.
 
 When it is done, event_base_loop() returns 0 if it exited normally, and -1 if
 it exited because of some unhandled error in the backend.

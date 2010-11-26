@@ -776,6 +776,15 @@ the bufferevent_getfd() function was introduced in Libevent 2.0.2-alpha.
 .Interface
 [code,C]
 --------
+struct event_base *bufferevent_get_base(struct bufferevent *bev);
+--------
+
+This function returns the event_base of a bufferevent.  It was introduced in
+2.0.9-rc.
+
+.Interface
+[code,C]
+--------
 struct bufferevent *bufferevent_get_underlying(struct bufferevent *bufev);
 --------
 
@@ -855,6 +864,10 @@ struct bufferevent *bufferevent_new(evutil_socket_t fd,
     evbuffercb readcb, evbuffercb writecb, everrorcb errorcb, void *cbarg);
 int bufferevent_base_set(struct event_base *base, struct bufferevent *bufev);
 --------
+
+The bufferevent_new() function creates a socket bufferevent only, and does so
+on the deprecated "default" event_base.  Calling bufferevent_base_set adjusts
+the event_base of a socket bufferevent only.
 
 Instead of setting timeouts as struct timeval, they were set as
 numbers of seconds:

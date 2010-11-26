@@ -1041,7 +1041,7 @@ mechanisms, where available, with:
 .Interface
 [code,C]
 --------
-int evbuffer_add_file(struct evbuffer *output, int fd, off_t offset,
+int evbuffer_add_file(struct evbuffer *output, int fd, ev_off_t offset,
     size_t length);
 --------
 
