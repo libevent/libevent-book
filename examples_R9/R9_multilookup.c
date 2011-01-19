@@ -5,15 +5,22 @@
 #include <sys/socket.h>
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 
 int n_pending_requests = 0;
 struct event_base *base = NULL;
 
+struct user_data {
+    char *name; /* the name we're resolving */
+    int idx; /* its position on the command line */
+};
+
 void callback(int errcode, struct evutil_addrinfo *addr, void *ptr)
 {
-    const char *name = ptr;
+    struct user_data *data = ptr;
+    const char *name = data->name;
     if (errcode) {
         printf("%s -> %s\n", name, evutil_gai_strerror(errcode));
     } else {
@@ -34,6 +41,8 @@ void callback(int errcode, struct evutil_addrinfo *addr, void *ptr)
         }
         evutil_freeaddrinfo(addr);
     }
+    free(data->name);
+    free(data);
     if (--n_pending_requests == 0)
         event_base_loopexit(base, NULL);
 }
@@ -58,6 +67,8 @@ int main(int argc, char **argv)
 
     for (i = 1; i < argc; ++i) {
         struct evutil_addrinfo hints;
+        struct evdns_getaddrinfo_request *req;
+        struct user_data *user_data;
         memset(&hints, 0, sizeof(hints));
         hints.ai_family = AF_UNSPEC;
         hints.ai_flags = EVUTIL_AI_CANONNAME;
@@ -67,12 +78,30 @@ int main(int argc, char **argv)
         hints.ai_socktype = SOCK_STREAM;
         hints.ai_protocol = IPPROTO_TCP;
 
-        evdns_getaddrinfo(dnsbase, argv[i], NULL /* no service name given */,
-                          &hints, callback, (void *)argv[i]);
+        if (!(user_data = malloc(sizeof(user_data)))) {
+            perror("malloc");
+            exit(1);
+        }
+        if (!(user_data->name = strdup(argv[i]))) {
+            perror("strdup");
+            exit(1);
+        }
+        user_data->idx = i;
+
         ++n_pending_requests;
+        req = evdns_getaddrinfo(
+                          dnsbase, argv[i], NULL /* no service name given */,
+                          &hints, callback, user_data);
+        if (req == NULL) {
+          printf("Unable to launch request for %s", argv[i]);
+          free(user_data->name);
+          free(user_data);
+          --n_pending_requests;
+        }
     }
 
-    event_base_dispatch(base);
+    if (n_pending_requests)
+      event_base_dispatch(base);
 
     evdns_base_free(dnsbase, 0);
     event_base_free(base);
