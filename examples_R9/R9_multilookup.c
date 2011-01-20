@@ -22,10 +22,13 @@ void callback(int errcode, struct evutil_addrinfo *addr, void *ptr)
     struct user_data *data = ptr;
     const char *name = data->name;
     if (errcode) {
-        printf("%s -> %s\n", name, evutil_gai_strerror(errcode));
+        printf("%d. %s -> %s\n", data->idx, name, evutil_gai_strerror(errcode));
     } else {
         struct evutil_addrinfo *ai;
-        printf("%s [%s]\n", name, addr->ai_canonname ? addr->ai_canonname : "");
+        printf("%d. %s", data->idx, name);
+        if (addr->ai_canonname)
+            printf(" [%s]", addr->ai_canonname);
+        puts("");
         for (ai = addr; ai; ai = ai->ai_next) {
             char buf[128];
             const char *s = NULL;
@@ -93,10 +96,9 @@ int main(int argc, char **argv)
                           dnsbase, argv[i], NULL /* no service name given */,
                           &hints, callback, user_data);
         if (req == NULL) {
-          printf("Unable to launch request for %s", argv[i]);
-          free(user_data->name);
-          free(user_data);
-          --n_pending_requests;
+          printf("    [request for %s returned immediately]\n", argv[i]);
+          /* No need to free user_data or decrement n_pending_requests; that
+           * happened in the callback. */
         }
     }
 

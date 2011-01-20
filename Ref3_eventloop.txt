@@ -105,6 +105,13 @@ the event_base is currently running callbacks for any active events, it will
 exit
 immediately after finishing the one it's currently processing.
 
+Note also that event_base_loopexit(base,NULL) and event_base_loopbreak(base)
+act differently when no event loop is running: loopexit schedules the next
+instance of the event loop to stop right after the next round of callbacks
+are run (as if it had been invoked with EVLOOP_ONCE) whereas loopbreak only
+stops a currently running loop, and has no effect if the event loop isn't
+running.
+
 Both of these methods return 0 on success and -1 on failure.
 
 .Example: Shut down immediately

@@ -317,6 +317,10 @@ immediately.  Otherwise, it returns a pointer to an
 evdns_getaddrinfo_request.  You can use this to cancel the request with
 evdns_getaddrinfo_cancel() at any time before the request is finished.
 
+Note that the callback function _will_ eventually be invoked whether
+evdns_getaddinfo() returns NULL or not, and whether
+evdns_getaddrinfo_cancel() is called or not.
+
 When you call evdns_getaddrinfo(), it makes its own internal copies of its
 nodename, servname, and hints arguments: you do not need to ensure that they
 continue to exist while the name lookup is in progress.
