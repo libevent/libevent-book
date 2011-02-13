@@ -224,6 +224,11 @@ void start_counting_bytes(void)
 - Your malloc function does not need to handle malloc(0).
 - The replaced memory management functions need to be threadsafe if you
   are using Libevent from more than one thread.
+- Libevent will use these functions to allocate memory that it returns to
+  you.  Thus, if you want to free memory that is allocated and returned by a
+  Libevent function, and you have replaced the malloc and realloc functions,
+  then you will probably have to use your replacement free function to free
+  it.
 
 The event_set_mem_functions() function is declared in <event2/event.h>.
 It first appeared in Libevent 2.0.1-alpha.
