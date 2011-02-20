@@ -126,7 +126,7 @@ EVUTIL_AI_ADDRCONFIG::
         addresses are only included in the result if the system has a
         nonlocal IPv6 address.
 
-The ai_family filed of 'hints' is used to tell evutil_getaddrinfo() which
+The ai_family field of 'hints' is used to tell evutil_getaddrinfo() which
 addresses it should return.  It can be AF_INET to request IPv4 addresses
 only, AF_INET6 to request IPv6 addresses only, or AF_UNSPEC to request
 all available addresses.
@@ -300,7 +300,7 @@ struct evdns_getaddrinfo_request *evdns_getaddrinfo(
 void evdns_getaddrinfo_cancel(struct evdns_getaddrinfo_request *req);
 -----
 
-The evdns_getaddrinfo_function() behaves just like evutil_getaddrinfo(),
+The evdns_getaddrinfo() function behaves just like evutil_getaddrinfo(),
 except that instead of blocking on DNS servers, it uses Libevent's
 low-level DNS facilities to look hostnames up for you.  Because it can't
 always return you the result immediately, you need to provide it a
@@ -772,7 +772,7 @@ struct evdns_server_question {
 };
 ------
 
-The 'flags' fieldn of the request contains the DNS flags set in the request;
+The 'flags' field of the request contains the DNS flags set in the request;
 the 'nquestions' field is the number of questions in the request; and
 'questions' is an array of pointers to struct evdns_server_question.  Each
 evdns_server_question includes the resource type of the request (see below
@@ -870,14 +870,14 @@ int evdns_server_request_add_reply(struct evdns_server_request *req,
 
 This function adds an arbitrary RR to the DNS reply of a request 'req'.
 The 'section' argument describes which section to add it to, and should be
-one of the EVDNS_*_SECTION values.  The 'name' argument is the name field of
+one of the EVDNS_*\_SECTION values.  The 'name' argument is the name field of
 the RR.  The 'type' argument is the 'type' field of the RR, and should be one
 of the EVDNS_TYPE_* values if possible.  The 'dns_class' argument is the
 class field of the RR, and should generally be EVDNS_CLASS_INET.  The 'ttl'
 argument is the time-to-live in seconds of the RR.  The rdata and rdlength
 fields of the RR will be generated from the 'datalen' bytes provided in
 'data'.  If is_name is true, the data will be encoded as a DNS name (i.e.,
-with dns name compression).  Otherwise, it's included verbatim.
+with DNS name compression).  Otherwise, it's included verbatim.
 
 .Interface
 [code,C]

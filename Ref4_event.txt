@@ -255,8 +255,8 @@ Caveats when working with signals
 
 With current versions of Libevent, with most backends, only one event_base
 per process at a time can be listening for signals.  If you add signal events
-to two event_bases at once ---even the signals are different!--- only one
-event_base will get the signals.
+to two event_bases at once ---even if the signals are different!--- only one
+event_base will receive signals.
 
 The kqueue backend does not have this limitation.
 
@@ -281,7 +281,7 @@ structure.
 These are _very_ small costs, and do not matter for most applications.
 You should just stick to using event_new() unless you *know* that
 you're incurring a significant performance penalty for heap-allocating
-your events.  Not using this function can cause hard-to-diagnose errors
+your events.  Using event_assign() can cause hard-to-diagnose errors
 with future versions of Libevent if they use a larger event structure
 than the one you're building with.
 
@@ -335,6 +335,7 @@ event_del() on it *before* you call event_assign() on it again.
 
 There are convenience macros you can use to event_assign() a timeout-only or
 a signal event:
+
 .Interface
 [code,C]
 --------

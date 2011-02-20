@@ -361,7 +361,7 @@ void bufferevent_free(struct bufferevent *bev);
 --------
 
 This function frees a bufferevent.  Bufferevents are internally
-reference counted, so if the bufferevent has pending deferred
+reference-counted, so if the bufferevent has pending deferred
 callbacks when you free it, it won't be deleted until the callbacks
 are done.
 
@@ -388,7 +388,7 @@ void bufferevent_setcb(struct bufferevent *bufev,
 
 The bufferevent_setcb() function changes one or more of the callbacks
 of a bufferevent.  The readcb, writecb, and eventcb functions are
-called (respectively) when enough data is read, enough data is
+called (respectively) when enough data is read, when enough data is
 written, or when an event occurs.  The first argument of each is the
 bufferevent that has had the event happen.  The last argument is the
 value provided by the user in the 'cbarg' parameter of
@@ -401,7 +401,7 @@ function.  Note the all callback functions on a bufferevent share a
 single 'cbarg' value, so changing it will affect all of them.
 
 This function was introduced in Libevent 1.4.4.  The type names
-"bufferevent_data_cb" and "bufferevet_event_cb" are new in Libevent
+"bufferevent_data_cb" and "bufferevent_event_cb" are new in Libevent
 2.0.2-alpha.
 
 .Interface

@@ -434,7 +434,7 @@ If you are running in an environment where your program is likely to drop
 privileges (for example, by running chroot()), you should call
 evutil_secure_rng_init() before you do so.
 
-You can add more random bytes to the entropy poll yourself by calling
+You can add more random bytes to the entropy pool yourself by calling
 evutil_secure_rng_add_bytes(); this shouldn't be necessary in typical
 use.
 

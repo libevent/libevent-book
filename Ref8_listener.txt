@@ -74,7 +74,7 @@ LEV_OPT_CLOSE_ON_EXEC::
     If this option is set, the connection listener sets the
     close-on-exec flag on the underlying listener socket.  See your
     platform documentation for fcntl and FD_CLOEXEC for more
-    informatino.
+    information.
 
 LEV_OPT_REUSEABLE::
     By default on some platforms, once a listener socket is closed,

@@ -82,7 +82,7 @@ void set_logfile(FILE *f)
 
 .NOTE
 It is not safe to invoke Libevent functions from within a user-provided
-event_log_cb callback!  For instance, if try to write a log callback that
+event_log_cb callback!  For instance, if you try to write a log callback that
 uses bufferevents to send warning messages to a network socket, you are
 likely to run into strange and hard-to-diagnose bugs.  This restriction may
 be removed for some functions in a future version of Libevent.
@@ -289,7 +289,7 @@ library to implement:
   - unlocking
   - lock allocation
   - lock destruction
-- Conditinos
+  - Conditions
   - condition variable creation
   - condition variable destruction
   - waiting on a condition variable

@@ -75,7 +75,7 @@ int main(int argc, char **argv)
         memset(&hints, 0, sizeof(hints));
         hints.ai_family = AF_UNSPEC;
         hints.ai_flags = EVUTIL_AI_CANONNAME;
-        /* Unless we specify a socktype, we'll get at leat two entries for
+        /* Unless we specify a socktype, we'll get at least two entries for
          * each address: one for TCP and one for UDP. That's not what we
          * want. */
         hints.ai_socktype = SOCK_STREAM;
