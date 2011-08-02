@@ -465,9 +465,7 @@ report for you.  They include:
 
 Tracking which events are initialized requires that Libevent use extra memory
 and CPU, so you should only enable debug mode when actually debugging your
-program. By default this feature is disabled and must be enabled at compile-time
-by adding '-DUSE_DEBUG' to your CFLAGS environment variable. Optionally this
-can be passed along with ./configure: 'CFLAGS=-DUSE_DEBUG ./configure ..'
+program. 
 
 .Interface
 [code,C]
@@ -537,7 +535,20 @@ void mainloop(evutil_socket_t fd1, evutil_socket_t fd2, int debug_mode)
 }
 -----
 
+Detailed event debugging is a feature which can only be enabled at compile-time using
+the CFLAGS environment variable "-DUSE_DEBUG". With this flag enabled, any program compiled 
+against Libevent will output a very verbose log detailing low-level activity on the back-end.
+These logs include, but not limited to, the following:
+
+- event additions
+- event deletions
+- platform specific event notification information
+
+This feature cannot be enabled or disabled via an API call so it must only be
+used in developer builds. 
+
 These debugging functions were added in Libevent 2.0.4-alpha.
+
 
 Detecting the version of Libevent
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
