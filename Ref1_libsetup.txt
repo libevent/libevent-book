@@ -465,7 +465,8 @@ report for you.  They include:
 
 Tracking which events are initialized requires that Libevent use extra memory
 and CPU, so you should only enable debug mode when actually debugging your
-program.
+program. By default this feature is disabled and must be enabled at compile-time. 
+You can enable this by running: 'CFLAGS="$CFLAGS:-DUSE_DEBUG" ./configure ....'
 
 .Interface
 [code,C]
