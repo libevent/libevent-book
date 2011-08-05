@@ -71,8 +71,6 @@ evssl_init(void)
         return NULL;
     }
     SSL_CTX_set_options(server_ctx, SSL_OP_NO_SSLv2);
-    SSL_CTX_set_cipher_list(server_ctx, "RC4+RSA:HIGH:+MEDIUM:+LOW");
-    SSL_CTX_set_session_cache_mode(server_ctx, SSL_SESS_CACHE_OFF);
 
     return server_ctx;
 }
