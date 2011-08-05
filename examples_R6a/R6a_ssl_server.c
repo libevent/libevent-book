@@ -14,7 +14,7 @@
 #include <event2/listener.h>
 #include <event2/bufferevent_ssl.h>
 
-static char * private_key =
+static char private_key[] =
     "-----BEGIN RSA PRIVATE KEY-----\n"
     "MIICXQIBAAKBgQC1XaK4b4MnyIzuDgphD1ySx60vgNuGU4ZAST4X23/Iz9yEwRBR\n"
     "b7CCfKbbRGFT0Y76SiWT/bWmTCpJcOxbrr+nr08YMN4vOweyHLN8UuFb/a054ONx\n"
@@ -31,7 +31,7 @@ static char * private_key =
     "p8dYihTLZ/c1QREQbGXcDgaQdTMvckc0PuO/Hhl+reLh\n"
     "-----END RSA PRIVATE KEY-----\n";
 
-static char * certificate =
+static char certificate[] =
     "-----BEGIN CERTIFICATE-----\n"
     "MIIDeDCCAuGgAwIBAgIJAKef6j1Xr5X0MA0GCSqGSIb3DQEBBQUAMIGFMQswCQYD\n"
     "VQQGEwJBVTETMBEGA1UECBMKU29tZS1TdGF0ZTEhMB8GA1UEChMYSW50ZXJuZXQg\n"
@@ -56,10 +56,11 @@ static char * certificate =
 
 
 static void
-ssl_readcb(struct bufferevent * bev, void * arg) {
-    struct evbuffer * in = bufferevent_get_input(bev);
+ssl_readcb(struct bufferevent * bev, void * arg)
+{
+    struct evbuffer *in = bufferevent_get_input(bev);
 
-    printf("Recvd %zu bytes\n", evbuffer_get_length(in));
+    printf("Received %zu bytes\n", evbuffer_get_length(in));
     printf("----- data ----\n");
     printf("%.*s\n", (int)evbuffer_get_length(in), evbuffer_pullup(in, -1));
 
@@ -67,40 +68,43 @@ ssl_readcb(struct bufferevent * bev, void * arg) {
 }
 
 static void
-ssl_acceptcb(struct evconnlistener * serv, int sock, struct sockaddr * sa, int sa_len, void * arg) {
-    struct event_base  * evbase;
-    struct bufferevent * bev;
-    SSL_CTX            * server_ctx;
-    SSL                * client_ctx;
+ssl_acceptcb(struct evconnlistener *serv, int sock, struct sockaddr *sa,
+             int sa_len, void *arg)
+{
+    struct event_base *evbase;
+    struct bufferevent *bev;
+    SSL_CTX *server_ctx;
+    SSL *client_ctx;
 
     server_ctx = (SSL_CTX *)arg;
     client_ctx = SSL_new(server_ctx);
-    evbase     = evconnlistener_get_base(serv);
+    evbase = evconnlistener_get_base(serv);
 
-    bev        = bufferevent_openssl_socket_new(evbase, sock, client_ctx,
-                                                BUFFEREVENT_SSL_ACCEPTING,
-                                                BEV_OPT_CLOSE_ON_FREE);
+    bev = bufferevent_openssl_socket_new(evbase, sock, client_ctx,
+                                         BUFFEREVENT_SSL_ACCEPTING,
+                                         BEV_OPT_CLOSE_ON_FREE);
 
     bufferevent_enable(bev, EV_READ);
     bufferevent_setcb(bev, ssl_readcb, NULL, NULL, NULL);
 }
 
 static SSL_CTX *
-evssl_init(void) {
-    EVP_PKEY * pkey;
-    X509     * cx509;
-    BIO      * pkey_bio;
-    BIO      * cert_bio;
-    SSL_CTX  * server_ctx;
+evssl_init(void)
+{
+    EVP_PKEY *pkey;
+    X509 *cx509;
+    BIO *pkey_bio;
+    BIO *cert_bio;
+    SSL_CTX  *server_ctx;
 
     SSL_load_error_strings();
     SSL_library_init();
     RAND_status();
 
-    pkey_bio   = BIO_new_mem_buf(private_key, -1);
-    cert_bio   = BIO_new_mem_buf(certificate, -1);
-    pkey       = PEM_read_bio_PrivateKey(pkey_bio, NULL, NULL, NULL);
-    cx509      = PEM_read_bio_X509(cert_bio, NULL, NULL, NULL);
+    pkey_bio = BIO_new_mem_buf(private_key, -1);
+    cert_bio = BIO_new_mem_buf(certificate, -1);
+    pkey = PEM_read_bio_PrivateKey(pkey_bio, NULL, NULL, NULL);
+    cx509 = PEM_read_bio_X509(cert_bio, NULL, NULL, NULL);
 
     server_ctx = SSL_CTX_new(SSLv23_server_method());
 
@@ -114,23 +118,24 @@ evssl_init(void) {
 }
 
 int
-main(int argc, char ** argv) {
-    SSL_CTX               * ctx;
-    struct evconnlistener * listener;
-    struct event_base     * evbase;
-    struct sockaddr_in      sin;
-
+main(int argc, char **argv)
+{
+    SSL_CTX *ctx;
+    struct evconnlistener *listener;
+    struct event_base *evbase;
+    struct sockaddr_in sin;
 
     memset(&sin, 0, sizeof(sin));
-    sin.sin_family      = AF_INET;
-    sin.sin_port        = htons(9999);
-    sin.sin_addr.s_addr = inet_addr("127.0.0.1");
+    sin.sin_family = AF_INET;
+    sin.sin_port = htons(9999);
+    sin.sin_addr.s_addr = htonl(0x7f000001); /* 127.0.0.1 */
 
-    ctx      = evssl_init();
-    evbase   = event_base_new();
-    listener = evconnlistener_new_bind(evbase, ssl_acceptcb, (void *)ctx,
-                                       LEV_OPT_CLOSE_ON_FREE | LEV_OPT_REUSEABLE, 1024,
-                                       (struct sockaddr *)&sin, sizeof(sin));
+    ctx = evssl_init();
+    evbase = event_base_new();
+    listener = evconnlistener_new_bind(
+                         evbase, ssl_acceptcb, (void *)ctx,
+                         LEV_OPT_CLOSE_ON_FREE | LEV_OPT_REUSEABLE, 1024,
+                         (struct sockaddr *)&sin, sizeof(sin));
 
     event_base_loop(evbase, 0);
 
