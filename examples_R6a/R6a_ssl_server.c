@@ -134,6 +134,9 @@ main(int argc, char ** argv) {
 
     event_base_loop(evbase, 0);
 
+    evconnlistener_free(listener);
+    SSL_CTX_free(ctx);
+
     return 0;
 }
 
