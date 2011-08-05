@@ -39,6 +39,7 @@ check: examples inline_examples
 examples:
 	cd examples_01 && $(MAKE)
 	cd examples_R6 && $(MAKE)
+	cd examples_R6a && $(MAKE)
 	cd examples_R8 && $(MAKE)
 	cd examples_R9 && $(MAKE)
 
@@ -59,6 +60,7 @@ Ref3_eventloop.html: license.txt
 Ref4_event.html: license.txt
 Ref5_evutil.html: license.txt
 Ref6_bufferevent.html: examples_R6/*.c license.txt
+Ref6a_advanced_bufferevent.html: examples_R6a/*.c license.txt
 Ref7_evbuffer.html: license.txt
 Ref8_listener.html: examples_R8/*.c license.txt
 Ref9_dns.html: examples_R9/*.c license.txt

@@ -9,6 +9,7 @@
 /examples_01/01_rot13_server_forking
 /examples_01/01_sync_webclient
 /examples_R6/R6_http_client
+/examples_R6a/R6a_ssl_server
 /examples_R8/R8_echo_server
 /examples_R9/R9_multilookup
 /examples_R9/R9_dns_server
