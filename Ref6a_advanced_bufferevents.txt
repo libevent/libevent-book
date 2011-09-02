@@ -478,6 +478,8 @@ cache once closed. The following code implements this workaround.
 --------
 SSL *ctx = bufferevent_openssl_get_ssl(bev);
 
+/* SSL_SENT_SHUTDOWN | SSL_RECEIVED_SHUTDOWN essentially ignores any return
+ * values, violating RFC. We dothis to keep from blocking. */
 SSL_set_shutdown(ctx, SSL_SENT_SHUTDOWN | SSL_RECEIVED_SHUTDOWN);
 SSL_shutdown(ctx);
 bufferevent_free(bev);
