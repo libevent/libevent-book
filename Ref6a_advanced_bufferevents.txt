@@ -463,6 +463,28 @@ If you're creating a socket-based bufferevent and the SSL object already
 has a socket set, you do not need to provide the socket yourself: just pass
 -1.  You can also set the fd later with bufferevent_setfd().
 
+/// TODO: Remove this once bufferevent_shutdown() API has been finished.
+
+It should be noted that when BEV_OPT_CLOSE_ON_FREE is set on a SSL bufferevent,
+a clean shutdown will not be performed on the SSL connection. A downside to this
+is the session will be treated as "bad", and removed from the session cache. This
+can cause significant performance degradation on SSL applications under load. 
+
+Currently the only workaround is to do lazy SSL shutdowns manually. While this
+"technically" breaks TLS RFC, it will make sure that sessions will stay in
+cache once closed. The following code implements this workaround.
+
+[code,C]
+--------
+SSL *ctx = bufferevent_openssl_get_ssl(bev);
+
+/* SSL_SENT_SHUTDOWN | SSL_RECEIVED_SHUTDOWN essentially ignores any return
+ * values, violating RFC. We dothis to keep from blocking. */
+SSL_set_shutdown(ctx, SSL_SENT_SHUTDOWN | SSL_RECEIVED_SHUTDOWN);
+SSL_shutdown(ctx);
+bufferevent_free(bev);
+--------
+
 .Interface
 [code,C]
 --------
