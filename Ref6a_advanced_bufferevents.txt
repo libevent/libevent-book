@@ -465,21 +465,26 @@ has a socket set, you do not need to provide the socket yourself: just pass
 
 /// TODO: Remove this once bufferevent_shutdown() API has been finished.
 
-It should be noted that when BEV_OPT_CLOSE_ON_FREE is set on a SSL bufferevent,
-a clean shutdown will not be performed on the SSL connection. A downside to this
-is the session will be treated as "bad", and removed from the session cache. This
-can cause significant performance degradation on SSL applications under load. 
+Note that when BEV_OPT_CLOSE_ON_FREE is set on a SSL bufferevent,
+a clean shutdown will not be performed on the SSL connection.  This has two
+problems: first, the connection will seem to have been "broken" by the other
+side, rather than having been closed cleanly: the other party will not be
+able to tell whether you closed the connection, or whether it was broken
+by an attacker or third party.  Second, OpenSSL will treat
+the session as "bad", and removed from the session cache. This
+can cause significant performance degradation on SSL applications under load.
 
 Currently the only workaround is to do lazy SSL shutdowns manually. While this
-"technically" breaks TLS RFC, it will make sure that sessions will stay in
+breaks the TLS RFC, it will make sure that sessions will stay in
 cache once closed. The following code implements this workaround.
 
 [code,C]
 --------
 SSL *ctx = bufferevent_openssl_get_ssl(bev);
 
-/* SSL_SENT_SHUTDOWN | SSL_RECEIVED_SHUTDOWN essentially ignores any return
- * values, violating RFC. We dothis to keep from blocking. */
+/* SSL_SENT_SHUTDOWN | SSL_RECEIVED_SHUTDOWN tells SSL_shutdown to
+ * act as if the SSL close handshake had already been completed.
+ * It is a nasty hack, but if we don't do it, SSL_shutdown will block. */
 SSL_set_shutdown(ctx, SSL_SENT_SHUTDOWN | SSL_RECEIVED_SHUTDOWN);
 SSL_shutdown(ctx);
 bufferevent_free(bev);
