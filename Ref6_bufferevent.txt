@@ -269,6 +269,7 @@ int main_loop(void)
     base = event_base_new();
 
     memset(&sin, 0, sizeof(sin));
+    sin.sin_family = AF_INET;   
     sin.sin_addr.s_addr = htonl(0x7f000001); /* 127.0.0.1 */
     sin.sin_port = htons(8080); /* Port 8080 */
 
