@@ -376,7 +376,7 @@ EVTHREAD_READ::
 
 EVTHREAD_WRITE::
         For READWRITE locks only: acquire or release the lock for
-        reading.
+        writing.
 
 EVTHREAD_TRY::
         For locking only: acquire the lock only if the lock can't be
