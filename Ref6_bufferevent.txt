@@ -209,6 +209,10 @@ options (BEV_OPT_CLOSE_ON_FREE, etc).  The 'fd' argument is an
 optional file descriptor for a socket.  You can set fd to -1 if
 you want to set the file descriptor later.
 
+TIP: [Make sure that the socket you provide to bufferevent_socket_new is
+in non-blocking mode. Libevent provides the convenience method
+evutil_make_socket_nonblocking for this.]
+
 This function returns a bufferevent on success, and NULL on failure.
 
 The bufferevent_socket_new() function was introduced in Libevent 2.0.1-alpha.

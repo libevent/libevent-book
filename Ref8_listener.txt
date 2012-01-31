@@ -51,6 +51,11 @@ the port you want to listen on, and that you're passing the socket in as
 call evconnlistener_new_bind(), and pass in the sockaddr you want to bind to,
 and its length.
 
+TIP: [When using evconnlistener_new, make sure your listening socket is in
+non-blocking mode by using evutil_make_socket_nonblocking or by manually
+setting the correct socket option. When the listening socket is left in
+blocking mode, undefined behavior might occur.]
+
 To free a connection listener, pass it to evconnlistener_free().
 
 Recognized flags
@@ -61,9 +66,9 @@ evconnlistener_new() function.  You can give any number of these, OR'd
 together.
 
 LEV_OPT_LEAVE_SOCKETS_BLOCKING::
-    By default, when the connection listener receives a new socket,
-    it sets it up to be nonblocking so that you can use it with the
-    rest of Libevent.  Set this flag if you do not want this
+    By default, when the connection listener accepts a new incoming
+    socket, it sets it up to be nonblocking so that you can use it
+    with the rest of Libevent.  Set this flag if you do not want this
     behavior.
 
 LEV_OPT_CLOSE_ON_FREE::
