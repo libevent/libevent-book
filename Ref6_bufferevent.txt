@@ -695,7 +695,7 @@ Setting a timeout to NULL removes it.
 
 The read timeout will trigger if the bufferevent waits at least
 'timeout_read' seconds while trying to read read.  The write
-timeout will trigger if the bufferevent waits at least 'timeout_read'
+timeout will trigger if the bufferevent waits at least 'timeout_write'
 seconds while trying to write data.
 
 Note that the timeouts only count when the bufferevent would like to
