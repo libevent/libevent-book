@@ -151,7 +151,7 @@ EVENT_BASE_FLAG_EPOLL_USE_CHANGELIST::
     that causes erroneous results if you give Libevent any fds cloned by
     dup() or its variants.  This flag has no effect if you use a backend
     other than epoll.  You can also turn on the epoll-changelist option by
-    setting the EVENT_EPOLL_uSE_CHANGELIST environment variable.
+    setting the EVENT_EPOLL_USE_CHANGELIST environment variable.
 
 The above functions that manipulate an event_config all return 0 on success,
 -1 on failure.
