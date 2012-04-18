@@ -26,7 +26,9 @@ def getIdentifiers(files):
         if (ident.startswith('_EVENT2_') and ident.endswith("_H_") and
             ident == "_EVENT2_%s_H_"%(fname[:-2].upper())):
             continue
-        if ident.startswith('_'):
+        elif ident.startswith("EVENT2_") and ident.endswith("_H_INCLUDED_"):
+            continue
+        elif ident.startswith('_'):
             continue
 
         idmap[ident] = [fname, lineno, False]
