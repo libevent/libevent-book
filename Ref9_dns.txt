@@ -660,7 +660,10 @@ The errors codes that can be passed to the callback are as follows:
 |DNS_ERR_TIMEOUT      | We waited too long for an answer
 |DNS_ERR_SHUTDOWN     | The user asked us to shut down the evdns system
 |DNS_ERR_CANCEL       | The user asked us to cancel this request
+|DNS_ERR_NODATA       | The response arrived, but contained no answers
 |================
+
+(DNS_ERR_NODATA was new in 2.0.15-stable.)
 
 You can decode these error codes to a human-readable string with:
 

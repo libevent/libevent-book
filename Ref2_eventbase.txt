@@ -153,6 +153,14 @@ EVENT_BASE_FLAG_EPOLL_USE_CHANGELIST::
     other than epoll.  You can also turn on the epoll-changelist option by
     setting the EVENT_EPOLL_USE_CHANGELIST environment variable.
 
+EVENT_BASE_FLAG_PRECISE_TIMER::
+    By default, Libevent tries to use the fastest available timing mechanism
+    that the operating system provides.  If there is a slower timing
+    mechanism that provides more fine-grained timing precision, this
+    flag tells Libevent to use that timing mechanism instead.  If the
+    operating system provides no such slower-but-more-precise mechanism,
+    this flag has no effect.
+
 The above functions that manipulate an event_config all return 0 on success,
 -1 on failure.
 
@@ -174,8 +182,25 @@ event_config that the event_base it generates should try to make good use of
 a given number of CPUs when multithreading.  Note that this is only a hint:
 the event base may wind up using more or fewer CPUs than you select.
 
+.Interface
+[code,C]
+-----
+int event_config_set_max_dispatch_interval(struct event_config *cfg,
+    const struct timeval *max_interval, int max_callbacks,
+    int min_priority);
+-----
+
+This function prevents priority inversion by limiting how many low-priority
+event callbacks can be invoked before checking for more high-priority events.
+If max_interval is non-null, the event loop checks the time after each
+callback, and re-scans for high-priority events if max_interval has passed.
+If max_callbacks is nonnegative, the event loop also checks for more events
+after max_callbacks callbacks have been invoked.  These rules apply to any
+event of min_priority or higher.
+
+
 //BUILD: FUNCTIONBODY INC:event2/event.h
-.Example
+.Example: Preferring edge-triggered backends
 [code,C]
 --------
 struct event_config *cfg;
@@ -206,10 +231,37 @@ for (i=0; i<2; ++i) {
 }
 --------
 
+//BUILD: FUNCTIONBODY INC:event2/event.h
+.Example: Avoiding priority-inversion
+[code,C]
+------
+struct event_config *cfg;
+struct event_base *base;
+
+cfg = event_config_new();
+if (!cfg)
+   /* Handle error */;
+
+/* I'm going to have events running at two priorities.  I expect that
+   some of my priority-1 events are going to have pretty slow callbacks,
+   so I don't want more than 100 msec to elapse (or 5 callbacks) before
+   checking for priority-0 events. */
+struct timeval msec_100 = { 0, 100*1000 };
+event_config_set_max_dispatch_interval(cfg, &msec_100, 5, 1);
+
+base = event_base_new_with_config(cfg);
+if (!base)
+   /* Handle error */;
+
+event_base_priority_init(base, 2);
+------
+
 These functions and types are declared in <event2/event.h>.
 
 The EVENT_BASE_FLAG_IGNORE_ENV flag first appeared in Libevent 2.0.2-alpha.
-The  event_config_set_num_cpus_hint function was new in Libevent 2.0.7-rc.
+The EVENT_BASE_FLAG_PRECISE_TIMER flag first appeared in Libevent
+2.1.2-alpha. The  event_config_set_num_cpus_hint() function was new in Libevent
+2.0.7-rc, and event_config_set_max_dispatch_interval() was new in 2.1.1-alpha.
 Everything else in this section first appeared in Libevent 2.0.1-alpha.
 
 Examining an event_base's backend method
@@ -330,17 +382,32 @@ value for n_priorities.
 NOTE: You *must* call this function before any events become active.  It is
 best to call it immediately after creating the event_base.
 
+
+To find the number of priorities currently supported by a base, you can
+call event_base_getnpriorities().
+
+.Interface
+[code,C]
+-----
+int event_base_get_npriorities(struct event_base *base);
+-----
+
+The return value is equal to the number of priorities configured in the
+base.  So if event_base_get_npriorities() returns 3, then allowable priority
+values are 0, 1, and 2.
+
 .Example
 
---------
+-------
 For an example, see the documentation for event_priority_set below.
---------
+-------
 
 By default, all new events associated with this base will be initialized
 with priority equal to n_priorities / 2.
 
 The event_base_priority_init function is defined in <event2/event.h>.  It has
-been available since Libevent 1.0.
+been available since Libevent 1.0.  The event_base_get_npriorities() function
+was new in Libevent 2.1.1-alpha.
 
 
 Reinitializing an event_base after fork()

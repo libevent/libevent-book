@@ -15,8 +15,9 @@ events and alert you about them.
 .Interface
 [code,C]
 --------
-#define EVLOOP_ONCE	0x01
-#define EVLOOP_NONBLOCK	0x02
+#define EVLOOP_ONCE		0x01
+#define EVLOOP_NONBLOCK		0x02
+#define EVLOOP_NO_EXIT_ON_EMPTY	0x04
 
 int event_base_loop(struct event_base *base, int flags);
 --------
@@ -35,6 +36,13 @@ more to run, then return.  If EVLOOP_NONBLOCK is set, then
 the loop will not wait for events to trigger: it will only check whether
 any events are ready to trigger immediately, and run their callbacks if so.
 
+Ordinarily, the loop will exit as soon as it has no pending events.  You can
+override this behavior by passing the EVLOOP_NO_EXIT_ON_EMPTY flag---for
+example, if you're going to be adding events from some other thread.  If you
+do set EVLOO_NO_EXIT_ON_EMPTY, the loop will keep running until somebody
+calls event_base_loopbreak(), or calls event_base_loopexit(), or an error
+occurs.
+
 When it is done, event_base_loop() returns 0 if it exited normally, and -1 if
 it exited because of some unhandled error in the backend.
 
@@ -44,7 +52,8 @@ algorithm:
 .Pseudocode
 [code,C]
 --------
-while (any events are registered with the loop) {
+while (any events are registered with the loop,
+        or EVLOOP_NO_EXIT_ON_EMPTY was set) {
 
     if (EVLOOP_NONBLOCK was set, or any events are already active)
         If any registered events have triggered, mark them active.
@@ -214,9 +223,21 @@ actual current time.  It returns 0 on success, and negative on failure.
 
 Note that since the timeval is cached when Libevent starts running
 callbacks, it will be at least a little inaccurate. If your callbacks
-take a long time to run, it may be *very* inaccurate.
+take a long time to run, it may be *very* inaccurate.  To force an immediate
+cache update, you can call this function:
 
-This function was new in Libevent 2.0.4-alpha.
+.Interface
+[code,C]
+-----
+int event_base_update_cache_time(struct event_base *base);
+-----
+
+It returns 0 on success and -1 on failure, and has no effect if the base was
+not running its event loop.
+
+The event_base_gettimeofday_cached() function was new in Libevent
+2.0.4-alpha.  Libevent 2.1.1-alpha added event_base_update_cache_time().
+
 
 Dumping the event_base status
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

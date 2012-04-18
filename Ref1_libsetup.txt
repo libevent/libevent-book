@@ -94,8 +94,28 @@ uses bufferevents to send warning messages to a network socket, you are
 likely to run into strange and hard-to-diagnose bugs.  This restriction may
 be removed for some functions in a future version of Libevent.
 
+Ordinarily, debug logs are not enabled, and are not sent to the logging
+callback.  You can turn them on manually, if Libevent was built to support
+them.
+
+.Interface
+[code,C]
+-----
+#define EVENT_DBG_NONE 0
+#define EVENT_DBG_ALL 0xffffffffu
+
+void event_enable_debug_logging(ev_uint32_t which);
+-----
+
+Debugging logs are verbose, and not necessarily useful under most
+circumstances.  Calling event_enable_debug_logging() with EVENT_DBG_NONE gets
+default behavior; calling it with EVENT_DBG_ALL turns on all the supported
+debugging logs.  More fine-grained options may be supported in future
+versions.
+
 These functions are declared in <event2/event.h>.  They first appeared in
-Libevent 1.0c.
+Libevent 1.0c, except for event_enable_debug_logging(), which first appeared
+in Libevent 2.1.1-alpha.
 
 .COMPATIBILITY NOTE
 Before Libevent 2.0.19-stable, the EVENT_LOG_* macros had names that began
@@ -668,4 +688,34 @@ check_version_match(void)
 The macros and functions in this section are defined in
 <event2/event.h>.  The event_get_version() function first appeared in
 Libevent 1.0c; the others first appeared in Libevent 2.0.1-alpha.
+
+
+Freeing global Libevent structures
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Even when you've freed all the objects that you allocated with Libevent,
+there will be a few globally allocated structures left over.  This isn't
+usually a problem: once the process exits, they will all get cleaned up
+anyway.  But having these structures can confuse some debugging tools into
+thinking that Libevent is leaking resources.  If you need to make sure that
+Libevent has released all internal library-global data structures, you can
+call:
+
+.Interface
+[Code,C]
+--------
+void libevent_global_shutdown(void);
+--------
+
+This function doesn't free any structures that were returned to you by a
+Libevent function.  If you want to free everything before exiting, you'll
+need to free all events, event_bases, bufferevents, and so on yourself.
+
+Calling libevent_global_shutdown() will make other Libevent functions behave
+unpredictably; don't call it except as the last Libevent function your
+program invokes.  One exception is that libevent_global_shutdown() is
+idempotent: it is okay to call it even if it has already been called.
+
+This function is declared in <event2/event.h>. It was introduced in Libevent
+2.1.1-alpha.
 

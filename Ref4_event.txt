@@ -175,6 +175,60 @@ timeout of five seconds, the event will become active:
   - Whenever five seconds have passed since the event last became
     active.
 
+
+Creating an event as its own callback argument
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Frequently, you might want to create an event that receives itself as a
+callback argument.  You can't just pass a pointer to the event as an argument
+to event_new(), though, because .  To solve this problem, you can use
+event_self_cbarg().
+
+.Interface
+[code,C]
+-----
+void *event_self_cbarg();
+-----
+
+The event_self_cbarg() function returns a "magic" pointer which, when passed
+as an event callback argument, tells event_new() to create an event receiving
+itself as its callback argument.
+
+.Example
+[code,C]
+--------
+#include <event2/event.h>
+
+static int n_calls = 0;
+
+void cb_func(evutil_socket_t fd, short what, void *arg)
+{
+    struct event *me = arg;
+
+    printf("cb_func called %d times so far.\n", ++n_calls);
+
+    if (n_calls > 100)
+       event_del(me);
+}
+
+void run(struct event_base *base)
+{
+    struct timeval one_sec = { 1, 0 };
+    struct *ev;
+    /* We're going to set up a repeating timer to get called called 100
+       times. */
+    ev = event_new(base, -1, EV_PERSIST, cb_func, event_self_cbarg());
+    event_add(ev, &one_sec);
+    event_base_dispatch(base);
+}
+--------
+
+This function can also be used with event_new(), evtimer_new(),
+evsignal_new(), event_assign(), evtimer_assign(), and evsignal_assign().  It
+won't work as a callback argument for non-events, however.
+
+The event_self_cbarg() function was introduced in Libevent 2.1.1-alpha.
+
 Timeout-only events
 ^^^^^^^^^^^^^^^^^^^
 
@@ -606,6 +660,25 @@ function has existed since Libevent 0.1.  Libevent 2.0.1-alpha
 introduced event_get_fd() and event_get_signal().  Libevent 2.0.2-alpha
 introduced event_get_base().  The others were new in Libevent
 2.0.4-alpha.
+
+Finding the currently running event
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+For debugging or other purposes, you can get a pointer to the currently
+running event.
+
+.Interface
+[code,C]
+-----
+struct event *event_base_get_running_event(struct event_base *base);
+-----
+
+Note that this function's behavior is only defined when it's called from
+within the provided event_base's loop.  Calling it from another thread is not
+supported, and can cause undefined behavior.
+
+This function is declared in <event2/event.h>.  It was introduced in Libevent
+2.1.1-alpha.
 
 Configuring one-off events
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
