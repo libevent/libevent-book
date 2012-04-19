@@ -152,6 +152,35 @@ it.
 
 // TODO: Write a couple of examples.
 
+Limiting maximum single read/write size
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+By default, bufferevents won't read or write the maximum possible amount
+of bytes on each invocation of the event loop; doing so can lead to
+weird unfair behaviors and resource starvation.  On the other hand, the
+defaults might not be reasonable for all situations.
+
+.Interface
+[code,C]
+-----
+int bufferevent_set_max_single_read(struct bufferevent *bev, size_t size);
+int bufferevent_set_max_single_write(struct bufferevent *bev, size_t size);
+
+ev_ssize_t bufferevent_get_max_single_read(struct bufferevent *bev);
+ev_ssize_t bufferevent_get_max_single_write(struct bufferevent *bev);
+-----
+
+The two "set" functions replace the current read and write maxima
+respectively.  If the 'size' value is 0 or above EV_SSIZE_MAX, they
+instead set the maxima to the default value.  These functions return 0
+on success and -1 on failure.
+
+The two "get" functions return the current per-loop read and write
+maxima respectively.
+
+These functions were added in 2.1.1-alpha.
+
+
 Bufferevents and Rate-limiting
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -526,7 +555,26 @@ int bufferevent_ssl_renegotiate(struct bufferevent *bev);
 Calling this function tells the SSL to renegotiate, and the bufferevent to
 invoke appropriate callbacks.  This is an advanced topic; you should
 generally avoid it unless you really know what you're doing, especially since
-many SSL versions have had known security issues related to renegotiation.
+many SSL versions have had known security issues related to
+renegotiation.
+
+.Interface
+[code,C]
+-----
+int bufferevent_openssl_get_allow_dirty_shutdown(struct bufferevent *bev);
+void bufferevent_openssl_set_allow_dirty_shutdown(struct bufferevent *bev,
+    int allow_dirty_shutdown);
+-----
+
+All good versions of the SSL protocol (that is, SSLv3 and all TLS
+versions) support an authenticated shutdown operation that enables the
+parties to distinguish an intentional close from an accidental or
+maliciously induced termination in the underling buffer.  By default, we
+treat anything besides a proper shutdown as an error on the connection.
+If the allow_dirty_shutdown flag is set to 1, however, we treat a close
+in the connection as a BEV_EVENT_EOF.
+
+The allow_dirty_shutdown functions were added in Libevent 2.1.1-alpha.
 
 .Example: A simple SSL-based echo server
 [code,C]

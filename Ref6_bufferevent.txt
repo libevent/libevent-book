@@ -389,6 +389,12 @@ typedef void (*bufferevent_event_cb)(struct bufferevent *bev,
 void bufferevent_setcb(struct bufferevent *bufev,
     bufferevent_data_cb readcb, bufferevent_data_cb writecb,
     bufferevent_event_cb eventcb, void *cbarg);
+
+void bufferevent_getcb(struct bufferevent *bufev,
+    bufferevent_data_cb *readcb_ptr,
+    bufferevent_data_cb *writecb_ptr,
+    bufferevent_event_cb *eventcb_ptr,
+    void **cbarg_ptr);
 --------
 
 The bufferevent_setcb() function changes one or more of the callbacks
@@ -405,9 +411,15 @@ You can disable a callback by passing NULL instead of the callback
 function.  Note the all callback functions on a bufferevent share a
 single 'cbarg' value, so changing it will affect all of them.
 
-This function was introduced in Libevent 1.4.4.  The type names
-"bufferevent_data_cb" and "bufferevent_event_cb" are new in Libevent
-2.0.2-alpha.
+You can retrieve the currently set callbacks for a bufferevent by passing
+pointers to bufferevent_getcb(), which sets *readcb_ptr to the current read
+callback, *writecb_ptr to the current write callback, *eventcb_ptr to the
+current event callback, and *cbarg_ptr to the current callback argument
+field.  Any of these pointers set to NULL will be ignored.
+
+The bufferevent_setcb() function was introduced in Libevent 1.4.4.  The type
+names "bufferevent_data_cb" and "bufferevent_event_cb" were new in Libevent
+2.0.2-alpha.  The bufferevent_getcb() functino was added in 2.1.1-alpha.
 
 .Interface
 [code,C]
