@@ -287,6 +287,9 @@ evbuffer_pullup() would do.)
 [code,C]
 --------
 ev_ssize_t evbuffer_copyout(struct evbuffer *buf, void *data, size_t datlen);
+ev_ssize_t evbuffer_copyout_from(struct evbuffer *buf,
+     const struct evbuffer_ptr *pos,
+     void *data_out, size_t datlen);
 --------
 
 The evbuffer_copyout() behaves just like evbuffer_remove(), but does not
@@ -295,6 +298,11 @@ bytes from the front of 'buf' into the memory at 'data'.  If there are
 fewer than 'datlen' bytes available, the function copies all the bytes
 there are.  The return value is -1 on failure, and is otherwise the
 number of bytes copied.
+
+The evbuffer_copyout_from() function behaves like evbuffer_copyout(), but
+instead of copying bytes from the front of the buffer, it copies them
+beginning at the position provided in 'pos'.  See "Searching within an
+evbuffer" below for information on the evbuffer_ptr structure.
 
 If copying data from the buffer is too slow, use evbuffer_peek() instead.
 
@@ -342,7 +350,8 @@ int get_record(struct evbuffer *buf, size_t *size_out, char **record_out)
 }
 --------
 
-This function first appeared in Libevent 2.0.5-alpha.
+The evbuffer_copyout() function first appeared in Libevent 2.0.5-alpha;
+evbuffer_copyout_from() was added in Libevent 2.1.1-alpha.
 
 Line-oriented input
 ~~~~~~~~~~~~~~~~~~~
@@ -354,7 +363,8 @@ enum evbuffer_eol_style {
         EVBUFFER_EOL_ANY,
         EVBUFFER_EOL_CRLF,
         EVBUFFER_EOL_CRLF_STRICT,
-        EVBUFFER_EOL_LF
+        EVBUFFER_EOL_LF,
+        EVBUFFER_EOL_NUL
 };
 char *evbuffer_readln(struct evbuffer *buffer, size_t *n_read_out,
     enum evbuffer_eol_style eol_style);
@@ -391,6 +401,10 @@ EVBUFFER_EOL_ANY::
     and linefeed characters.  This format is not very useful; it
     exists mainly for backward compatibility.
 
+EVBUFFER_EOL_NUL::
+    The end of line is a single byte with the value 0 -- that is,
+    an ASCII NUL.
+
 (Note that if you used event_set_mem_functions() to override the
 default malloc, the string returned by evbuffer_readln will be
 allocated by the malloc-replacement you specified.)
@@ -414,7 +428,7 @@ if (!request_line) {
 --------
 
 The evbuffer_readln() interface is available in Libevent 1.4.14-stable and
-later.
+later.  EVBUFFER_EOL_NUL was added in Libevent 2.1.1-alpha.
 
 Searching within an evbuffer
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1033,10 +1047,15 @@ void spool_resource_to_evbuffer(struct evbuffer *buf,
 
 --------
 
+The evbuffer_add_reference() function has had is present
+interface since 2.0.2-alpha.
+
+Adding a file to an evbuffer
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Some operating systems provide ways to write files to the network
 without ever copying the data to userspace.  You can access these
-mechanisms, where available, with:
+mechanisms, where available, with the simple interface:
 
 .Interface
 [code,C]
@@ -1052,12 +1071,12 @@ reading.  It adds 'length' bytes from the file, starting at position
 failure.
 
 .WARNING
-As of Libevent 2.0.2-alpha, the only reliable thing to do with data
-added this way is to send it to the network with evbuffer_write*(),
+In Libevent 2.0.x, the only reliable thing to do with data
+added this way was to send it to the network with evbuffer_write*(),
 drain it with evbuffer_drain(), or move it to another evbuffer with
-evbuffer_*_buffer().  You can't reliably extract it from the buffer
+evbuffer_*_buffer().  You couldn't reliably extract it from the buffer
 with evbuffer_remove(), linearize it with evbuffer_pullup(), and so
-on.
+on.  Libevent 2.1.x tries to fix this limitation.
 
 If your operating system supports splice() or sendfile(), Libevent
 will use it to send data from 'fd' to the network directly when call
@@ -1068,11 +1087,103 @@ to copy the data to userspace.  Otherwise, Libevent will just read the
 data from disk into RAM.
 
 The file descriptor will be closed after the data is flushed from the
-evbuffer, or when the evbuffer is freed.
+evbuffer, or when the evbuffer is freed.  If that's not what you want, or if
+you want finer-grained control over the file, see the file_segment
+functionality below.
 
-Both functions in this section were introduced in Libevent
-2.0.1-alpha.  The evbuffer_add_reference() function has had is present
-interface since 2.0.2-alpha.
+This function was introduced in Libevent 2.0.1-alpha.
+
+Fine-grained control with file segments
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The evbuffer_add_file() interface is inefficient for adding the same file
+more than once, since it takes ownership of the file.
+
+.Interface
+[code,C]
+-----
+struct evbuffer_file_segment;
+
+struct evbuffer_file_segment *evbuffer_file_segment_new(
+	int fd, ev_off_t offset, ev_off_t length, unsigned flags);
+void evbuffer_file_segment_free(struct evbuffer_file_segment *seg);
+int evbuffer_add_file_segment(struct evbuffer *buf,
+    struct evbuffer_file_segment *seg, ev_off_t offset, ev_off_t length);
+-----
+
+The evbuffer_file_segment_new() function creates and returns a new
+evbuffer_file_segment object to represent a piece of the underlying file
+stored in 'fd' that begins at 'offset' and contains 'length' bytes.  On
+error, it return NULL.
+
+File segments are implemented with sendfile, splice, mmap, CreateFileMapping,
+or malloc()-and-read(), as appropriate.  They're created using the most
+lightweight supported mechanism, and transition to a heavier-weight mechanism
+as needed.  (For example, if your OS supports sendfile and mmap, then a file
+segment can be implemented using only sendfile, until you try to actually
+inspect its contents.  At that point, it needs to be mmap()ed.)  You can
+control the fine-grained behavior of a file segment with these flags:
+
+EVBUF_FS_CLOSE_ON_FREE::
+    If this flag is set, freeing the file segment with
+    evbuffer_file_segment_free() will close the underlying file.
+
+EVBUF_FS_DISABLE_MMAP::
+    If this flag is set, the file_segment will never use a mapped-memory
+    style backend (CreateFileMapping, mmap) for this file, even if that would
+    be appropriate.
+
+EVBUF_FS_DISABLE_SENDFILE::
+    If this flag is set, the file_segment will never use a sendfile-style
+    backend (sendfile, splice) for this file, even if that would
+    be appropriate.
+
+EVBUF_FS_DISABLE_LOCKING::
+    If this flag is set, no locks are allocated for the file segment: it
+    won't be safe to use it in any way where it can be seen by multiple
+    threads.
+
+
+Once you have an evbuffer_file_segment, you can add some or all of it to an
+evbuffer using evbuffer_add_file_segment().  The 'offset'
+argument here refers to an offset within the file segment, not to an offset
+within the file itself.
+
+When you no longer want to use a file segment, you can free it with
+evbuffer_file_segment_free().  The actual storage won't be released until no
+evbuffer any longer holds a reference to a piece of the file segment.
+
+These file-segment functions first appeared in Libevent 2.1.1-alpha.
+
+Adding an evbuffer to another by reference
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can also add one evbuffer's to another by reference: rather than removing
+the contents of one buffer and adding them to another, you give one evbuffer
+a reference to another, and it behaves as though you had copied all the
+bytes in.
+
+.Interface
+[code,C]
+-----
+int evbuffer_add_buffer_reference(struct evbuffer *outbuf,
+    struct evbuffer *inbuf);
+-----
+
+The evbuffer_add_buffer_reference() function behaves as though you had copied
+all the data from 'outbuf' to 'inbuf', but does not perform any unnecessary
+copies.  It returns 0 if successful and -1 on failure.
+
+Note that subsequent changes to the contents of 'inbuf' are not reflected in
+'outbuf': this function adds the current contents of the evbuffer by
+reference, not the evbuffer itself.
+
+Note also that you cannot nest buffer references: a buffer that has already
+been the 'outbuf' of one evbuffer_add_buffer_reference call cannot be the
+'inbuf' of another.
+
+This function was introduced in Libevent 2.1.1-alpha.
+
 
 Making an evbuffer add- or remove-only
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
