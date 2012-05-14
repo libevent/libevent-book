@@ -370,6 +370,11 @@ reference-counted, so if the bufferevent has pending deferred
 callbacks when you free it, it won't be deleted until the callbacks
 are done.
 
+The bufferevent_free() function does, however, try to free the
+bufferevent as soon as possible.  If there is pending data to write on
+the bufferevent, it probably won't be flushed before the bufferevent is
+freed.
+
 If the BEV_OPT_CLOSE_ON_FREE flag was set, and this bufferevent has a
 socket or underlying bufferevent associated with it as its transport,
 that transport is closed when you free the bufferevent.
