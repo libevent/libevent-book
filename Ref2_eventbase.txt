@@ -123,7 +123,8 @@ The recognized option values for event_config_set_flag() are:
 EVENT_BASE_FLAG_NOLOCK::
     Do not allocate locks for the event_base. Setting
     this option may save a little time for locking and releasing the
-    event_base, but will make it unsafe to access it from multiple threads.
+    event_base, but will make it unsafe and nonfunctional to access it
+    from multiple threads.
 
 EVENT_BASE_FLAG_IGNORE_ENV::
     Do not check the EVENT_* environment
