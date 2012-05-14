@@ -100,7 +100,10 @@ LEV_OPT_DISABLED::
 LEV_OPT_DEFERRED_ACCEPT::
     If possible, tell the kernel to not announce sockets as having been
     accepted until some data has been received on them, and they are ready
-    for reading. Not all operating systems support this option: on ones that
+    for reading. Do not use this option if your protocol
+    _doesn't_ start out with the client transmitting data, since in that case
+    this option will sometimes cause the kernel to never tell you about the
+    connection. Not all operating systems support this option: on ones that
     don't, this option has no effect.  New in Libevent 2.1.1-alpha.
 
 The connection listener callback
