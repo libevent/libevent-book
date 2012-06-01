@@ -214,7 +214,7 @@ void cb_func(evutil_socket_t fd, short what, void *arg)
 void run(struct event_base *base)
 {
     struct timeval one_sec = { 1, 0 };
-    struct *ev;
+    struct event *ev;
     /* We're going to set up a repeating timer to get called called 100
        times. */
     ev = event_new(base, -1, EV_PERSIST, cb_func, event_self_cbarg());

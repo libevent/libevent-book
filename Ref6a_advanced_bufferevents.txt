@@ -576,6 +576,7 @@ in the connection as a BEV_EVENT_EOF.
 
 The allow_dirty_shutdown functions were added in Libevent 2.1.1-alpha.
 
+//BUILD: SKIP
 .Example: A simple SSL-based echo server
 [code,C]
 --------

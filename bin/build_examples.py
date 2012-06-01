@@ -182,11 +182,11 @@ def getCodeBlocks(fname, outputDir):
     return filelist
 
 CC=os.environ.get("CC", "gcc")
-CFLAGS=os.environ.get("LEBOOK_CFLAGS", "-Wall").split()
+CFLAGS=os.environ.get("LEBOOK_CFLAGS", "").split()
 
 def build(fname):
     "Build a C file 'fname'."
-    command = [CC, "-c", "-o", "tmp.o" ]
+    command = [CC, "-Wall", "-c", "-o", "tmp.o" ]
     command.extend(CFLAGS)
     command.append(fname)
     print " ".join(command)
