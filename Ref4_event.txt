@@ -373,7 +373,7 @@ struct event_pair *event_pair_new(struct event_base *base, evutil_socket_t fd)
         if (!p) return NULL;
         p->fd = fd;
         event_assign(&p->read_event, base, fd, EV_READ|EV_PERSIST, readcb, p);
-        event_assign(&p->read_event, base, fd, EV_WRITE|EV_PERSIST, writecb, p);
+        event_assign(&p->write_event, base, fd, EV_WRITE|EV_PERSIST, writecb, p);
         return p;
 }
 --------
