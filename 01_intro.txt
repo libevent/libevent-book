@@ -170,7 +170,7 @@ while (i_still_want_to_read()) {
     /* Add all of the interesting fds to readset */
     for (i=0; i < n_sockets; ++i) {
          if (fd[i]>maxfd) maxfd = fd[i];
-         FD_SET(i, &readset);
+         FD_SET(fd[i], &readset);
     }
 
     /* Wait until one or more fds are ready to read */
