@@ -412,7 +412,7 @@ EVTHREAD_WRITE::
         writing.
 
 EVTHREAD_TRY::
-        For locking only: acquire the lock only if the lock can't be
+        For locking only: acquire the lock only if the lock can be
         acquired immediately.
 
 The id_fn argument must be a function returning an unsigned long
