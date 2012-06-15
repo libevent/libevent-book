@@ -133,7 +133,7 @@ EVENT_BASE_FLAG_IGNORE_ENV::
     between your program and Libevent.
 
 EVENT_BASE_FLAG_STARTUP_IOCP::
-    On Window only, this flag makes Libevent
+    On Windows only, this flag makes Libevent
     enable any necessary IOCP dispatch logic on startup, rather than
     on-demand.
 
