@@ -702,7 +702,7 @@ Libevent has released all internal library-global data structures, you can
 call:
 
 .Interface
-[Code,C]
+[code,C]
 --------
 void libevent_global_shutdown(void);
 --------

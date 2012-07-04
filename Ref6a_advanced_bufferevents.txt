@@ -99,7 +99,7 @@ struct bufferevent *bufferevent_filter_new(struct bufferevent *underlying,
 --------
 
 The bufferevent_filter_new() function creates a new filtering bufferevent,
-wrapped around and existing "underlying" bufferevent.  All data received via
+wrapped around an existing "underlying" bufferevent.  All data received via
 the underlying bufferevent is transformed with the "input" filter before
 arriving at the filtering bufferevent, and all data sent via the filtering
 bufferevent is transformed with an "output" filter before being sent out to

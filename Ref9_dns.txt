@@ -468,10 +468,10 @@ options::
         How many DNS requests do we allow to be pending at once?  (If
         we try to do more requests than this, the extras will stall
         until the earlier ones are answered or time out.)  Defaults to
-        XXX.
+        64.
      attempts:INT;;
         How many times to we re-transmit a DNS request before giving up
-        on it?  Defaults to XXX.
+        on it?  Defaults to 3.
      randomize-case:INT;;
         If nonzero, we randomize the case on outgoing DNS requests and
         make sure that replies have the same case as our requests.  This

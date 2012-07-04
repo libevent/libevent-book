@@ -94,7 +94,7 @@ LEV_OPT_THREADSAFE::
 
 LEV_OPT_DISABLED::
     Initialize the listener to be disabled, not enabled.  You can
-    turn it on manually with evconnlistener_disable(). New in Libevent
+    turn it on manually with evconnlistener_enable(). New in Libevent
     2.1.1-alpha.
 
 LEV_OPT_DEFERRED_ACCEPT::

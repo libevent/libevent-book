@@ -137,7 +137,7 @@ evbuffer_add_printf(buf, "Hello %s %d.%d.%d", "world", 2, 0, 1);
 
 The evbuffer_add() and evbuffer_add_printf() functions were introduced in
 Libevent 0.8; evbuffer_expand() was in Libevent 0.9, and
-evbuffer_add_printf() first appeared in Libevent 1.1.
+evbuffer_add_vprintf() first appeared in Libevent 1.1.
 
 Moving data from one evbuffer to another
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -728,7 +728,7 @@ for (i=0; i<n && n_to_add > 0; ++i) {
    if (len > n_to_add) /* Don't write more than n_to_add bytes. */
       len = n_to_add;
    if (generate_data(v[i].iov_base, len) < 0) {
-      /* If there was a data during data generation, we can just stop
+      /* If there was a problem during data generation, we can just stop
          here; no data will be committed to the buffer. */
       return;
    }
