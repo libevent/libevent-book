@@ -488,6 +488,9 @@ The usual options are accepted; BEV_OPT_CLOSE_ON_FREE makes the SSL object
 and the underlying fd or bufferevent get closed when the openssl bufferevent
 itself is closed.
 
+Once the handshake is complete, the new bufferevent's event callback gets invoked
+with BEV_EVENT_CONNECTED in flags.
+
 If you're creating a socket-based bufferevent and the SSL object already
 has a socket set, you do not need to provide the socket yourself: just pass
 -1.  You can also set the fd later with bufferevent_setfd().
