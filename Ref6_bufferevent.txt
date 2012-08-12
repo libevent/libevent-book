@@ -424,7 +424,7 @@ field.  Any of these pointers set to NULL will be ignored.
 
 The bufferevent_setcb() function was introduced in Libevent 1.4.4.  The type
 names "bufferevent_data_cb" and "bufferevent_event_cb" were new in Libevent
-2.0.2-alpha.  The bufferevent_getcb() functino was added in 2.1.1-alpha.
+2.0.2-alpha.  The bufferevent_getcb() function was added in 2.1.1-alpha.
 
 .Interface
 [code,C]

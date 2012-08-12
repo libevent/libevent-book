@@ -181,8 +181,8 @@ Creating an event as its own callback argument
 
 Frequently, you might want to create an event that receives itself as a
 callback argument.  You can't just pass a pointer to the event as an argument
-to event_new(), though, because .  To solve this problem, you can use
-event_self_cbarg().
+to event_new(), though, because it does not exist yet.  To solve this problem,
+you can use event_self_cbarg().
 
 .Interface
 [code,C]

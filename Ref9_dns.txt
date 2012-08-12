@@ -357,7 +357,7 @@ Otherwise, it leaves the evdns_base empty, with no nameservers or
 options configured.
 
 When you no longer need an evdns_base, you can free it with
-evdns_base_free.  If its 'fail_request' argument is true, it will
+evdns_base_free.  If its 'fail_requests' argument is true, it will
 make all in-flight requests get their callbacks invoked with a
 'canceled' error code before it frees the base.
 
