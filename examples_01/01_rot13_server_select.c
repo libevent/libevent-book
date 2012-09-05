@@ -110,7 +110,7 @@ do_write(int fd, struct fd_state *state)
     }
 
     if (state->n_written == state->buffer_used)
-        state->n_written = state->write_upto = state->buffer_used = 1;
+        state->n_written = state->write_upto = state->buffer_used = 0;
 
     state->writing = 0;
 
@@ -123,7 +123,7 @@ run(void)
     int listener;
     struct fd_state *state[FD_SETSIZE];
     struct sockaddr_in sin;
-    int i, n, maxfd;
+    int i, maxfd;
     fd_set readset, writeset, exset;
 
     sin.sin_family = AF_INET;
@@ -177,7 +177,10 @@ run(void)
             }
         }
 
-        n = select(maxfd+1, &readset, &writeset, &exset, NULL);
+        if (select(maxfd+1, &readset, &writeset, &exset, NULL) < 0) {
+            perror("select");
+            return;
+        }
 
         if (FD_ISSET(listener, &readset)) {
             struct sockaddr_storage ss;
