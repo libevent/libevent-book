@@ -110,7 +110,7 @@ do_write(int fd, struct fd_state *state)
     }
 
     if (state->n_written == state->buffer_used)
-        state->n_written = state->write_upto = state->buffer_used = 1;
+        state->n_written = state->write_upto = state->buffer_used = 0;
 
     state->writing = 0;
 
