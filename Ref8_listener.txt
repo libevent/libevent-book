@@ -29,7 +29,7 @@ void evconnlistener_free(struct evconnlistener *lev);
 
 The two evconnlistener_new*() functions both allocate and return a new
 connection listener object.  A connection listener uses an event_base to
-note when a there is a new TCP connection on a given listener socket.
+note when there is a new TCP connection on a given listener socket.
 When a new connection arrives, it invokes the callback function you give it.
 
 In both functions, the 'base' parameter is an event_base that the listener
