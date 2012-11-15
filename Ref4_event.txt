@@ -704,6 +704,10 @@ Events inserted with event_base_once cannot be deleted or manually
 activated: if you want to be able to cancel an event, create it with the
 regular event_new() or event_assign() interfaces.
 
+Note also that at least up to Libevent 2.0, if the event is never
+triggered, the internal memory used to hold it will never be freed.
+This may be fixed in a later version of Libevent.
+
 Manually activating an event
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
