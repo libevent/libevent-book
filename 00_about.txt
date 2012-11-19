@@ -5,7 +5,7 @@ include::license.txt[]
 About this document
 -------------------
 
-This document will teach you how to use Libevent 2.0 to write fast
+This document will teach you how to use Libevent 2.0 (and later) to write fast
 portable asynchronous network IO programs in C.  We assume:
 
 * That you already know C.

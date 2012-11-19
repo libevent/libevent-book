@@ -479,13 +479,17 @@ If one of these lock errors occurs, Libevent exits with an assertion failure.
 .Interface
 [code,C]
 -----
-void evthread_enable_lock_debuging(void);
+void evthread_enable_lock_debugging(void);
+#define evthread_enable_lock_debuging() evthread_enable_lock_debugging()
 -----
 
 NOTE: This function MUST be called before any locks are created or used.  To
 be safe, call it just after you set your threading functions.
 
-This function is new in Libevent 2.0.4-alpha.
+This function was new in Libevent 2.0.4-alpha with the misspelled name
+"evthread_enable_lock_debuging()."  The spelling was fixed to
+evthread_enable_lock_debugging() in 2.1.2-alpha; both names are currently
+supported.
 
 Debugging event usage
 ~~~~~~~~~~~~~~~~~~~~~

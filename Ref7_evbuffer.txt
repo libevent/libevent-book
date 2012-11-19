@@ -1153,7 +1153,23 @@ When you no longer want to use a file segment, you can free it with
 evbuffer_file_segment_free().  The actual storage won't be released until no
 evbuffer any longer holds a reference to a piece of the file segment.
 
-These file-segment functions first appeared in Libevent 2.1.1-alpha.
+.Interface
+[code,C]
+--------
+typedef void (*evbuffer_file_segment_cleanup_cb)(
+    struct evbuffer_file_segment const *seg, int flags, void *arg);
+
+void evbuffer_file_segment_add_cleanup_cb(struct evbuffer_file_segment *seg,
+	evbuffer_file_segment_cleanup_cb cb, void *arg);
+--------
+
+You can add a callback function to a file segment that will be invoked when
+the final reference to the file segment has been released and the file
+segment is about to get freed.  This callback *must not* attempt to revivify
+the file segment, add it to any buffers, or so on.
+
+These file-segment functions first appeared in Libevent 2.1.1-alpha;
+evbuffer_file_segment_add_cleanup_cb() was added in 2.1.2-alpha.
 
 Adding an evbuffer to another by reference
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

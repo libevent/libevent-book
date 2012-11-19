@@ -490,7 +490,9 @@ Otherwise, 'tv' is the size of the timeout in seconds and
 microseconds.
 
 If you call event_add() on an event that is _already_ pending, it will
-leave it pending, and reschedule it with the provided timeout.
+leave it pending, and reschedule it with the provided timeout.  If the
+event is already pending, and you re-add it with the timeout NULL,
+event_add() will have no effect.
 
 NOTE: Do not set 'tv' to the time at which you want the timeout to
 run.  If you say "tv->tv_sec = time(NULL)+10;" on 1 January 2010, your
@@ -510,8 +512,23 @@ NOTE: If you delete an event after it becomes active but before
 its callback has a chance to execute, the callback will not be
 executed.
 
-These functions are defined in <event2/event.h>; they have existed
-since Libevent 0.1.
+.Interface
+[code,C]
+--------
+int event_remove_timer(struct event *ev);
+---------
+
+Finally, you can remove a pending event's timeout completely without
+deleting its IO or signal components.  If the event had no timeout
+pending, event_remove_timer() has no effect.  If the event had only a
+timeout but no IO or signal component, event_remove_timer() has the
+same effect as event_del(). The return value is 0 on success, -1 on
+failure.
+
+
+These are defined in <event2/event.h>; event_add() and event_del()
+have existed since Libevent 0.1; event_remove_timer() was added in
+2.1.2-alpha.
 
 Events with priorities
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -590,6 +607,7 @@ struct event_base *event_get_base(const struct event *ev);
 short event_get_events(const struct event *ev);
 event_callback_fn event_get_callback(const struct event *ev);
 void *event_get_callback_arg(const struct event *ev);
+int event_get_priority(const struct event *ev);
 
 void event_get_assignment(const struct event *event,
         struct event_base **base_out,
@@ -613,7 +631,8 @@ event_get_base() function returns its configured event_base.  The
 event_get_events() function returns the event flags (EV_READ, EV_WRITE,
 etc) of the event.  The event_get_callback() and
 event_get_callback_arg() functions return the callback function and
-argument pointer.
+argument pointer.  The event_get_priority() function returns the event's
+currently assigned priority.
 
 The event_get_assignment() function copies all of the assigned fields of
 the event into the provided pointers.  If any of the pointers is NULL,
@@ -656,10 +675,10 @@ int replace_callback(struct event *ev, event_callback_fn new_callback,
 ------
 
 These functions are declared in <event2/event.h>.  The event_pending()
-function has existed since Libevent 0.1.  Libevent 2.0.1-alpha
-introduced event_get_fd() and event_get_signal().  Libevent 2.0.2-alpha
-introduced event_get_base().  The others were new in Libevent
-2.0.4-alpha.
+function has existed since Libevent 0.1.  Libevent 2.0.1-alpha introduced
+event_get_fd() and event_get_signal().  Libevent 2.0.2-alpha introduced
+event_get_base(). Libevent 2.1.2-alpha added event_get_priority().  The
+others were new in Libevent 2.0.4-alpha.
 
 Finding the currently running event
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -704,9 +723,12 @@ Events inserted with event_base_once cannot be deleted or manually
 activated: if you want to be able to cancel an event, create it with the
 regular event_new() or event_assign() interfaces.
 
-Note also that at least up to Libevent 2.0, if the event is never
-triggered, the internal memory used to hold it will never be freed.
-This may be fixed in a later version of Libevent.
+Note also that at up to Libevent 2.0, if the event is never triggered, the
+internal memory used to hold it will never be freed.  Starting in Libevent
+2.1.2-alpha, these events _are_ freed when the event_base is freed, even if
+they haven't activated, but still be aware: if there's some storage
+associated with their callback arguments, that storage won't be released
+unless your program has done something to track and release it.
 
 Manually activating an event
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~

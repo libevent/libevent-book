@@ -198,6 +198,28 @@ These functions are declared in <event2/event.h>.  The event_break_loopexit()
 function was first implemented in Libevent 1.0c; event_break_loopbreak() was
 first implemented in Libevent 1.4.3.
 
+Re-checking for events
+~~~~~~~~~~~~~~~~~~~~~~
+
+Ordinarily, Libevent checks for events, then runs all the active events
+with the highest priority, then checks for events again, and so on.  But
+sometimes you might want to stop Libevent right after the current
+callback has been run, and tell it to scan again.  By analogy to
+event_base_loopbreak(), you can do this with the function
+event_base_loopcontinue().
+
+.Interface
+[code,C]
+--------
+int event_base_loopcontinue(struct event_base *);
+--------
+
+Calling event_base_loopcontinue() has no effect if we aren't currently
+running event callbacks.
+
+This function was introduced in Libevent 2.1.2-alpha.
+
+
 Checking the internal time cache
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -256,6 +278,42 @@ The list is meant to be human-readable; its format *will* change in future
 versions of Libevent.
 
 This function was introduced in Libevent 2.0.1-alpha.
+
+Running a function over every event in an event_base
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.Interface
+[code,C]
+--------
+typedef int (*event_base_foreach_event_cb)(const struct event_base *,
+    const struct event *, void *);
+
+int event_base_foreach_event(struct event_base *base,
+                             event_base_foreach_event_cb fn,
+                             void *arg);
+--------
+
+You can use event_base_foreach_event() to iterate over every currently
+active or pending event associated with an event_base().  The provided
+callback will be invoked exactly once per event, in an unspecified
+order.  The third argument of event_base_foreach_event() will be passed
+as the third argument to each invocation of the callback.
+
+The callback function must return 0 to continue iteration, or some other
+integer to stop iterating. Whatever value the callback function finally
+returns will then be returned by event_base_foreach_function().
+
+Your callback function *must not* modify any of the events that it
+receives, or add or remove any events to the event base, or otherwise
+modify any event associated with the event base, or undefined behavior
+can occur, up to or including crashes and heap-smashing.
+
+The event_base lock will be held for the duration of the call to
+event_base_foreach_event() -- this will block other threads from doing
+anything useful with the event_base, so make sure that your callback
+doesn't take a long time.
+
+This function was added in Libevent 2.1.2-alpha.
 
 Obsolete event loop functions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
