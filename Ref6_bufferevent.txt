@@ -322,7 +322,7 @@ int bufferevent_socket_get_dns_error(struct bufferevent *bev);
 This function resolves the DNS name 'hostname', looking for addresses of type
 'family'.  (Allowable family types are AF_INET, AF_INET6, and AF_UNSPEC.)  If
 the name resolution fails, it invokes the event callback with an error event.
-If it succeeds, it launches a resolution attempt just as bufferevent_connect
+If it succeeds, it launches a connection attempt just as bufferevent_connect
 would.
 
 The dns_base argument is optional.  If it is NULL, then Libevent blocks while
@@ -424,7 +424,7 @@ field.  Any of these pointers set to NULL will be ignored.
 
 The bufferevent_setcb() function was introduced in Libevent 1.4.4.  The type
 names "bufferevent_data_cb" and "bufferevent_event_cb" were new in Libevent
-2.0.2-alpha.  The bufferevent_getcb() functino was added in 2.1.1-alpha.
+2.0.2-alpha.  The bufferevent_getcb() function was added in 2.1.1-alpha.
 
 .Interface
 [code,C]
@@ -708,7 +708,11 @@ void bufferevent_set_timeouts(struct bufferevent *bufev,
     const struct timeval *timeout_read, const struct timeval *timeout_write);
 --------
 
-Setting a timeout to NULL removes it.
+Setting a timeout to NULL is supposed to remove it; however before Libevent
+2.1.2-alpha this wouldn't work with all event types.  (As a workaround for
+older versions, you can try setting the timeout to a multi-day interval
+and/or having your eventcb function ignore BEV_TIMEOUT events when you don't
+want them.)
 
 The read timeout will trigger if the bufferevent waits at least
 'timeout_read' seconds while trying to read read.  The write
@@ -770,6 +774,7 @@ types.
 [code,C]
 --------
 int bufferevent_priority_set(struct bufferevent *bufev, int pri);
+int bufferevent_get_priority(struct bufferevent *bufev);
 --------
 
 This function adjusts the priority of the events used to implement
@@ -779,7 +784,8 @@ priorities.
 This function returns 0 on success, and -1 on failure.  It works on
 socket-based bufferevents only.
 
-This function was introduced in Libevent 1.0.
+The bufferevent_priority_set() function was introduced in Libevent 1.0;
+bufferevent_get_priority() didn't appear until Libevent 2.1.2-alpha. 
 
 .Interface
 [code,C]

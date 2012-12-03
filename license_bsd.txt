@@ -2,7 +2,7 @@ This license applies to the example source code in the book,
    "Fast Portable non-blocking network programming in Libevent."
 The book itself is NOT under this license.
 
-Copyright 2009-2010 Nick Mathewson
+Copyright 2009-2012 Nick Mathewson
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are

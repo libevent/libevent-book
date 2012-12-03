@@ -99,7 +99,7 @@ struct bufferevent *bufferevent_filter_new(struct bufferevent *underlying,
 --------
 
 The bufferevent_filter_new() function creates a new filtering bufferevent,
-wrapped around and existing "underlying" bufferevent.  All data received via
+wrapped around an existing "underlying" bufferevent.  All data received via
 the underlying bufferevent is transformed with the "input" filter before
 arriving at the filtering bufferevent, and all data sent via the filtering
 bufferevent is transformed with an "output" filter before being sent out to
@@ -487,6 +487,9 @@ BUFFEREVENT_SSL_OPEN if the SSL handshake is done.
 The usual options are accepted; BEV_OPT_CLOSE_ON_FREE makes the SSL object
 and the underlying fd or bufferevent get closed when the openssl bufferevent
 itself is closed.
+
+Once the handshake is complete, the new bufferevent's event callback gets invoked
+with BEV_EVENT_CONNECTED in flags.
 
 If you're creating a socket-based bufferevent and the SSL object already
 has a socket set, you do not need to provide the socket yourself: just pass

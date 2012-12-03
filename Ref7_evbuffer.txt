@@ -137,7 +137,7 @@ evbuffer_add_printf(buf, "Hello %s %d.%d.%d", "world", 2, 0, 1);
 
 The evbuffer_add() and evbuffer_add_printf() functions were introduced in
 Libevent 0.8; evbuffer_expand() was in Libevent 0.9, and
-evbuffer_add_printf() first appeared in Libevent 1.1.
+evbuffer_add_vprintf() first appeared in Libevent 1.1.
 
 Moving data from one evbuffer to another
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -728,7 +728,7 @@ for (i=0; i<n && n_to_add > 0; ++i) {
    if (len > n_to_add) /* Don't write more than n_to_add bytes. */
       len = n_to_add;
    if (generate_data(v[i].iov_base, len) < 0) {
-      /* If there was a data during data generation, we can just stop
+      /* If there was a problem during data generation, we can just stop
          here; no data will be committed to the buffer. */
       return;
    }
@@ -1153,7 +1153,23 @@ When you no longer want to use a file segment, you can free it with
 evbuffer_file_segment_free().  The actual storage won't be released until no
 evbuffer any longer holds a reference to a piece of the file segment.
 
-These file-segment functions first appeared in Libevent 2.1.1-alpha.
+.Interface
+[code,C]
+--------
+typedef void (*evbuffer_file_segment_cleanup_cb)(
+    struct evbuffer_file_segment const *seg, int flags, void *arg);
+
+void evbuffer_file_segment_add_cleanup_cb(struct evbuffer_file_segment *seg,
+	evbuffer_file_segment_cleanup_cb cb, void *arg);
+--------
+
+You can add a callback function to a file segment that will be invoked when
+the final reference to the file segment has been released and the file
+segment is about to get freed.  This callback *must not* attempt to revivify
+the file segment, add it to any buffers, or so on.
+
+These file-segment functions first appeared in Libevent 2.1.1-alpha;
+evbuffer_file_segment_add_cleanup_cb() was added in 2.1.2-alpha.
 
 Adding an evbuffer to another by reference
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
