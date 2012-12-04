@@ -751,16 +751,21 @@ Warning: calling event_active() recursively on the same event may result in
 resource exhaustion. The following snippet of code is an example of how
 event_active can be used incorrectly.
 
+.Bad Example: making an infinite loop with event_active()
 [code,C]
 --------
-struct event * ev;
+struct event *ev;
 
-static void cb(int sock, short which, void * arg) {
+static void cb(int sock, short which, void *arg) {
+        /* Whoops: Calling event_active on the same event unconditionally
+           from within its callback means that no other events might not get
+           run! */
+
 	event_active(ev, EV_WRITE, 0);
 }
 
 int main(int argc, char **argv) {
-	struct event_base * base = event_base_new();
+	struct event_base *base = event_base_new();
 
 	ev = event_new(base, -1, EV_PERSIST | EV_READ, cb, NULL);
 
@@ -774,8 +779,8 @@ int main(int argc, char **argv) {
 }
 --------
 
-This creates a situation where the event loop is only executed once and calls the
-function "cb" forever.
+This creates a situation where the event loop is only executed once and calls
+the function "cb" forever.
 
 This function is defined in <event2/event.h>.  It has existed
 since Libevent 0.3.
