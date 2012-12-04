@@ -747,6 +747,36 @@ This function makes an event 'ev' become active with the flags 'what'
 not need to have previously been pending, and activating it does not
 make it pending.
 
+Warning: calling event_active() recursively on the same event may result in
+resource exhaustion. The following snippet of code is an example of how
+event_active can be used incorrectly.
+
+[code,C]
+--------
+struct event * ev;
+
+static void cb(int sock, short which, void * arg) {
+	event_active(ev, EV_WRITE, 0);
+}
+
+int main(int argc, char **argv) {
+	struct event_base * base = event_base_new();
+
+	ev = event_new(base, -1, EV_PERSIST | EV_READ, cb, NULL);
+
+	event_add(ev, NULL);
+
+	event_active(ev, EV_WRITE, 0);
+
+	event_base_loop(base, 0);
+
+	return 0;
+}
+--------
+
+This creates a situation where the event loop is only executed once and calls the
+function "cb" forever.
+
 This function is defined in <event2/event.h>.  It has existed
 since Libevent 0.3.
 
