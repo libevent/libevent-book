@@ -140,7 +140,7 @@ the corresponding condition happens.  (This is true of evbuffer
 callbacks too; we'll get to those later.)  This immediate invocation
 can make trouble when dependencies get complex.  For example, suppose
 that there is a callback that moves data into evbuffer A when it grows
-empty, and another callback that process data out of evbuffer A when
+empty, and another callback that processes data out of evbuffer A when
 it grows full.  Since these calls are all happening on the stack, you
 might risk a stack overflow if the dependency grows nasty enough.
 
@@ -413,7 +413,7 @@ callbacks.  The 'events' argument of the event callback is a bitmask
 of event flags: see "callbacks and watermarks" above.
 
 You can disable a callback by passing NULL instead of the callback
-function.  Note the all callback functions on a bufferevent share a
+function.  Note all the callback functions on a bufferevent share a
 single 'cbarg' value, so changing it will affect all of them.
 
 You can retrieve the currently set callbacks for a bufferevent by passing
