@@ -243,7 +243,7 @@ get_tcp_socket_for_host(const char *hostname, ev_uint16_t port)
 
     /* Look up the hostname. */
     err = evutil_getaddrinfo(hostname, port_buf, &hints, &answer);
-    if (err < 0) {
+    if (err != 0) {
           fprintf(stderr, "Error while resolving '%s': %s",
                   hostname, evutil_gai_strerror(err));
           return -1;
