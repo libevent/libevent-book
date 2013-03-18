@@ -246,8 +246,8 @@ improving the clarity of your code.
     event_add((ev),(tv))
 #define evtimer_del(ev) \
     event_del(ev)
-#define evtimer_pending(ev, what, tv_out) \
-    event_pending((ev), (what), (tv_out))
+#define evtimer_pending(ev, tv_out) \
+    event_pending((ev), EV_TIMEOUT, (tv_out))
 --------
 
 These macros have been present since Libevent 0.6, except for evtimer_new(),
