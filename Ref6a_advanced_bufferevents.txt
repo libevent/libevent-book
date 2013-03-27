@@ -594,6 +594,7 @@ Since OpenSSL uses a myriad of global variables, you must still configure
 OpenSSL to be thread safe. While this process is outside the scope of Libevent,
 this topic comes up enough to warrant discussion.
 
+//BUILD: SKIP
 .Example: A very simple example of how to enable thread safe OpenSSL
 [code,C]
 --------
