@@ -586,4 +586,16 @@ The allow_dirty_shutdown functions were added in Libevent 2.1.1-alpha.
 include::examples_R6a/R6a_ssl_server.c[]
 --------
 
+Some notes on threading and OpenSSL
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+The built in threading mechanisms of Libevent do not cover OpenSSL locking.
+Since OpenSSL uses a myriad of global variables, you must still configure
+OpenSSL to be thread safe. While this process is outside the scope of Libevent,
+this topic comes up enough to warrant discussion.
+
+.Example: A very simple example of how to enable thread safe OpenSSL
+[code,C]
+--------
+include::examples_R6a/R6a_ssl_lock_init.c[]
+--------
