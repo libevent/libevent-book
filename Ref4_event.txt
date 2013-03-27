@@ -751,6 +751,7 @@ Warning: calling event_active() recursively on the same event may result in
 resource exhaustion. The following snippet of code is an example of how
 event_active can be used incorrectly.
 
+//BUILD: INC:event2/event.h
 .Bad Example: making an infinite loop with event_active()
 [code,C]
 --------
