@@ -71,7 +71,7 @@ waits for one connection won't make any of the other connections'
 processes block.
 
 Here's another example program.  It is a trivial server that listens
-for TCP connections on port 47013, reads data from its input one line
+for TCP connections on port 40713, reads data from its input one line
 at a time, and writes out the ROT13 obfuscation of line each as it
 arrives.  It uses the Unix fork() call to create a new process for
 each incoming connection.
