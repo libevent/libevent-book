@@ -351,9 +351,9 @@ void evdns_base_free(struct evdns_base *base, int fail_requests);
 -----
 
 The evdns_base_new() function returns a new evdns_base on success, and
-NULL on failure.  If the 'initialize' argument is true, it tries to
+NULL on failure.  If the 'initialize' argument is 1, it tries to
 configure the DNS base sensibly given your operating system's default.
-Otherwise, it leaves the evdns_base empty, with no nameservers or
+If it is 0, it leaves the evdns_base empty, with no nameservers or
 options configured.
 
 When you no longer need an evdns_base, you can free it with
