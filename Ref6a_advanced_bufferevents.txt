@@ -215,7 +215,7 @@ Setting a rate limit on a bufferevent
 #define EV_RATE_LIMIT_MAX EV_SSIZE_MAX
 struct ev_token_bucket_cfg;
 struct ev_token_bucket_cfg *ev_token_bucket_cfg_new(
-	size_t read_rate, sizee_t read_burst,
+	size_t read_rate, size_t read_burst,
 	size_t write_rate, size_t write_burst,
 	const struct timeval *tick_len);
 void ev_token_bucket_cfg_free(struct ev_token_bucket_cfg *cfg);
@@ -272,7 +272,7 @@ int bufferevent_remove_from_rate_limit_group(struct bufferevent *bev);
 To construct a rate limiting group, call bufferevent_rate_limit_group() with an
 event_base and an initial ev_token_bucket_cfg.  You can add bufferevents to
 the group with bufferevent_add_to_rate_limit_group() and
-bufferevnt_remove_from_rate_limit_group(); these functions return 0 on
+bufferevent_remove_from_rate_limit_group(); these functions return 0 on
 success and -1 on error.
 
 A single bufferevent can be a member of no more than one rate limiting group
