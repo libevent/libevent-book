@@ -522,7 +522,7 @@ int evdns_base_set_option(struct evdns_base *base, const char *option,
 int evdns_base_count_nameservers(struct evdns_base *base);
 -----
 
-The evdns_base_nameserver_sockdaddr_add() function adds a nameserver to an
+The evdns_base_nameserver_sockaddr_add() function adds a nameserver to an
 existing evdns_base by its address.  The 'flags' argument is currently
 ignored, and should be 0 for forward-compatibility.  The function returns 0 on
 success and negative on failure.  (It was added in Libevent 2.0.7-rc.)
