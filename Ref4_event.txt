@@ -783,6 +783,37 @@ int main(int argc, char **argv) {
 This creates a situation where the event loop is only executed once and calls
 the function "cb" forever.
 
+.Alternative solution to the above problem using timers
+
+[code,C]
+--------
+
+struct event * ev;
+struct timeval tv;
+
+static void cb(int sock, short which, void *arg) {
+   if (!evtimer_pending(ev, NULL)) {
+       event_del(ev);
+       evtimer_add(ev, &tv);
+   }
+}
+
+int main(int argc, char **argv) {
+   struct event_base *base = event_base_new();
+
+   tv.tv_sec = 0;
+   tv.tv_usec = 0;
+
+   ev = evtimer_new(evbase, cb, NULL);
+
+   evtimer_add(ev, &tv);
+
+   event_base_loop(base, 0);
+
+   return 0;
+}
+--------
+
 This function is defined in <event2/event.h>.  It has existed
 since Libevent 0.3.
 
