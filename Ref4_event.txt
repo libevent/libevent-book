@@ -781,8 +781,7 @@ int main(int argc, char **argv) {
 --------
 
 This creates a situation where the event loop is only executed once and calls
-the function "cb" forever because it will never drop back into the main event
-loop.
+the function "cb" forever.
 
 .Alternative solution to the above problem using timers
 timers.
