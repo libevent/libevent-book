@@ -784,7 +784,6 @@ This creates a situation where the event loop is only executed once and calls
 the function "cb" forever.
 
 .Alternative solution to the above problem using timers
-timers.
 
 [code,C]
 --------
