@@ -783,12 +783,12 @@ int main(int argc, char **argv) {
 This creates a situation where the event loop is only executed once and calls
 the function "cb" forever.
 
-.Alternative solution to the above problem using timers
-
+//BUILD: INC:event2/event.h
+.Example: Alternative solution to the above problem using timers
 [code,C]
 --------
 
-struct event * ev;
+struct event *ev;
 struct timeval tv;
 
 static void cb(int sock, short which, void *arg) {
@@ -813,6 +813,34 @@ int main(int argc, char **argv) {
    return 0;
 }
 --------
+
+//BUILD: INC:event2/event.h
+.Example: Alternative solution to the above problem using event_config_set_max_dispatch_interval()
+[code,C]
+--------
+struct event *ev;
+
+static void cb(int sock, short which, void *arg) {
+	event_active(ev, EV_WRITE, 0);
+}
+
+int main(int argc, char **argv) {
+        struct event_config *cfg = event_config_new();
+        /* Run at most 16 callbacks before checking for other events. */
+        event_config_set_max_dispatch_interval(cfg, 0, 16);
+	struct event_base *base = event_base_new_with_config(cfg);
+	ev = event_new(base, -1, EV_PERSIST | EV_READ, cb, NULL);
+
+	event_add(ev, NULL);
+
+	event_active(ev, EV_WRITE, 0);
+
+	event_base_loop(base, 0);
+
+	return 0;
+}
+--------
+
 
 This function is defined in <event2/event.h>.  It has existed
 since Libevent 0.3.
