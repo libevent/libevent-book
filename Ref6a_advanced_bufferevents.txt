@@ -510,6 +510,8 @@ Currently the only workaround is to do lazy SSL shutdowns manually. While this
 breaks the TLS RFC, it will make sure that sessions will stay in
 cache once closed. The following code implements this workaround.
 
+//BUILD: SKIP
+.Example
 [code,C]
 --------
 SSL *ctx = bufferevent_openssl_get_ssl(bev);

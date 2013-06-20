@@ -103,9 +103,9 @@ def isExample(line):
             line.startswith(".Deprecated Interface"):
         pass
     elif line.startswith("."):
-        print "Weird label %r"%line
+        print "WARN: Weird label %r"%line
     else:
-        print "No label on code section"
+        print "WARN: No label on code section"
 
     return False
 
