@@ -804,7 +804,7 @@ int main(int argc, char **argv) {
    tv.tv_sec = 0;
    tv.tv_usec = 0;
 
-   ev = evtimer_new(evbase, cb, NULL);
+   ev = evtimer_new(base, cb, NULL);
 
    evtimer_add(ev, &tv);
 
@@ -827,7 +827,7 @@ static void cb(int sock, short which, void *arg) {
 int main(int argc, char **argv) {
         struct event_config *cfg = event_config_new();
         /* Run at most 16 callbacks before checking for other events. */
-        event_config_set_max_dispatch_interval(cfg, 0, 16);
+        event_config_set_max_dispatch_interval(cfg, NULL, 16, 0);
 	struct event_base *base = event_base_new_with_config(cfg);
 	ev = event_new(base, -1, EV_PERSIST | EV_READ, cb, NULL);
 
