@@ -210,11 +210,11 @@ But we're still not done.  Because generating and reading the select()
 bit arrays takes time proportional to the largest fd that you provided
 for select(), the select() call scales terribly when the number of
 sockets is high.  footnote:[On the userspace side, generating and
-reading the bit arrays takes time proportional to the number of fds
-that you provided for select().  But on the kernel side, reading the
-bit arrays takes time proportional to the largest fd in the bit array,
-which tends to be around _the total number of fds in use in the whole
-program_, regardless of how many fds are added to the sets in
+reading the bit arrays can be made to take time proportional to the
+number of fds that you provided for select().  But on the kernel side,
+reading the bit arrays takes time proportional to the largest fd in the
+bit array, which tends to be around _the total number of fds in use in
+the whole program_, regardless of how many fds are added to the sets in
 select().]
 
 Different operating systems have provided different replacement
