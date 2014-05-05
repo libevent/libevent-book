@@ -301,6 +301,8 @@ complete, the bufferevent would report it as a write.
 Note that you only get a BEV_EVENT_CONNECTED event if you launch the
 connect() attempt using bufferevent_socket_connect().  If you call
 connect() on your own, the connection gets reported as a write.
+If you want to call connect() yourself, but still get BEV_EVENT_CONNECTED
+event, call bufferevent_socket_connect(bev, NULL, 0) after connect().
 
 This function was introduced in Libevent 2.0.2-alpha.
 
