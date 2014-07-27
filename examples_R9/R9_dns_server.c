@@ -75,13 +75,13 @@ int main(int argc, char **argv)
 
     server_fd = socket(AF_INET, SOCK_DGRAM, 0);
     if (server_fd < 0)
-        return 1;
+        return 2;
     memset(&listenaddr, 0, sizeof(listenaddr));
     listenaddr.sin_family = AF_INET;
     listenaddr.sin_port = htons(LISTEN_PORT);
     listenaddr.sin_addr.s_addr = INADDR_ANY;
     if (bind(server_fd, (struct sockaddr*)&listenaddr, sizeof(listenaddr))<0)
-        return 1;
+        return 3;
 
     server = evdns_add_server_port_with_base(base, server_fd, 0,
                                              server_callback, NULL);
