@@ -81,7 +81,7 @@ int main(int argc, char **argv)
         hints.ai_socktype = SOCK_STREAM;
         hints.ai_protocol = IPPROTO_TCP;
 
-        if (!(user_data = malloc(sizeof(user_data)))) {
+        if (!(user_data = malloc(sizeof(struct user_data)))) {
             perror("malloc");
             exit(1);
         }
