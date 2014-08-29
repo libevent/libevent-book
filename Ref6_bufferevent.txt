@@ -302,6 +302,11 @@ Note that you only get a BEV_EVENT_CONNECTED event if you launch the
 connect() attempt using bufferevent_socket_connect().  If you call
 connect() on your own, the connection gets reported as a write.
 
+If you want to call connect() yourself, but still get receive a
+BEV_EVENT_CONNECTED event when the connection succeeds, call
+bufferevent_socket_connect(bev, NULL, 0) after connect() returns -1 with
+errno equal to EAGAIN or EINPROGRESS.
+
 This function was introduced in Libevent 2.0.2-alpha.
 
 Launching connections by hostname
