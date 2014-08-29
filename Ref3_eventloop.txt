@@ -36,15 +36,17 @@ more to run, then return.  If EVLOOP_NONBLOCK is set, then
 the loop will not wait for events to trigger: it will only check whether
 any events are ready to trigger immediately, and run their callbacks if so.
 
-Ordinarily, the loop will exit as soon as it has no pending events.  You can
+Ordinarily, the loop will exit as soon as it has no pending or active events.
+You can
 override this behavior by passing the EVLOOP_NO_EXIT_ON_EMPTY flag---for
 example, if you're going to be adding events from some other thread.  If you
 do set EVLOOP_NO_EXIT_ON_EMPTY, the loop will keep running until somebody
 calls event_base_loopbreak(), or calls event_base_loopexit(), or an error
 occurs.
 
-When it is done, event_base_loop() returns 0 if it exited normally, and -1 if
-it exited because of some unhandled error in the backend.
+When it is done, event_base_loop() returns 0 if it exited normally, -1 if
+it exited because of some unhandled error in the backend, and 1 if it exited
+because there were no more pending or active events.
 
 To aid in understanding, here's an approximate summary of the event_base_loop
 algorithm:
