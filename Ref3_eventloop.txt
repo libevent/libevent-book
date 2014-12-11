@@ -62,7 +62,7 @@ while (any events are registered with the loop,
     else
         Wait until at least one event has triggered, and mark it active.
 
-    for (p = 0; p < n_priorities; ++p {
+    for (p = 0; p < n_priorities; ++p) {
        if (any event with priority of p is active) {
           Run all active events with priority of p.
           break; /* Do not run any events of a less important priority */
