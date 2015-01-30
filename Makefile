@@ -30,7 +30,7 @@ all: html examples
 pdf: LibeventBook.pdf
 
 LibeventBook.pdf: *.txt examples*/*.c
-	a2x -f pdf LibeventBook.txt
+	a2x -f pdf LibeventBook.txt --no-xmllint
 
 html: $(GENERATED_HTML)
 
