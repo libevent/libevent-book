@@ -82,7 +82,9 @@ int main(int argc, char **argv)
     listenaddr.sin_addr.s_addr = INADDR_ANY;
     if (bind(server_fd, (struct sockaddr*)&listenaddr, sizeof(listenaddr))<0)
         return 3;
-
+    /*The server will hijack the event loop after receiving the first request if the socket is blocking*/
+    if(evutil_make_socket_nonblocking(server_fd)<0)
+        return 4;
     server = evdns_add_server_port_with_base(base, server_fd, 0,
                                              server_callback, NULL);
 
