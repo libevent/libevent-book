@@ -215,7 +215,7 @@ void run(struct event_base *base)
 {
     struct timeval one_sec = { 1, 0 };
     struct event *ev;
-    /* We're going to set up a repeating timer to get called called 100
+    /* We're going to set up a repeating timer to get called 100
        times. */
     ev = event_new(base, -1, EV_PERSIST, cb_func, event_self_cbarg());
     event_add(ev, &one_sec);
@@ -329,7 +329,7 @@ saves them:
      event is not already in the cache.
 
 Using this method risks breaking binary compatibility with other
-versions of of Libevent, which may have different sizes for the event
+versions of Libevent, which may have different sizes for the event
 structure.
 
 These are _very_ small costs, and do not matter for most applications.

@@ -720,14 +720,14 @@ and/or having your eventcb function ignore BEV_TIMEOUT events when you don't
 want them.)
 
 The read timeout will trigger if the bufferevent waits at least
-'timeout_read' seconds while trying to read read.  The write
+'timeout_read' seconds while trying to read data.  The write
 timeout will trigger if the bufferevent waits at least 'timeout_write'
 seconds while trying to write data.
 
 Note that the timeouts only count when the bufferevent would like to
 read or write.  In other words, the read timeout is not enabled if
 reading is disabled on the bufferevent, or if the input buffer is full
-(at its high-water mark).  Similarly, the write timeout is not enabled if
+(at its high-water mark).  Similarly, the write timeout is not enabled
 if writing is disabled, or if there is no data to write.
 
 When a read or write timeout occurs, the corresponding read or write
