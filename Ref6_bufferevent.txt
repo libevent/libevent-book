@@ -573,8 +573,8 @@ input and output buffers respectively.  For full information on all
 the operations you can perform on an evbuffer type, see the next
 chapter.
 
-Note that the application may only remove (not add) data on the input
-buffer, and may only add (not remove) data from the output buffer.
+Note that the application may only remove (not add) data from the input
+buffer, and may only add (not remove) data to the output buffer.
 
 If writing on the bufferevent was stalled because of too little data
 (or if reading was stalled because of too much), then adding data to
