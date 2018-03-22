@@ -293,7 +293,7 @@ int main_loop(void)
 }
 --------
 
-The bufferevent_base_connect() function was introduced in
+The bufferevent_socket_connect() function was introduced in
 Libevent-2.0.2-alpha.  Before then, you had to manually call
 connect() on your socket yourself, and when the connection was
 complete, the bufferevent would report it as a write.
