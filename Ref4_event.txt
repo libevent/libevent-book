@@ -314,6 +314,30 @@ event_base will receive signals.
 
 The kqueue backend does not have this limitation.
 
+Creating user-triggered events
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Sometimes it's useful to create events which can be activated and
+run later, when all higher-priority events have completed.  Any sort
+of cleanup or garbage-collection would be such an event.  See "Events
+with priorities" for an explanation of setting a lowered priority.
+
+A user-triggered event can be created as:
+
+[code,C]
+--------
+struct event *user = event_new(evbase, -1, 0, user_cb, myhandle);
+--------
+
+Note that no event_add() is required.  It is then 'fired' with:
+
+[code,C]
+--------
+event_active(user, 0, 0);
+--------
+
+The 3rd parameter is not significant for non-signal events.
+
 Setting up events without heap-allocation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
