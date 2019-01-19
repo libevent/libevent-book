@@ -87,7 +87,7 @@ flags set.  Thus, it keeps running until there are no more registered events
 or until event_base_loopbreak() or event_base_loopexit() is called.
 
 These functions are defined in <event2/event.h>.  They have existed since
-Libevent 1.0.
+Libevent 1.0. EVLOOP_NO_EXIT_ON_EMPTY	existed since Libevent 2.1.1-alpha.
 
 Stopping the loop
 ~~~~~~~~~~~~~~~~~
