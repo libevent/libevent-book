@@ -73,7 +73,6 @@ void
 free_fd_state(struct fd_state *state)
 {
     event_free(state->read_event);
-    event_free(state->write_event);
     free(state);
 }
 
@@ -93,21 +92,23 @@ do_read(evutil_socket_t fd, short events, void *arg)
         for (i=0; i < result; ++i)  {
             if (state->buffer_used < sizeof(state->buffer))
                 state->buffer[state->buffer_used++] = rot13_char(buf[i]);
-            if (buf[i] == '\n') {
-                assert(state->write_event);
-                event_add(state->write_event, NULL);
-                state->write_upto = state->buffer_used;
-            }
         }
     }
 
     if (result == 0) {
-        free_fd_state(state);
+        /*
+         * We completed with read, set write_event to echo back to the client.
+         */
+        event_del(state->read_event);
+        assert(state->write_event);
+        event_add(state->write_event, NULL);
+        state->write_upto = state->buffer_used;
     } else if (result < 0) {
         if (errno == EAGAIN) // XXXX use evutil macro
             return;
         perror("recv");
         free_fd_state(state);
+        close(fd);
     }
 }
 
@@ -122,7 +123,9 @@ do_write(evutil_socket_t fd, short events, void *arg)
         if (result < 0) {
             if (errno == EAGAIN) // XXX use evutil macro
                 return;
-            free_fd_state(state);
+            event_free(state->read_event);
+            event_free(state->write_event);
+            free(state);
             return;
         }
         assert(result != 0);
@@ -131,9 +134,11 @@ do_write(evutil_socket_t fd, short events, void *arg)
     }
 
     if (state->n_written == state->buffer_used)
-        state->n_written = state->write_upto = state->buffer_used = 1;
+        state->n_written = state->write_upto = state->buffer_used = 0;
 
-    event_del(state->write_event);
+    event_free(state->read_event);
+    event_free(state->write_event);
+    close(fd);
 }
 
 void
