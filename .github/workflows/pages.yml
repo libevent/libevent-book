@@ -25,6 +25,7 @@ jobs:
         shell: bash
         run: |
           make
+          ln TOC.html index.html
       - uses: actions/upload-pages-artifact@v1
         with:
           path: .
