@@ -49,7 +49,9 @@ inline_examples:
 .SUFFIXES: .txt .html
 
 .txt.html:
+	cp docinfo.html $(basename $<)-docinfo.html
 	$(ASCIIDOC) $<
+	rm $(basename $<)-docinfo.html
 
 00_about.html: license.txt
 01_intro.html: examples_01/*.c license.txt

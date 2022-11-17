@@ -1,3 +1,4 @@
+:docinfo:
 include::license.txt[]
 
 :language: C
