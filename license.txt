@@ -10,5 +10,5 @@ link:license_bsd.html[the license_bsd file] distributed with these documents
 for the full terms.
 
 To get the source for the latest version of this document, install git
-and run "git clone git://github.com/nmathewson/libevent-book.git"
+and run "git clone git://github.com/libevent/libevent-book.git"
 ______________________________
