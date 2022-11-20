@@ -1,10 +1,11 @@
 :docinfo:
+
+About this document
+===================
+
 include::license.txt[]
 
 :language: C
-
-About this document
--------------------
 
 This document will teach you how to use Libevent 2.0 (and later) to write fast
 portable asynchronous network IO programs in C.  We assume:

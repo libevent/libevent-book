@@ -1,10 +1,11 @@
 :docinfo:
+
+Setting up the Libevent library
+===============================
+
 include::license.txt[]
 
 :language: C
-
-Setting up the Libevent library
--------------------------------
 
 Libevent has a few global settings that are shared across the entire
 process.  These affect the entire library.
@@ -14,7 +15,7 @@ other part of the Libevent library.  If you don't, Libevent could wind
 up in an inconsistent state.
 
 Log messages in Libevent
-~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------
 
 Libevent can log internal errors and warnings.  It also logs debugging
 messages if it was compiled with logging support.  By default, these
@@ -126,7 +127,7 @@ for backward compatibility with Libevent 2.0.18-stable and earlier.  They may
 be removed in a future version of Libevent.
 
 Handling fatal errors
-~~~~~~~~~~~~~~~~~~~~~
+---------------------
 
 When Libevent detects a non-recoverable internal error (such as a corrupted
 data structure), its default behavior is to call exit() or abort() to leave the
@@ -159,7 +160,7 @@ in Libevent 2.0.3-alpha.
 
 
 Memory management
-~~~~~~~~~~~~~~~~~
+-----------------
 
 By default, Libevent uses the C library's memory management functions to
 allocate memory from the heap.  You can have Libevent use another memory
@@ -274,7 +275,7 @@ event_set_mem_functions() by checking whether the
 EVENT_SET_MEM_FUNCTIONS_IMPLEMENTED macro is defined.
 
 Locks and threading
-~~~~~~~~~~~~~~~~~~~
+-------------------
 
 As you probably know if you're writing multithreaded programs, it isn't
 always safe to access the same data from multiple threads at the same
@@ -466,7 +467,7 @@ programs built to use the above thread-related functions will not
 run.
 
 Debugging lock usage
-~~~~~~~~~~~~~~~~~~~~
+--------------------
 
 To help debug lock usage, Libevent has an optional "lock debugging"
 feature that wraps its locking calls in order to catch typical lock
@@ -493,7 +494,7 @@ evthread_enable_lock_debugging() in 2.1.2-alpha; both names are currently
 supported.
 
 Debugging event usage
-~~~~~~~~~~~~~~~~~~~~~
+---------------------
 
 There are some common errors in using events that Libevent can detect and
 report for you.  They include:
@@ -589,7 +590,7 @@ These debugging functions were added in Libevent 2.0.4-alpha.
 
 
 Detecting the version of Libevent
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+---------------------------------
 
 New versions of Libevent can add features and remove bugs.  Sometimes
 you'll want to detect the Libevent version, so that you can:
@@ -696,7 +697,7 @@ Libevent 1.0c; the others first appeared in Libevent 2.0.1-alpha.
 
 
 Freeing global Libevent structures
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+----------------------------------
 
 Even when you've freed all the objects that you allocated with Libevent,
 there will be a few globally allocated structures left over.  This isn't

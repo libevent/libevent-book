@@ -1,10 +1,11 @@
 :docinfo:
+
+Creating an event_base
+======================
+
 include::license.txt[]
 
 :language: C
-
-Creating an event_base
-----------------------
 
 Before you can use any interesting Libevent function, you need to allocate
 one or more event_base structures.  Each event_base structure holds a set of
@@ -35,7 +36,7 @@ variable, and so on.  If you want to turn off backends from within the
 program, see notes on event_config_avoid_method() below.
 
 Setting up a default event_base
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-------------------------------
 
 The event_base_new() function allocates and returns a new event base with
 the default settings.  It examines the environment variables and returns
@@ -56,7 +57,7 @@ The event_base_new() function is declared in <event2/event.h>.  It first
 appeared in Libevent 1.4.3.
 
 Setting up a complicated event_base
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------------------
 
 If you want more control over what kind of event_base you get, you need to
 use an event_config.  An event_config is an opaque structure that holds
@@ -269,7 +270,7 @@ The EVENT_BASE_FLAG_PRECISE_TIMER flag first appeared in Libevent
 Everything else in this section first appeared in Libevent 2.0.1-alpha.
 
 Examining an event_base's backend method
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+----------------------------------------
 
 Sometimes you want to see which features are actually available in an
 event_base, or which method it's using.
@@ -342,7 +343,7 @@ call was first available in Libevent 1.4.3.  The others first appeared in
 Libevent 2.0.1-alpha.
 
 Deallocating an event_base
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+--------------------------
 
 When you are finished with an event_base, you can deallocate it with
 event_base_free().
@@ -362,7 +363,7 @@ implemented in Libevent 1.2.
 
 
 Setting priorities on an event_base
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------------------
 
 Libevent supports setting multiple priorities on an event.  By default,
 though, an event_base supports only a single priority level.  You can set the
@@ -415,7 +416,7 @@ was new in Libevent 2.1.1-alpha.
 
 
 Reinitializing an event_base after fork()
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------------------------
 
 Not all event backends persist cleanly after a call to fork().  Thus, if your
 program uses fork() or a related system call in order to start a new process,
@@ -453,7 +454,7 @@ available in Libevent 1.4.3-alpha.
 
 
 Obsolete event_base functions
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------------
 
 Older versions of Libevent relied pretty heavily on the idea of a
 "current" event_base.  The "current" event_base was a global setting

@@ -1,22 +1,23 @@
 :docinfo:
+
+Helper functions and types for Libevent
+=======================================
+
 include::license.txt[]
 
 :language: C
 
 // FIXME: This part incorporates way too many standards by reference.
 
-Helper functions and types for Libevent
----------------------------------------
-
 The <event2/util.h> header defines many functions that you might find
 helpful for implementing portable applications using Libevent.
 Libevent uses these types and functions internally.
 
 Basic types
-~~~~~~~~~~~
+-----------
 
 evutil_socket_t
-^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~
 
 Most everywhere except Windows, a socket is an int, and the operating
 system hands them out in numeric order.  Using the Windows socket API,
@@ -38,7 +39,7 @@ socket() or accept() without risking pointer truncation on Windows.
 This type was introduced in Libevent 2.0.1-alpha.
 
 Standard integer types
-^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~
 
 Often you will find yourself on a C system that missed out on the 21st
 century and therefore does not implement the standard C99
@@ -65,7 +66,7 @@ These types were introduced in Libevent 1.4.0-beta.  The MAX/MIN constants
 first appeared in Libevent 2.0.4-alpha.
 
 Miscellaneous compatibility types
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The ev_ssize_t type is defined to ssize_t (signed size_t) on platforms that
 have one, and to a reasonable default on platforms that don't.  The largest
@@ -91,7 +92,7 @@ the EV_SSIZE_MAX/MIN macros, were added in Libevent 2.0.4-alpha.  The
 ev_off_t type first appeared in Libevent 2.0.9-rc.
 
 Timer portability functions
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+---------------------------
 
 Not every platform defines the standard timeval manipulation functions,
 so we provide our own implementations.
@@ -168,7 +169,7 @@ NOTE: It wasn't safe to use <= or >= with timercmp before Libevent
 1.4.4.
 
 Socket API compatibility
-~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------
 
 This section exists because, for historical reasons, Windows has never
 really implemented the Berkeley sockets API in a nice compatible (and
@@ -269,7 +270,7 @@ These functions were introduced in Libevent 1.4.0-beta, except for
 evutil_make_socket_closeonexec(), which was new in Libevent 2.0.4-alpha.
 
 Portable string manipulation functions
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+--------------------------------------
 
 .Interface
 [code,C]
@@ -298,7 +299,7 @@ The evutil_strtoll() function has been in Libevent since 1.4.2-rc.
 These other functions first appeared in version 1.4.5.
 
 Locale-independent string manipulation functions
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------------------------------
 
 Sometimes, when implementing ASCII-based protocols, you want to manipulate
 strings according to ASCII's notion of character type, regardless of your
@@ -317,7 +318,7 @@ locale.  The evutil_ascii_str[n]casecmp() functions were first exposed in
 Libevent 2.0.3-alpha.
 
 IPv6 helper and portability functions
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-------------------------------------
 
 .Interface
 [code,C]
@@ -383,7 +384,7 @@ These functions were introduced in Libevent 2.0.1-alpha, except for
 evutil_sockaddr_cmp(), which introduced in 2.0.3-alpha.
 
 Structure macro portability functions
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-------------------------------------
 
 .Interface
 [code,C]
@@ -398,7 +399,7 @@ This macro was introduced in Libevent 2.0.1-alpha.  It was buggy in every
 version before Libevent 2.0.3-alpha.
 
 Secure random number generator
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------------
 
 Many applications (including evdns) need a source of hard-to-predict random
 numbers for their security.

@@ -1,10 +1,11 @@
 :docinfo:
+
+Bufferevents: advanced topics
+=============================
+
 include::license.txt[]
 
 :language: C
-
-Bufferevents: advanced topics
------------------------------
 
 This chapter describes some advanced features of Libevent's bufferevent
 implementation that aren't necessary for typical uses.  If you're just
@@ -12,7 +13,7 @@ learning how to use bufferevents, you should skip this chapter for now
 and go on to read link:Ref7_evbuffer.html[the evbuffer chapter].
 
 Paired bufferevents
-~~~~~~~~~~~~~~~~~~~
+-------------------
 
 Sometimes you have a networking program that needs to talk to itself.
 For example, you could have a program written to tunnel user connections
@@ -72,7 +73,7 @@ Bufferevent pairs were new in Libevent 2.0.1-alpha; the
 bufferevent_pair_get_partner() function was introduced in Libevent 2.0.6.
 
 Filtering bufferevents
-~~~~~~~~~~~~~~~~~~~~~~
+----------------------
 
 Sometimes you want to transform all the data passing through a bufferevent
 object.  You could do this to add a compression layer, or wrap a protocol in
@@ -154,7 +155,7 @@ it.
 // TODO: Write a couple of examples.
 
 Limiting maximum single read/write size
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+---------------------------------------
 
 By default, bufferevents won't read or write the maximum possible amount
 of bytes on each invocation of the event loop; doing so can lead to
@@ -183,7 +184,7 @@ These functions were added in 2.1.1-alpha.
 
 
 Bufferevents and Rate-limiting
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------------
 
 Some programs want to limit the amount of bandwidth used for any single
 bufferevent, or for a group of bufferevents.  Libevent 2.0.4-alpha and
@@ -191,7 +192,7 @@ Libevent 2.0.5-alpha added a basic facility to put caps on individual
 bufferevents, or to assign bufferevents to a rate-limited group.
 
 The rate-limiting model
-^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~
 
 Libevent's rate-limiting uses a _token bucket_ algorithm to decide how many
 bytes to read or write at a time.  Every rate-limited object, at any given
@@ -208,7 +209,7 @@ of bytes that will be sent or received in a single burst.  The timing unit
 determines the smoothness of the traffic.
 
 Setting a rate limit on a bufferevent
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .Interface
 [code,C]
@@ -248,7 +249,7 @@ it is NOT currently safe to do this until no bufferevents are using the
 ev_token_bucket_cfg.
 
 Setting a rate limit on a group of bufferevents
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You can assign bufferevents to a 'rate limiting group' if you want to limit
 their total bandwidth usage.
@@ -292,7 +293,7 @@ you care strongly about scheduling fairness, please help out
 with patches for future versions.
 
 Inspecting current rate-limit values
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Sometimes your code may want to inspect the current rate limits that apply
 for a given bufferevent or group.  Libevent provides some functions to do so.
@@ -346,7 +347,7 @@ created, and reset to 0 whenever bufferevent_rate_limit_group_reset_totals()
 is called on a group.
 
 Manually adjusting rate limits
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 For programs with really complex needs, you might want to adjust the current
 values of a token bucket.  You might want to do this, for example, if your
@@ -368,7 +369,7 @@ rate limiting group.  Note that the decrements are signed: if you want to
 increment a bucket, pass a negative value.
 
 Setting the smallest share possible in a rate-limited group
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Frequently, you don't want to divide the bytes available in a rate-limiting
 group up evenly among all bufferevents in every tick.  For example, if you
@@ -401,7 +402,7 @@ introduced.  The function to change them was first exposed in Libevent
 2.0.6-rc.
 
 Limitations of the rate-limiting implementation
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 As of Libevent 2.0, there are some limitations to the rate-limiting
 implementation that you should know.
@@ -433,7 +434,7 @@ implementation that you should know.
 /// TODO: Write an example for rate-limiting
 
 Bufferevents and SSL
-~~~~~~~~~~~~~~~~~~~~
+--------------------
 
 Bufferevents can use the OpenSSL library to implement the SSL/TLS secure
 transport layer.  Because many applications don't need or want to link
@@ -450,7 +451,7 @@ This section is not a tutorial on OpenSSL, SSL/TLS, or cryptography in general.
 These functions are all declared in the header "event2/bufferevent_ssl.h".
 
 Setting up and using an OpenSSL-based bufferevent
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .Interface
 [code,C]
@@ -590,7 +591,7 @@ include::examples_R6a/R6a_ssl_server.c[]
 --------
 
 Some notes on threading and OpenSSL
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The built in threading mechanisms of Libevent do not cover OpenSSL locking.
 Since OpenSSL uses a myriad of global variables, you must still configure

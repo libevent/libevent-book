@@ -1,10 +1,11 @@
 :docinfo:
+
+Working with events
+===================
+
 include::license.txt[]
 
 :language: C
-
-Working with events
--------------------
 
 Libevent's basic unit of operation is the 'event'.  Every event
 represents a set of conditions, including:
@@ -29,7 +30,7 @@ non-pending by 'deleting' it, and you can 'add' a non-pending event to
 make it pending again.
 
 Constructing event objects
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+--------------------------
 
 To create a new event, use the event_new() interface.
 
@@ -112,7 +113,7 @@ appeared in Libevent 2.0.1-alpha.  The event_callback_fn type
 first appeared as a typedef in Libevent 2.0.4-alpha.
 
 The event flags
-^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~
 
 EV_TIMEOUT::
     This flag indicates an event that becomes active after a timeout
@@ -154,7 +155,7 @@ before Libevent 1.0, except for EV_ET, which was introduced in
 Libevent 2.0.1-alpha.
 
 About Event Persistence
-^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~
 
 By default, whenever a pending event becomes active (because its fd is
 ready to read or write, or because its timeout expires), it becomes
@@ -178,7 +179,7 @@ timeout of five seconds, the event will become active:
 
 
 Creating an event as its own callback argument
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Frequently, you might want to create an event that receives itself as a
 callback argument.  You can't just pass a pointer to the event as an argument
@@ -231,7 +232,7 @@ won't work as a callback argument for non-events, however.
 The event_self_cbarg() function was introduced in Libevent 2.1.1-alpha.
 
 Timeout-only events
-^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~
 
 As a convenience, there are a set of macros beginning with evtimer_ that
 you can use in place of the event_* calls to allocate and manipulate
@@ -255,7 +256,7 @@ These macros have been present since Libevent 0.6, except for evtimer_new(),
 which first appeared in Libevent 2.0.1-alpha.
 
 Constructing signal events
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Libevent can also watch for POSIX-style signals.  To construct a
 handler for a signal, use:
@@ -306,7 +307,7 @@ The evsignal_* macros have been present since Libevent 2.0.1-alpha.
 Prior versions called them signal_add(), signal_del(), and so on.
 
 Caveats when working with signals
-+++++++++++++++++++++++++++++++++
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 With current versions of Libevent, with most backends, only one event_base
 per process at a time can be listening for signals.  If you add signal events
@@ -316,7 +317,7 @@ event_base will receive signals.
 The kqueue backend does not have this limitation.
 
 Setting up events without heap-allocation
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 For performance and other reasons, some people like to allocate events
 as a part of a larger structure.  For each use of the event, this
@@ -472,7 +473,7 @@ function was introduced in Libevent 2.0.4-alpha.  The event structure
 itself is defined in <event2/event_struct.h>.
 
 Making events pending and non-pending
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-------------------------------------
 
 Once you have constructed an event, it won't actually do anything
 until you have made it 'pending' by adding it.  You do this with
@@ -532,7 +533,7 @@ have existed since Libevent 0.1; event_remove_timer() was added in
 2.1.2-alpha.
 
 Events with priorities
-~~~~~~~~~~~~~~~~~~~~~~
+----------------------
 
 When multiple events trigger at the same time, Libevent does not
 define any order with respect to when their callbacks will be
@@ -592,7 +593,7 @@ This function is declared in <event2/event.h>.  It has existed since
 Libevent 1.0.
 
 Inspecting event status
-~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------
 
 Sometimes you want to tell whether an event has been added, and check
 what it refers to.
@@ -682,7 +683,7 @@ event_get_base(). Libevent 2.1.2-alpha added event_get_priority().  The
 others were new in Libevent 2.0.4-alpha.
 
 Finding the currently running event
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------------------
 
 For debugging or other purposes, you can get a pointer to the currently
 running event.
@@ -701,7 +702,7 @@ This function is declared in <event2/event.h>.  It was introduced in Libevent
 2.1.1-alpha.
 
 Configuring one-off events
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+--------------------------
 
 If you don't need to add an event more than once, or delete it once it
 has been added, and it doesn't have to be persistent, you can use
@@ -732,7 +733,7 @@ associated with their callback arguments, that storage won't be released
 unless your program has done something to track and release it.
 
 Manually activating an event
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+----------------------------
 
 Rarely, you may want to make an event active even though its
 conditions have not triggered.
@@ -847,7 +848,7 @@ This function is defined in <event2/event.h>.  It has existed
 since Libevent 0.3.
 
 Optimizing common timeouts
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+--------------------------
 
 Current versions of Libevent use a binary heap algorithm to keep track
 of pending events' timeouts.  A binary heap gives performance of order
@@ -927,7 +928,7 @@ for you.
 This functionality was introduced in Libevent 2.0.4-alpha.
 
 Telling a good event apart from cleared memory
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+----------------------------------------------
 
 Libevent provides functions that you can use to distinguish an
 initialized event from memory that has been cleared by setting it to 0
@@ -991,7 +992,7 @@ int add_reader(struct reader *r, struct event_base *b)
 The event_initialized() function has been present since Libevent 0.3.
 
 Obsolete event manipulation functions
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-------------------------------------
 
 Pre-2.0 versions of Libevent did not have event_assign() or
 event_new().  Instead, you had event_set(), which associated the event

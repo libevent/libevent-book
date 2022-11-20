@@ -1,10 +1,11 @@
 :docinfo:
+
+A tiny introduction to asynchronous IO
+========================================
+
 include::license.txt[]
 
 :language: C
-
-A tiny introduction to asynchronous IO
-----------------------------------------
 
 Most beginning programmers start with blocking IO calls.
 An IO call is _synchronous_ if, when you call it, it does not return
@@ -259,7 +260,7 @@ with the divergent parts of the Win32 networking API.)
 
 
 What about convenience?  (and what about Windows?)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+--------------------------------------------------
 
 You've probably noticed that as our code has gotten more efficient,
 it has also gotten more complex.  Back when we were forking, we didn't
@@ -296,7 +297,7 @@ include::examples_01/01_rot13_server_bufferevent.c[]
 -------
 
 How efficient is all of this, really?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-------------------------------------
 
 XXXX write an efficiency section here.  The benchmarks on the libevent
 page are really out of date.

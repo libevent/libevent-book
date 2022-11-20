@@ -1,10 +1,11 @@
 :docinfo:
+
+Bufferevents: concepts and basics
+=================================
+
 include::license.txt[]
 
 :language: C
-
-Bufferevents: concepts and basics
----------------------------------
 
 Most of the time, an application wants to perform some amount of data
 buffering in addition to just responding to events.  When we want to
@@ -61,7 +62,7 @@ declared in event2/buffer.h; see the next chapter for information on
 those.
 
 Bufferevents and evbuffers
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+--------------------------
 
 Every bufferevent has an input buffer and an output buffer.  These are
 of type "struct evbuffer".  When you have data to write on a
@@ -72,7 +73,7 @@ The evbuffer interface supports many operations; we discuss them in a
 later section.
 
 Callbacks and watermarks
-~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------
 
 Every bufferevent has two data-related callbacks: a read callback
 and a write callback.  By default, the read callback is called
@@ -134,7 +135,7 @@ BEV_EVENT_CONNECTED::
 (The above event names are new in Libevent 2.0.2-alpha.)
 
 Deferred callbacks
-~~~~~~~~~~~~~~~~~~
+------------------
 
 By default, a bufferevent callbacks are executed _immediately_ when
 the corresponding condition happens.  (This is true of evbuffer
@@ -154,7 +155,7 @@ callbacks.
 (Deferred callbacks were introduced in Libevent 2.0.1-alpha.)
 
 Option flags for bufferevents
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------------
 
 You can use one or more flags when creating a bufferevent to alter its
 behavior.  Recognized flags are:
@@ -182,7 +183,7 @@ BEV_OPT_UNLOCK_CALLBACKS::
 above were new in Libevent 2.0.1-alpha.)
 
 Working with socket-based bufferevents
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+--------------------------------------
 
 The simplest bufferevents to work with is the socket-based type.  A
 socket-based bufferevent uses Libevent's underlying event mechanism to
@@ -191,7 +192,7 @@ operations, and uses underlying network calls (like readv, writev,
 WSASend, or WSARecv) to transmit and receive data.
 
 Creating a socket-based bufferevent
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You can create a socket-based bufferevent using
 bufferevent_socket_new():
@@ -219,7 +220,7 @@ This function returns a bufferevent on success, and NULL on failure.
 The bufferevent_socket_new() function was introduced in Libevent 2.0.1-alpha.
 
 Launching connections on socket-based bufferevents
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If the bufferevent's socket is not yet connected, you can launch a new
 connection.
@@ -311,7 +312,7 @@ errno equal to EAGAIN or EINPROGRESS.
 This function was introduced in Libevent 2.0.2-alpha.
 
 Launching connections by hostname
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Quite often, you'd like to combine resolving a hostname and connecting to it
 into a single operation.  There's an interface for that:
@@ -357,13 +358,13 @@ The bufferevent_socket_connect_hostname() function was new in Libevent
 2.0.3-alpha; bufferevent_socket_get_dns_error() was new in 2.0.5-beta.
 
 Generic bufferevent operations
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------------
 
 The functions in this section work with multiple bufferevent
 implementations.
 
 Freeing a bufferevent
-^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~
 
 .Interface
 [code,C]
@@ -388,7 +389,7 @@ that transport is closed when you free the bufferevent.
 This function was introduced in Libevent 0.8.
 
 Manipulating callbacks, watermarks, and enabled operations
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .Interface
 [code,C]
@@ -556,7 +557,7 @@ struct bufferevent *setup_bufferevent(void)
 --------
 
 Manipulating data in a bufferevent
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Reading and writing data from the network does you no good if you
 can't look at it.  Bufferevents give you these methods to give them
@@ -701,7 +702,7 @@ write_callback_fibonacci(struct bufferevent *bev, void *ctx)
 --------
 
 Read- and write timeouts
-^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 As with other events, you can have a timeout get invoked if a certain
 amount of time passes without any data having been successfully
@@ -740,7 +741,7 @@ This functions has existed since Libevent 2.0.1-alpha.  It didn't behave
 consistently across bufferevent types until Libevent 2.0.4-alpha.
 
 Initiating a flush on a bufferevent
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .Interface
 [code,C]
@@ -771,7 +772,7 @@ implemented for some bufferevent types.  In particular, socket-based
 bufferevents don't have it.
 
 Type-specific bufferevent functions
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------------------
 
 These bufferevent functions are not supported on all bufferevent
 types.
@@ -829,7 +830,7 @@ would occur, see notes on filtering bufferevents.
 This function was introduced in Libevent 2.0.2-alpha.
 
 Manually locking and unlocking a bufferevent
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-------------------------------------------
 
 As with evbuffers, sometimes you want to ensure that a number of operations
 on a bufferevent are all performed atomically.  Libevent exposes functions
@@ -854,7 +855,7 @@ every time that you locked the bufferevent.
 These functions were introduced in Libevent 2.0.6-rc.
 
 Obsolete bufferevent functionality
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+----------------------------------
 
 The bufferevent backend code underwent substantial revision between
 Libevent 1.4 and Libevent 2.0.  In the old interface, it was sometimes

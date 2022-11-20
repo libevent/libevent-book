@@ -1,13 +1,14 @@
 :docinfo:
+
+Working with an event loop
+==========================
+
 include::license.txt[]
 
 :language: C
 
-Working with an event loop
---------------------------
-
 Running the loop
-~~~~~~~~~~~~~~~~
+----------------
 
 Once you have an event_base with some events registered (see the next section
 about how to create and register events), you will want Libevent to wait for
@@ -91,7 +92,7 @@ These functions are defined in <event2/event.h>.  They have existed since
 Libevent 1.0.
 
 Stopping the loop
-~~~~~~~~~~~~~~~~~
+-----------------
 
 If you want an active event loop to stop running before all events are
 removed from it, you have two slightly different functions you can call.
@@ -202,7 +203,7 @@ function was first implemented in Libevent 1.0c; event_break_loopbreak() was
 first implemented in Libevent 1.4.3.
 
 Re-checking for events
-~~~~~~~~~~~~~~~~~~~~~~
+----------------------
 
 Ordinarily, Libevent checks for events, then runs all the active events
 with the highest priority, then checks for events again, and so on.  But
@@ -224,7 +225,7 @@ This function was introduced in Libevent 2.1.2-alpha.
 
 
 Checking the internal time cache
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+--------------------------------
 
 Sometimes you want to get an approximate view of the current time inside
 an event callback, and you want to get it without calling gettimeofday()
@@ -265,7 +266,7 @@ The event_base_gettimeofday_cached() function was new in Libevent
 
 
 Dumping the event_base status
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------------
 
 .Interface
 [code,C]
@@ -283,7 +284,7 @@ versions of Libevent.
 This function was introduced in Libevent 2.0.1-alpha.
 
 Running a function over every event in an event_base
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+----------------------------------------------------
 
 .Interface
 [code,C]
@@ -319,7 +320,7 @@ doesn't take a long time.
 This function was added in Libevent 2.1.2-alpha.
 
 Obsolete event loop functions
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------------
 
 As discussed above, older versions of Libevent APIs had a global
 notion of a "current" event_base.

@@ -1,13 +1,14 @@
 :docinfo:
+
+The Libevent Reference Manual: Preliminaries
+============================================
+
 include::license.txt[]
 
 :language: C
 
-The Libevent Reference Manual: Preliminaries
---------------------------------------------
-
 Libevent from 10,000 feet
-~~~~~~~~~~~~~~~~~~~~~~~~~
+-------------------------
 
 Libevent is a library for writing fast portable nonblocking IO.  Its
 design goals are:
@@ -71,7 +72,7 @@ evrpc::
 
 
 The Libraries
-~~~~~~~~~~~~~
+-------------
 
 When Libevent is built, by default it installs the following
 libraries:
@@ -108,7 +109,7 @@ libevent_openssl::
     connections.
 
 The Headers
-~~~~~~~~~~~
+-----------
 
 All current public Libevent headers are installed under the 'event2'
 directory.  Headers fall into three broad classes:
@@ -136,7 +137,7 @@ Structure headers::
 Libevent" below.)
 
 If you have to work with an old version of Libevent
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+---------------------------------------------------
 
 Libevent 2.0 has revised its APIs to be generally more rational and
 less error-prone.  If it's possible, you should write new programs to
@@ -175,7 +176,7 @@ Individual sections below will discuss the obsolete APIs that you
 might encounter for specific areas of the codebase.
 
 Notes on version status
-^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~
 
 Versions of Libevent before 1.4.7 or so should be considered totally
 obsolete.  Versions of Libevent before 1.3e or so should be considered

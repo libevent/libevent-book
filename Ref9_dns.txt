@@ -1,10 +1,11 @@
 :docinfo:
+
+Using DNS with Libevent: high and low-level functionality
+=========================================================
+
 include::license.txt[]
 
 :language: C
-
-Using DNS with Libevent: high and low-level functionality
----------------------------------------------------------
 
 Libevent provides a few APIs to use for resolving DNS names, and a
 facility for implementing simple DNS servers.
@@ -19,7 +20,7 @@ to fix all of these in some future version of Libevent, but for now, they're
 not there.
 
 Preliminaries: Portable blocking name resolution
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------------------------------
 
 To aid in porting programs that already use blocking name resolution,
 Libevent provides a portable implementation of the standard
@@ -274,7 +275,7 @@ These functions and constants were new in Libevent 2.0.3-alpha.  They
 are declared in event2/util.h.
 
 Non-blocking hostname resolution with evdns_getaddrinfo()
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+---------------------------------------------------------
 
 The main problem with the regular getaddrinfo() interface, and with
 evutil_getaddrinfo() above, is that they're blocking: when you call
@@ -336,7 +337,7 @@ These functions were new in Libevent 2.0.3-alpha.  They are declared in
 event2/dns.h.
 
 Creating and configuring an evdns_base
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+--------------------------------------
 
 Before you can do nonblocking DNS lookups with evdns, you'll need to
 configure an evdns_base.  Each evdns_base stores a list of nameservers,
@@ -363,7 +364,7 @@ make all in-flight requests get their callbacks invoked with a
 'canceled' error code before it frees the base.
 
 Initializing evdns from the system configuration
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If you want a little more control over how the evdns_base is
 initialized, you can pass 0 as the 'initialize' argument to
@@ -424,7 +425,7 @@ nameservers from your registry (or your NetworkParams, or wherever
 they're hidden).
 
 The resolv.conf file format
-+++++++++++++++++++++++++++
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The resolv.conf format we recognize is a text file, each line of which
 should either be empty, contain a comment starting with the # character,
@@ -498,7 +499,7 @@ options::
 Unrecognized tokens and options are ignored.
 
 Configuring evdns manually
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If you want even more fine-grained control over evdns's behavior,
 you can use these functions:
@@ -551,7 +552,7 @@ any nameservers were added, you can use evdns_base_count_nameservers()
 to see how many there are.
 
 Library-side configuration
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 There are a couple of functions you can use to specify library-wide
 settings for the evdns module:
@@ -689,7 +690,7 @@ Canceling a request with this function makes its callback get invoked with
 the DNS_ERR_CANCEL result code.
 
 Suspending DNS client operations and changing nameservers
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+---------------------------------------------------------
 
 Sometimes you want to reconfigure or shut down the DNS subsystem without
 affecting in-flight DNS request too much.
@@ -717,7 +718,7 @@ server and responding to UDP DNS requests.
 This section assumes some familiarity with the DNS protocol.
 
 Creating and closing a DNS server
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+---------------------------------
 
 .Interface
 [code,C]
@@ -749,7 +750,7 @@ The evdns_add_server_port_with_base() function was new in 2.0.1-alpha;
 evdns_close_server_port() was introduced in 1.3.
 
 Examining a DNS request
-~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------
 
 Unfortunately, Libevent doesn't currently provide a great way to look at DNS
 requests via a programmatic interface.  Instead, you're stuck including
@@ -803,7 +804,7 @@ struct sockaddr_storage is recommended.
 This function was introduced in Libevent 1.3c.
 
 Responding to DNS requests
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+--------------------------
 
 Every time your DNS server receives a request, the request is passed to
 the callback function you provided, along with your user_data pointer.  The
@@ -914,7 +915,7 @@ All the functions in this section were introduced in Libevent 1.3, except for
 evdns_server_request_set_flags() which first appeared in Libevent 2.0.1-alpha.
 
 DNS Server example
-~~~~~~~~~~~~~~~~~~
+------------------
 
 //BUILD: SKIP
 .Example: A trivial DNS responder

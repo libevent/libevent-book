@@ -1,10 +1,11 @@
 :docinfo:
+
+Evbuffers: utility functionality for buffered IO
+================================================
+
 include::license.txt[]
 
 :language: C
-
-Evbuffers: utility functionality for buffered IO
-------------------------------------------------
 
 Libevent's evbuffer functionality implements a queue of bytes,
 optimized for adding data to the end and removing it from the front.
@@ -18,7 +19,7 @@ The functions in this chapter are declared in event2/buffer.h unless
 otherwise noted.
 
 Creating or freeing an evbuffer
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-------------------------------
 
 .Interface
 [code,C]
@@ -34,7 +35,7 @@ all of its contents.
 These functions have existed since Libevent 0.8.
 
 Evbuffers and Thread-safety
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+---------------------------
 
 .Interface
 [code,C]
@@ -65,7 +66,7 @@ one operation that need to execute without another thread butting in.)
 These functions were all introduced in Libevent 2.0.1-alpha.
 
 Inspecting an evbuffer
-~~~~~~~~~~~~~~~~~~~~~~
+----------------------
 
 .Interface
 [code,C]
@@ -91,7 +92,7 @@ of bytes currently stored in the _first_ chunk.
 It was introduced in Libevent 2.0.1-alpha.
 
 Adding data to an evbuffer: basics
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+----------------------------------
 
 .Interface
 [code,C]
@@ -141,7 +142,7 @@ Libevent 0.8; evbuffer_expand() was in Libevent 0.9, and
 evbuffer_add_vprintf() first appeared in Libevent 1.1.
 
 Moving data from one evbuffer to another
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+----------------------------------------
 
 For efficiency, Libevent has optimized functions for moving data from
 one evbuffer to another.
@@ -166,7 +167,7 @@ We introduced evbuffer_add_buffer() in Libevent 0.8;
 evbuffer_remove_buffer() was new in Libevent 2.0.1-alpha.
 
 Adding data to the front of an evbuffer
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+---------------------------------------
 
 .Interface
 [code,C]
@@ -183,7 +184,7 @@ These functions should be used with caution, and never on an evbuffer
 shared with a bufferevent.  They were new in Libevent 2.0.1-alpha.
 
 Rearranging the internal layout of an evbuffer
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+----------------------------------------------
 
 Sometimes you want to peek at the first N bytes of data in the
 front of an evbuffer, and see it as a contiguous array of bytes.  To
@@ -253,7 +254,7 @@ previous versions of Libevent always kept evbuffer data contiguous,
 regardless of the cost.
 
 Removing data from an evbuffer
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------------
 
 .Interface
 [code,C]
@@ -276,7 +277,7 @@ Libevent 0.8 introduced evbuffer_drain(); evbuffer_remove() appeared in
 Libevent 0.9.
 
 Copying data out from an evbuffer
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+---------------------------------
 
 Sometimes you want to get a copy of the data at the start of a buffer without
 draining it.  For example, you might want to see whether a complete record
@@ -355,7 +356,7 @@ The evbuffer_copyout() function first appeared in Libevent 2.0.5-alpha;
 evbuffer_copyout_from() was added in Libevent 2.1.1-alpha.
 
 Line-oriented input
-~~~~~~~~~~~~~~~~~~~
+-------------------
 
 .Interface
 [code,C]
@@ -432,7 +433,7 @@ The evbuffer_readln() interface is available in Libevent 1.4.14-stable and
 later.  EVBUFFER_EOL_NUL was added in Libevent 2.1.1-alpha.
 
 Searching within an evbuffer
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+----------------------------
 
 The evbuffer_ptr structure points to a location within an evbuffer,
 and contains data that you can use to iterate through an evbuffer.
@@ -535,7 +536,7 @@ outstanding evbuffer_ptr values, and makes them unsafe to use.
 These interfaces were new in Libevent 2.0.1-alpha.
 
 Inspecting data without copying it
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+----------------------------------
 
 Sometimes, you want to read data in an evbuffer without copying it out (as
 evbuffer_copyout() does), and without rearranging the evbuffer's internal
@@ -658,7 +659,7 @@ Otherwise, it starts at the pointer given in 'ptr'.
 This function is new in Libevent 2.0.2-alpha.
 
 Adding data to an evbuffer directly
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------------------
 
 Sometimes you want to insert data info an evbuffer directly, without
 first writing it into a character array and then copying it in with
@@ -783,7 +784,7 @@ These functions have existed with their present interfaces since Libevent
 2.0.2-alpha.
 
 Network IO with evbuffers
-~~~~~~~~~~~~~~~~~~~~~~~~~
+-------------------------
 
 The most common use case for evbuffers in Libevent is network IO.
 The interface for performing network IO on an evbuffer is:
@@ -826,7 +827,7 @@ these IO functions; the bufferevents code does it for you.
 The evbuffer_write_atmost() function was introduced in Libevent 2.0.1-alpha.
 
 Evbuffers and callbacks
-~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------
 
 Users of evbuffers frequently want to know when data is added to or
 removed from an evbuffer.  To support this, Libevent provides a
@@ -970,7 +971,7 @@ evbuffer_cb_(set|clear)_flags() functions have existed with their
 present interfaces since 2.0.2-alpha.
 
 Avoiding data copies with evbuffer-based IO
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-------------------------------------------
 
 Really fast network programming often calls for doing as few data
 copies as possible.  Libevent provides some mechanisms to help out
@@ -1052,7 +1053,7 @@ The evbuffer_add_reference() function has had is present
 interface since 2.0.2-alpha.
 
 Adding a file to an evbuffer
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+----------------------------
 
 Some operating systems provide ways to write files to the network
 without ever copying the data to userspace.  You can access these
@@ -1095,7 +1096,7 @@ functionality below.
 This function was introduced in Libevent 2.0.1-alpha.
 
 Fine-grained control with file segments
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+---------------------------------------
 
 The evbuffer_add_file() interface is inefficient for adding the same file
 more than once, since it takes ownership of the file.
@@ -1173,7 +1174,7 @@ These file-segment functions first appeared in Libevent 2.1.1-alpha;
 evbuffer_file_segment_add_cleanup_cb() was added in 2.1.2-alpha.
 
 Adding an evbuffer to another by reference
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------------------------
 
 You can also add one evbuffer's to another by reference: rather than removing
 the contents of one buffer and adding them to another, you give one evbuffer
@@ -1203,7 +1204,7 @@ This function was introduced in Libevent 2.1.1-alpha.
 
 
 Making an evbuffer add- or remove-only
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+--------------------------------------
 
 .Interface
 [code,C]
@@ -1221,7 +1222,7 @@ The evbuffer_freeze() functions were introduced in Libevent
 2.0.1-alpha.
 
 Obsolete evbuffer functions
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+---------------------------
 
 The evbuffer interface changed a lot in Libevent 2.0.  Before then,
 every evbuffers was implemented as a contiguous chunk of RAM, which
