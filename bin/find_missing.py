@@ -14,7 +14,7 @@ def getIdentifiers(files):
     idmap = {}
     for line in inp:
         line = line.strip()
-        m = pat.match(line)
+        m = pat.match(line.decode('utf-8'))
         assert m
         ident, fname, lineno, ext = m.groups()
         lineno = int(lineno)
@@ -34,25 +34,9 @@ def getIdentifiers(files):
         idmap[ident] = [fname, lineno, False]
     return idmap
 
-class CountingIter:
-    def __init__(self, iterable):
-        self._iter = iter(iterable)
-        self._count = 0
-
-    def __iter__(self):
-        return self
-
-    def next(self):
-        self._count += 1
-        return self._iter.next()
-
-    def count(self):
-        return self._count
-
 C_IDENT_PAT = re.compile(r'[a-zA-Z_][a-zA-Z0-9_]*')
 
 def removeIdentifiers(idmap, f):
-    f = CountingIter(f)
     for line in f:
         if line.startswith("//"):
             # If a function is mentioned in a comment, that doesn't count.
@@ -89,40 +73,40 @@ def findMissing(includeDir):
             continue
 
         f = open(txtFname, 'r')
-        removeIdentifiers(idmap, f)
+        removeIdentifiers(idmap, f.readlines())
         f.close()
 
     byfile = {}
-    for ident, (fname, lineno, found) in idmap.iteritems():
+    for ident, (fname, lineno, found) in idmap.items():
         byfile.setdefault(fname, []).append((lineno, ident, found))
 
     total_n = total_found = 0
-    for fname in sorted(byfile.iterkeys()):
+    for fname in sorted(byfile.keys()):
         n = len(byfile[fname])
         nfound = sum(1 for tp in byfile[fname] if tp[2])
-        print "%s: (%d%%)"%(fname, int(float(100*nfound)/n))
+        print("%s: (%d%%)"%(fname, int(float(100*nfound)/n)))
 
         total_n += n
         total_found += nfound
 
         for lineno,ident,found in sorted(byfile[fname]):
             if found:
-                print "\t    %3d:%s"%(lineno, ident)
+                print("\t    %3d:%s"%(lineno, ident))
             else:
-                print "\t*** %3d:%s"%(lineno, ident)
+                print("\t*** %3d:%s"%(lineno, ident))
 
-    print "TOTAL: %d%%"%int(float(100*total_found)/total_n)
+    print("TOTAL: %d%%"%int(float(100*total_found)/total_n))
 
 if __name__ == '__main__':
     import sys
     if len(sys.argv) != 2:
-        print \
+        print(\
 """%(prog)s expects a single argument: the location of the installed libevent2
 header files.  Example usage: %(prog)s /usr/local/include/event2
 It requires a GNU ctags.
 """ %{
             "prog":sys.argv[0]
-            }
+            })
     else:
         findMissing(sys.argv[1])
 

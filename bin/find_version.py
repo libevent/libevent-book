@@ -81,21 +81,21 @@ def compile():
         newInVersion[version] = []
         files = findfiles(d)
         identifiers = getIdentifiers(files)
-        for ident in identifiers.iterkeys():
-            if firstSeenIn.has_key(ident):
+        for ident in identifiers.keys():
+            if ident in firstSeenIn:
                 if firstSeenIn[ident] > version:
                     firstSeenIn[ident] = version
             else:
                 firstSeenIn[ident] = version
 
     for ident,version in sorted(firstSeenIn.items()):
-        print ident, writeVersion(version)
+        print(ident, writeVersion(version))
         newInVersion[version].append(ident)
 
-    print
+    print()
     for ver,new in sorted(newInVersion.items()):
-        print "==========", writeVersion(ver)
+        print("==========", writeVersion(ver))
         for ident in new:
-            print " ",ident
+            print(" ",ident)
 
 compile()

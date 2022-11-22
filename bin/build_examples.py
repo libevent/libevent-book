@@ -42,6 +42,8 @@ class FlushFile:
     def write(self, s):
         self._f.write(s)
         self._f.flush()
+    def flush(self):
+        self._f.flush()
 
 class lookbehind_iterator:
     """Iterator wrapper that remembers the last N items and the total
@@ -55,8 +57,8 @@ class lookbehind_iterator:
     def __iter__(self):
         return self
 
-    def next(self):
-        item = self._iter.next() # let StopIteration propagate
+    def __next__(self):
+        item = self._iter.__next__()  # let StopIteration propagate
         self._itemno += 1
         # This implementation makes iterating through an L-line file
         # into an O(N*L) operation, but so long as N is small, we don't
@@ -87,7 +89,7 @@ def isCode(line):
     if line == "[code,C]":
         return True
     elif line.lower().startswith("[code"):
-        print "%s should be [code,C]"%line
+        print("%s should be [code,C]"%line)
         return True
     else:
         return False
@@ -103,9 +105,9 @@ def isExample(line):
             line.startswith(".Deprecated Interface"):
         pass
     elif line.startswith("."):
-        print "WARN: Weird label %r"%line
+        print("WARN: Weird label %r"%line)
     else:
-        print "WARN: No label on code section"
+        print("WARN: No label on code section")
 
     return False
 
@@ -128,7 +130,7 @@ def getDirectives(line):
             directives.append(d.upper())
 
         if d not in ALL_DIRECTIVES:
-            print "Unknown directive %r"%d
+            print("Unknown directive %r"%d)
     return directives
 
 def writepreamble(outfile, directives):
@@ -189,20 +191,20 @@ def build(fname):
     command = [CC, "-Wall", "-c", "-o", "tmp.o" ]
     command.extend(CFLAGS)
     command.append(fname)
-    print " ".join(command)
+    print(" ".join(command))
     retcode = subprocess.call(command)
 
 def run(args):
     for fname in args:
         if not "_" in fname:
-            print "You broke the naming convention: %s has no _."%fname
+            print("You broke the naming convention: %s has no _."%fname)
             continue
         ident = re.sub(r'([^_]+)_.*', r'\1', fname)
         targetdir = "tmpcode_%s"%ident
-        print "Extracting source from %s"%fname
+        print("Extracting source from %s"%fname)
         cfiles = getCodeBlocks(fname, targetdir)
         for cfname in cfiles:
-            print "Building %s"%cfname
+            print("Building %s"%cfname)
             build(cfname)
 
 if __name__ == "__main__":
