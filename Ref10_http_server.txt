@@ -25,3 +25,33 @@ function that will send data back. A very simple example is provided in listing:
 ------
 include::examples_R10/R10_simple_server.c[]
 ------
+
+Given the previous example, the basics of the code here should be relatively
+self-explanatory. The main elements are the evhttp_set_gencb() function, which
+sets the callback function to be used when an HTTP request is received, and the
+generic_request_handler() callback function itself, which populates the response
+buffer with a simple message to show success.
+
+The HTTP wrapper provides a wealth of different functionality. For example,
+there is a request parser that will extract the query arguments from a typical
+request (as you would use in a HTTP request), and you can also set different
+handlers to be triggered within different requested paths.
+
+Let's extend this example act Libevent as Nginx-like server for static content:
+
+.Example: A static HTTP server implementation
+[code,C]
+------
+include::examples_R10/R10_static_server.c[]
+------
+
+As you can see here we've replaced generic_request_handler() by specfic
+send_file_to_user() handler which processes incoming request:
+
+* It checks if HTTP command is equal to `GET` or `HEAD` first
+
+* Then it parses request URI to extract request path and determine file path we
+  should handle by couple evhttp_request_get_uri()/evhttp_uri_parse() functions
+
+* After that it decoded URI string from something like `folder%2Fmy%20doc.txt`
+  to plain `folder/my doc.txt`

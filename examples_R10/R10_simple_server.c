@@ -2,7 +2,7 @@
 #include <event2/event.h>
 #include <event2/http.h>
 
-void
+static void
 generic_request_handler(struct evhttp_request *req, void *ctx)
 {
 	struct evbuffer *reply = evbuffer_new();
@@ -31,4 +31,5 @@ main()
 	event_base_dispatch(base);
 
 	evhttp_free(http_server);
+	event_base_free(base);
 }
