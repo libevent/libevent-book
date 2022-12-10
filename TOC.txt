@@ -24,6 +24,7 @@ A Libevent Reference Manual
 - link:Ref7_evbuffer.html[R7: Evbuffers: utility functionality for buffered IO]
 - link:Ref8_listener.html[R8: Connection listeners: accepting TCP connections]
 - link:Ref9_dns.html[R9: DNS for Libevent]
+- link:Ref10_http_server.html[R10: HTTP server]
 
 include::license.txt[]
 

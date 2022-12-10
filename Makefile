@@ -19,6 +19,7 @@ GENERATED_CHAPTERS= \
 	Ref7_evbuffer.html \
 	Ref8_listener.html \
 	Ref9_dns.html \
+	Ref10_http_server.html \
 	license_bsd.html
 
 GENERATED_HTML = $(GENERATED_METAFILES) $(GENERATED_CHAPTERS)

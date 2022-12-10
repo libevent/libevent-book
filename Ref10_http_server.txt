@@ -1,0 +1,27 @@
+:docinfo:
+
+Using the built-in HTTP server
+==============================
+
+include::license.txt[]
+
+:language: C
+
+The plain network-based Libevent interface is useful if you want to build native
+applications, but it is increasingly common to develop an application based
+around the HTTP protocol and a web page that loads, or more commonly dynamically
+reloads, information.
+
+To use the Libevent service, you use the same basic structure as already
+described for the main network event model, but instead of having to handle the
+network interfacing, the HTTP wrapper handles that for you.  This turns the
+entire process into the four function calls (initialize, start HTTP server, set
+HTTP callback function, and enter event loop), plus the contents of the callback
+function that will send data back. A very simple example is provided in listing:
+
+
+.Example: A basic HTTP server
+[code,C]
+------
+include::examples_R10/R10_simple_server.c[]
+------
