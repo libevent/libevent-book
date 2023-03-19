@@ -424,7 +424,7 @@ number for two different threads if they are both executing at the same
 time.
 
 The evthread_condition_callbacks structure describes callbacks related to
-condition variables.  For the version described above, the lock_api_version
+condition variables.  For the version described above, the condition_api_version
 field must be set to EVTHREAD_CONDITION_API_VERSION.  The alloc_condition
 function must return a pointer to a new condition variable.  It receives 0 as
 its argument.  The free_condition function must release storage and resources
