@@ -737,6 +737,7 @@ for (i=0; i<n && n_to_add > 0; ++i) {
    /* Set iov_len to the number of bytes we actually wrote, so we
       don't commit too much. */
    v[i].iov_len = len;
+   n_to_add -= len;
 }
 
 /* We commit the space here.  Note that we give it 'i' (the number of
