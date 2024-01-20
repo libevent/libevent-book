@@ -14,6 +14,8 @@
 /examples_R8/R8_echo_server
 /examples_R9/R9_multilookup
 /examples_R9/R9_dns_server
+/examples_R10/R10_simple_server
+/examples_R10/R10_static_server
 
 /tmpcode*
 

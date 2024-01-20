@@ -17,7 +17,7 @@ described for the main network event model, but instead of having to handle the
 network interfacing, the HTTP wrapper handles that for you.  This turns the
 entire process into the four function calls (initialize, start HTTP server, set
 HTTP callback function, and enter event loop), plus the contents of the callback
-function that will send data back. A very simple example is provided in listing:
+function that will send data back. A very simple example is provided in the listing:
 
 
 .Example: A basic HTTP server
@@ -45,10 +45,10 @@ Let's extend this example act Libevent as Nginx-like server for static content:
 include::examples_R10/R10_static_server.c[]
 ------
 
-As you can see here we've replaced generic_request_handler() by specfic
+As you can see here we've replaced generic_request_handler() by specific
 send_file_to_user() handler which processes incoming request:
 
-* It checks if HTTP command is equal to `GET` or `HEAD` first
+* First it checks if HTTP command is equal to `GET` or `HEAD`
 
 * Then it parses request URI to extract request path and determine file path we
   should handle by couple evhttp_request_get_uri()/evhttp_uri_parse() functions

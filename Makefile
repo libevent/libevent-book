@@ -43,6 +43,7 @@ examples:
 	cd examples_R6a && $(MAKE)
 	cd examples_R8 && $(MAKE)
 	cd examples_R9 && $(MAKE)
+	cd examples_R10 && $(MAKE)
 
 inline_examples:
 	./bin/build_examples.py *_*.txt
@@ -67,6 +68,7 @@ Ref6a_advanced_bufferevent.html: examples_R6a/*.c license.txt
 Ref7_evbuffer.html: license.txt
 Ref8_listener.html: examples_R8/*.c license.txt
 Ref9_dns.html: examples_R9/*.c license.txt
+Ref10_http_server.html: examples_R10/*.c license.txt
 
 clean:
 	rm -f *~
