@@ -286,9 +286,6 @@ Note that signal callbacks are run in the event loop after the signal
 occurs, so it is safe for them to call functions that you are not
 supposed to call from a regular POSIX signal handler.
 
-WARNING: Don't set a timeout on a signal event.  It might not be
-supported.  [FIXME: is this true?]
-
 There are also a set of convenience macros you can use when working
 with signal events.
 
