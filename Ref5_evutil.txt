@@ -338,8 +338,9 @@ AF_INET6, the string to parse in 'src', and 'dst' pointing to an in_addr
 or an in_addr6 as appropriate.
 
 The return value from evutil_inet_ntop() is NULL on failure and
-otherwise points to dst.  The return value from evutil_inet_pton() is 0
-on success and -1 on failure.
+otherwise points to dst.  The return value from evutil_inet_pton() is 1
+on success, -1 if af is not supported and 0 if src does not contain a character
+string representing a valid network address in the specified address family.
 
 .Interface
 [code,C]
