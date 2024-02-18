@@ -1,0 +1,57 @@
+:docinfo:
+
+Using the built-in HTTP server
+==============================
+
+include::license.txt[]
+
+:language: C
+
+The plain network-based Libevent interface is useful if you want to build native
+applications, but it is increasingly common to develop an application based
+around the HTTP protocol and a web page that loads, or more commonly dynamically
+reloads, information.
+
+To use the Libevent service, you use the same basic structure as already
+described for the main network event model, but instead of having to handle the
+network interfacing, the HTTP wrapper handles that for you.  This turns the
+entire process into the four function calls (initialize, start HTTP server, set
+HTTP callback function, and enter event loop), plus the contents of the callback
+function that will send data back. A very simple example is provided in the listing:
+
+
+.Example: A basic HTTP server
+[code,C]
+------
+include::examples_R10/R10_simple_server.c[]
+------
+
+Given the previous example, the basics of the code here should be relatively
+self-explanatory. The main elements are the evhttp_set_gencb() function, which
+sets the callback function to be used when an HTTP request is received, and the
+generic_request_handler() callback function itself, which populates the response
+buffer with a simple message to show success.
+
+The HTTP wrapper provides a wealth of different functionality. For example,
+there is a request parser that will extract the query arguments from a typical
+request (as you would use in a HTTP request), and you can also set different
+handlers to be triggered within different requested paths.
+
+Let's extend this example act Libevent as Nginx-like server for static content:
+
+.Example: A static HTTP server implementation
+[code,C]
+------
+include::examples_R10/R10_static_server.c[]
+------
+
+As you can see here we've replaced generic_request_handler() by specific
+send_file_to_user() handler which processes incoming request:
+
+* First it checks if HTTP command is equal to `GET` or `HEAD`
+
+* Then it parses request URI to extract request path and determine file path we
+  should handle by couple evhttp_request_get_uri()/evhttp_uri_parse() functions
+
+* After that it decoded URI string from something like `folder%2Fmy%20doc.txt`
+  to plain `folder/my doc.txt`
