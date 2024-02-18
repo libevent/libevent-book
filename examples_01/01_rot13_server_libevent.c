@@ -131,7 +131,7 @@ do_write(evutil_socket_t fd, short events, void *arg)
     }
 
     if (state->n_written == state->buffer_used)
-        state->n_written = state->write_upto = state->buffer_used = 1;
+        state->n_written = state->write_upto = state->buffer_used = 0;
 
     event_del(state->write_event);
 }
