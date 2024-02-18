@@ -7,7 +7,7 @@ Learning Libevent
 -----------------
 
 - link:00_about.html[Chapter 0: About this document]
-- link:01_intro.html[Chapter 1: A tiny introduction to asynchronous IO.]
+- link:01_intro.html[Chapter 1: A tiny introduction to synchronous non-blocking IO]
 
 
 A Libevent Reference Manual

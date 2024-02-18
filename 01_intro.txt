@@ -1,7 +1,7 @@
 :docinfo:
 
-A tiny introduction to asynchronous IO
-========================================
+A tiny introduction to synchronous non-blocking IO
+==================================================
 
 include::license.txt[]
 
@@ -239,7 +239,7 @@ provides a consistent interface to various select() replacements,
 using the most efficient version available on the computer where it's
 running.
 
-Here's yet another version of our asynchronous ROT13 server.  This
+Here's yet another version of our non-blocking ROT13 server.  This
 time, it uses Libevent 2 instead of select().  Note that the fd_sets
 are gone now: instead, we associate and disassociate events with a
 struct event_base, which might be implemented in terms of select(),
@@ -274,7 +274,7 @@ variables.
 Moreover, if you're deeply experienced with networking on Windows,
 you'll realize that Libevent probably isn't getting optimal
 performance when it's used as in the example above.  On Windows, the
-way you do fast asynchronous IO is not with a select()-like interface:
+way you do fast non-blocking IO is not with a select()-like interface:
 it's by using the IOCP (IO Completion Ports) API.  Unlike all the
 fast networking APIs, IOCP does not alert your program when a socket
 is _ready_ for an operation that your program then has to perform.

@@ -8,7 +8,7 @@ include::license.txt[]
 :language: C
 
 This document will teach you how to use Libevent 2.0 (and later) to write fast
-portable asynchronous network IO programs in C.  We assume:
+portable non-blocking network IO programs in C.  We assume:
 
 * That you already know C.
 * That you already know the basic C networking calls (socket(),
